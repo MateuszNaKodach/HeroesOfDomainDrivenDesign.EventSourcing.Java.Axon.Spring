@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: heroesofddd
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://localhost:6446/heroes_of_ddd_development
+    username: heroes_of_ddd_db_user
+    password: heroes_of_ddd_db_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
