@@ -28,8 +28,8 @@ class RecruitCreatureTest extends DwellingTest {
                .when(whenCommand)
                .expectException(AggregateNotFoundException.class);
         // todo: I don't like it exception is not from domain, AggregateNotFoundException is meaningless
-        //       .expectException(DomainRule.ViolatedException.class)
-        //       .expectExceptionMessage("Only not built building can be build");
+//               .expectException(DomainRule.ViolatedException.class)
+//               .expectExceptionMessage("Only not built building can be build");
     }
 
     @Test

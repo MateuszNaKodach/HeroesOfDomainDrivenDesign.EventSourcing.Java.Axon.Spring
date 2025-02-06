@@ -21,6 +21,7 @@ import java.util.Map;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
+// todo: probably we should model events ArmyEstablished and ArmyDestroyed, more on that on Event Model
 @Aggregate
 class Army {
 
@@ -29,7 +30,7 @@ class Army {
     private final Map<CreatureId, Amount> creatureStacks = new HashMap<>();
 
     @CommandHandler
-    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
+    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
     void handle(AddCreatureToArmy command) {
         new CanHaveMax7CreatureStacksInArmy(command.creatureId(), creatureStacks).verify();
 
