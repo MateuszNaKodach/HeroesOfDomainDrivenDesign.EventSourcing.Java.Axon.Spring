@@ -2,6 +2,7 @@ package com.dddheroes.heroesofddd.armies.write;
 
 import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
 import com.dddheroes.heroesofddd.armies.write.addcreature.CreatureAddedToArmy;
+import com.dddheroes.heroesofddd.armies.write.addcreature.CanHaveMax7CreatureStacksInArmy;
 import com.dddheroes.heroesofddd.armies.write.removecreature.CreatureRemovedFromArmy;
 import com.dddheroes.heroesofddd.armies.write.removecreature.RemoveCreatureFromArmy;
 import com.dddheroes.heroesofddd.shared.Amount;
@@ -29,9 +30,7 @@ class Army {
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     void handle(AddCreatureToArmy command) {
-        if (creatureStacks.size() >= 7 && !creatureStacks.containsKey(command.creatureId())) {
-            throw new IllegalStateException("Cannot add more than 7 different creature stacks to the army");
-        }
+        new CanHaveMax7CreatureStacksInArmy(command.creatureId(), creatureStacks).verify();
 
         apply(
                 CreatureAddedToArmy.event(
