@@ -15,4 +15,10 @@ public record RecruitCreature(
         Amount recruit
 ) implements DwellingCommand {
 
+    public static RecruitCreature command(String dwellingId, String creatureId, String toArmy, Integer recruit) {
+        return new RecruitCreature(DwellingId.of(dwellingId),
+                                   CreatureId.of(creatureId),
+                                   ArmyId.of(toArmy),
+                                   Amount.of(recruit));
+    }
 }

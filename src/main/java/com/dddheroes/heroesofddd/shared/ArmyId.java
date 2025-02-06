@@ -10,6 +10,10 @@ public record ArmyId(String raw) {
         }
     }
 
+    public static ArmyId of(String raw) {
+        return new ArmyId(raw);
+    }
+
     public static ArmyId random() {
         return new ArmyId(UUID.randomUUID().toString());
     }
