@@ -13,4 +13,9 @@ public record IncreaseAvailableCreatures(
         Amount increaseBy
 ) implements DwellingCommand {
 
+    public static IncreaseAvailableCreatures command(String dwellingId, String creatureId, Integer increaseBy) {
+        return new IncreaseAvailableCreatures(DwellingId.of(dwellingId),
+                                              CreatureId.of(creatureId),
+                                              Amount.of(increaseBy));
+    }
 }

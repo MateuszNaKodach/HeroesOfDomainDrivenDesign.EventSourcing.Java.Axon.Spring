@@ -93,6 +93,7 @@ public class Dwelling {
 
     @EventSourcingHandler
     void on(CreatureRecruited event) {
+        // todo: consider if it's OK or RecruitCreature should cause also AvailableCreaturesChanged event
         this.availableCreatures = this.availableCreatures.minus(new Amount(event.recruited()));
     }
 

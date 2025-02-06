@@ -24,7 +24,7 @@ class BuildDwellingTest extends DwellingTest {
     }
 
     @Test
-    void givenBuiltDwellingWhenBuildThenException() {
+    void givenBuiltDwellingWhenBuildSameOneMoreTimeThenException() {
         // given
         var givenEvents = List.of(
                 dwellingBuilt()
