@@ -12,13 +12,13 @@ public record RecruitCreature(
         DwellingId dwellingId,
         CreatureId creatureId,
         ArmyId toArmy,
-        Amount recruit
+        Amount quantity
 ) implements DwellingCommand {
 
-    public static RecruitCreature command(String dwellingId, String creatureId, String toArmy, Integer recruit) {
+    public static RecruitCreature command(String dwellingId, String creatureId, String toArmy, Integer quantity) {
         return new RecruitCreature(DwellingId.of(dwellingId),
                                    CreatureId.of(creatureId),
                                    ArmyId.of(toArmy),
-                                   Amount.of(recruit));
+                                   Amount.of(quantity));
     }
 }

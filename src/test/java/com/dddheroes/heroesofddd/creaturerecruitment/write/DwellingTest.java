@@ -3,15 +3,11 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.Cost;
 import com.dddheroes.heroesofddd.shared.CreatureId;
-import com.dddheroes.heroesofddd.shared.DomainRule;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
-
-import java.util.List;
 
 public class DwellingTest {
 
@@ -21,7 +17,7 @@ public class DwellingTest {
             .resources(ResourceType.GOLD, Amount.of(3000))
             .plus(ResourceType.CRYSTAL, Amount.of(1));
 
-    protected AggregateTestFixture<Dwelling> fixture;
+    protected AggregateTestFixture<?> fixture;
 
     @BeforeEach
     void setUp() {

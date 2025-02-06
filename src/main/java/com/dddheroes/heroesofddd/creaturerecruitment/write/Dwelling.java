@@ -22,7 +22,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
 @Aggregate
-public class Dwelling {
+class Dwelling {
 
     @AggregateIdentifier
     private DwellingId dwellingId;
@@ -77,7 +77,7 @@ public class Dwelling {
                 creatureId,
                 availableCreatures,
                 command.creatureId(),
-                command.recruit()
+                command.quantity()
         ).verify();
 
         apply(
@@ -85,8 +85,8 @@ public class Dwelling {
                         command.dwellingId(),
                         command.creatureId(),
                         command.toArmy(),
-                        command.recruit(),
-                        costPerTroop.multiply(command.recruit())
+                        command.quantity(),
+                        costPerTroop.multiply(command.quantity())
                 )
         );
     }
@@ -94,7 +94,7 @@ public class Dwelling {
     @EventSourcingHandler
     void on(CreatureRecruited event) {
         // todo: consider if it's OK or RecruitCreature should cause also AvailableCreaturesChanged event
-        this.availableCreatures = this.availableCreatures.minus(new Amount(event.recruited()));
+        this.availableCreatures = this.availableCreatures.minus(new Amount(event.quantity()));
     }
 
     Dwelling() {

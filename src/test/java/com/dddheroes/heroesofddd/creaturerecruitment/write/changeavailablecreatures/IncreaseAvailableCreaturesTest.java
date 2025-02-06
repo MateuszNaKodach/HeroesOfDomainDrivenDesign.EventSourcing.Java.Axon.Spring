@@ -7,7 +7,7 @@ import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-public class IncreaseAvailableCreaturesTest extends DwellingTest {
+class IncreaseAvailableCreaturesTest extends DwellingTest {
 
     @Test
     void givenNotBuildDwellingWhenIncreaseAvailableCreaturesThenException() {
