@@ -1,13 +1,15 @@
 package com.dddheroes.heroesofddd.armies.write.addcreature;
 
 import com.dddheroes.heroesofddd.armies.write.ArmyTest;
+import com.dddheroes.heroesofddd.shared.Amount;
+import com.dddheroes.heroesofddd.shared.CreatureId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.DomainRule;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-public class AddCreatureToArmyTest extends ArmyTest {
+class AddCreatureToArmyTest extends ArmyTest {
 
     @Test
     void givenEmptyArmy_WhenAddCreatureToArmy_ThenSuccess() {
@@ -88,5 +90,8 @@ public class AddCreatureToArmyTest extends ArmyTest {
                .expectEvents(thenEvent);
     }
 
+    private AddCreatureToArmy addCreatureToArmy(CreatureId creatureId, int quantity) {
+        return new AddCreatureToArmy(armyId, creatureId, Amount.of(quantity));
+    }
 
 }

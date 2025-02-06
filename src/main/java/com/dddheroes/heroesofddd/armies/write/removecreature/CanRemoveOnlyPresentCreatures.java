@@ -6,7 +6,7 @@ import com.dddheroes.heroesofddd.shared.DomainRule;
 
 import java.util.Map;
 
-public record OnlyPresentCreaturesCanBeRemoved(
+public record CanRemoveOnlyPresentCreatures(
         CreatureId creatureToRemove,
         Amount quantityToRemove,
         Map<CreatureId, Amount> creatureStacksBeforeRemoved
@@ -20,6 +20,6 @@ public record OnlyPresentCreaturesCanBeRemoved(
 
     @Override
     public String message() {
-        return "Only present creatures can be removed";
+        return "Can remove only present creatures";
     }
 }
