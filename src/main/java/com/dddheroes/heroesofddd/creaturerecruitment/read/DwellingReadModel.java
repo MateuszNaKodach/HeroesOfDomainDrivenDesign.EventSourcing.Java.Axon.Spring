@@ -17,6 +17,7 @@ import java.util.Map;
 
 public class DwellingReadModel {
 
+    @org.springframework.stereotype.Repository
     public interface Repository extends JpaRepository<State, String> {
 
     }
@@ -63,7 +64,7 @@ public class DwellingReadModel {
 
         private final DwellingReadModel.Repository repository;
 
-        public Projection(Repository repository) {
+        public Projection(DwellingReadModel.Repository repository) {
             this.repository = repository;
         }
 
