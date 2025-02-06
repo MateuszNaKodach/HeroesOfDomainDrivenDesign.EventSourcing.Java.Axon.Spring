@@ -1,16 +1,19 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature;
 
 import com.dddheroes.heroesofddd.shared.Amount;
+import com.dddheroes.heroesofddd.shared.CreatureId;
 import com.dddheroes.heroesofddd.shared.DomainRule;
 
 public record RecruitCreaturesNotExceedAvailableCreatures(
+        CreatureId dwellingCreatureId,
         Amount availableCreatures,
+        CreatureId recruitCreatureId,
         Amount recruit
 ) implements DomainRule {
 
     @Override
     public boolean isViolated() {
-        return recruit.compareTo(availableCreatures) > 0;
+        return !dwellingCreatureId.equals(recruitCreatureId) || recruit.compareTo(availableCreatures) > 0;
     }
 
     @Override

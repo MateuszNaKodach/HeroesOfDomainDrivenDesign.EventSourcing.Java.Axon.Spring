@@ -73,7 +73,12 @@ public class Dwelling {
 
     @CommandHandler
     void handle(RecruitCreature command) {
-        new RecruitCreaturesNotExceedAvailableCreatures(availableCreatures, command.recruit()).verify();
+        new RecruitCreaturesNotExceedAvailableCreatures(
+                creatureId,
+                availableCreatures,
+                command.creatureId(),
+                command.recruit()
+        ).verify();
 
         apply(
                 CreatureRecruited.event(
