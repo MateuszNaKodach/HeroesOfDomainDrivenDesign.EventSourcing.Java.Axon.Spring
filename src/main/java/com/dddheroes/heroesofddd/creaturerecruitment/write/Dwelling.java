@@ -36,10 +36,10 @@ public class Dwelling {
         new OnlyNotBuiltBuildingCanBeBuild(dwellingId).verify();
 
         apply(
-                new DwellingBuilt(
-                        command.dwellingId().raw(),
-                        command.creatureId().raw(),
-                        command.costPerTroop().raw()
+                DwellingBuilt.event(
+                        command.dwellingId(),
+                        command.creatureId(),
+                        command.costPerTroop()
                 )
         );
     }
@@ -58,10 +58,10 @@ public class Dwelling {
         // todo: check creatureId for the dwelling!
 
         apply(
-                new AvailableCreaturesChanged(
-                        command.dwellingId().raw(),
-                        command.creatureId().raw(),
-                        availableCreatures.plus(command.increaseBy()).raw()
+                AvailableCreaturesChanged.event(
+                        command.dwellingId(),
+                        command.creatureId(),
+                        availableCreatures.plus(command.increaseBy())
                 )
         );
     }
@@ -76,11 +76,12 @@ public class Dwelling {
         new RecruitCreaturesNotExceedAvailableCreatures(availableCreatures, command.recruit()).verify();
 
         apply(
-                new CreatureRecruited(
-                        command.dwellingId().raw(),
-                        command.creatureId().raw(),
-                        command.recruit().raw(),
-                        costPerTroop.multiply(command.recruit()).raw()
+                CreatureRecruited.event(
+                        command.dwellingId(),
+                        command.creatureId(),
+                        command.toArmy(),
+                        command.recruit(),
+                        costPerTroop.multiply(command.recruit())
                 )
         );
     }

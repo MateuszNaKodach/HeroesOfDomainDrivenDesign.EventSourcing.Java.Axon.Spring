@@ -10,6 +10,10 @@ public record DwellingId(String raw) {
         }
     }
 
+    public static DwellingId of(String raw) {
+        return new DwellingId(raw);
+    }
+
     public static DwellingId random() {
         return new DwellingId(UUID.randomUUID().toString());
     }

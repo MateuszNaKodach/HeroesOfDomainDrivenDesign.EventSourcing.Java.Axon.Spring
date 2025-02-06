@@ -9,6 +9,9 @@ import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
 
+import java.util.Collections;
+import java.util.List;
+
 class DwellingTest {
 
     private final DwellingId dwellingId = DwellingId.random();
@@ -26,8 +29,24 @@ class DwellingTest {
 
     @Test
     void givenNotBuiltDwellingWhenBuildThenBuilt() {
-        fixture.givenNoPriorActivity()
-               .when(new BuildDwelling(dwellingId, angelId, costPerTroop))
-               .expectEvents(new DwellingBuilt(dwellingId.raw(), angelId.raw(), costPerTroop.raw()));
+        // given
+        var givenEvents = List.of();
+
+        // when
+        var whenCommand = buildDwelling();
+
+        // then
+        var thenEvent = dwellingBuilt();
+        fixture.given(givenEvents)
+               .when(whenCommand)
+               .expectEvents(thenEvent);
+    }
+
+    private DwellingBuilt dwellingBuilt() {
+        return DwellingBuilt.event(dwellingId, angelId, costPerTroop);
+    }
+
+    private BuildDwelling buildDwelling() {
+        return BuildDwelling.command(dwellingId.raw(), angelId.raw(), costPerTroop.raw());
     }
 }
