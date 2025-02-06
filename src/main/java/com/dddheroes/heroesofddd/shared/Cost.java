@@ -59,4 +59,21 @@ public class Cost {
     public Amount amountOf(ResourceType type) {
         return resources.getOrDefault(type, Amount.zero());
     }
+
+    public Map<String, Integer> toRaw() {
+        return resources.entrySet().stream()
+                        .collect(Collectors.toMap(
+                                entry -> entry.getKey().name(),
+                                entry -> entry.getValue().raw()
+                        ));
+    }
+
+    public static Cost fromRaw(Map<String, Integer> raw) {
+        Map<ResourceType, Amount> resources = raw.entrySet().stream()
+                                                 .collect(Collectors.toMap(
+                                                         entry -> ResourceType.valueOf(entry.getKey()),
+                                                         entry -> new Amount(entry.getValue())
+                                                 ));
+        return new Cost(resources);
+    }
 }
