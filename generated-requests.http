@@ -29,3 +29,8 @@ Content-Type: application/json
   "armyId": "army-1",
   "quantity": 3
 }
+
+### Dwelling read model
+GET http://localhost:8080/dwellings/{{dwellingId}}
+Content-Type: application/json
+
