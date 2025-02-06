@@ -24,7 +24,8 @@ public class DwellingReadModel {
 
     private Integer availableCreatures;
 
-    DwellingReadModel(String dwellingId, String creatureId, Map<String, Integer> costPerTroop, Integer availableCreatures) {
+    DwellingReadModel(String dwellingId, String creatureId, Map<String, Integer> costPerTroop,
+                      Integer availableCreatures) {
         this.dwellingId = dwellingId;
         this.creatureId = creatureId;
         this.costPerTroop = costPerTroop;
@@ -39,6 +40,22 @@ public class DwellingReadModel {
     DwellingReadModel withAvailableCreaturesDecreasedBy(Integer decreasedBy) {
         this.availableCreatures = this.availableCreatures - decreasedBy;
         return this;
+    }
+
+    public String dwellingId() {
+        return dwellingId;
+    }
+
+    public String creatureId() {
+        return creatureId;
+    }
+
+    public Map<String, Integer> costPerTroop() {
+        return costPerTroop;
+    }
+
+    public Integer availableCreatures() {
+        return availableCreatures;
     }
 
     protected DwellingReadModel() {

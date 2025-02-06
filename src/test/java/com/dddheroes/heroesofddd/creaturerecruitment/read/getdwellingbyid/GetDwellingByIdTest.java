@@ -2,14 +2,18 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
+import com.dddheroes.heroesofddd.shared.ArmyId;
+import com.dddheroes.heroesofddd.shared.CreatureIds;
+import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.awaitility.Awaitility;
-import org.awaitility.core.AssertionCondition;
-import org.awaitility.core.Condition;
-import org.awaitility.core.ThrowingRunnable;
+import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
-import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.queryhandling.QueryGateway;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
-import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -25,52 +29,125 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 class GetDwellingByIdTest {
 
+    public static final Map<String, Integer> PHOENIX_COST = Map.of(
+            ResourceType.GOLD.name(), 2000,
+            ResourceType.MERCURY.name(), 1
+    );
+
     @Autowired
     private QueryGateway queryGateway;
 
+    // AxonServer event store is EventBus, but what about other implementations like JPA? Should I use EventStore instead?
     @Autowired
     private EventGateway eventGateway;
 
-    @Autowired
-    private EventStore eventStore;
-
     @Test
-    void dwellingNotExist() {
-        // when
-        var result = queryGateway.query(GetDwellingById.query("1"), DwellingReadModel.class).join();
-
-        // then
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void dwellingExist() {
+    void projectingDwellingReadModel_TestCase1() {
         // given
-//        eventGateway.publish(new DwellingBuilt("2", "2", new HashMap<>()));
-        eventStore.publish(new GenericDomainEventMessage<>(
-                "Dwelling",
-                "2",
-                0,
-                new DwellingBuilt("2", "2", new HashMap<>())
-        ));
+        var dwellingId = DwellingId.random().raw();
 
         // when
-        var query = GetDwellingById.query("2");
+        var query = GetDwellingById.query(dwellingId);
 
         // then
         awaitUntilAsserted(() -> {
-            var result = queryGateway.query(GetDwellingById.query("2"), DwellingReadModel.class).join();
-            assertThat(result).isNotNull();
+            var result = getDwellingReadModel(query);
+            assertThat(result).isNull();
         });
     }
 
-    private void dwellingDomainEvent(String dwellingId, int sequenceNumber, Object payload) {
-        eventGateway.publish(new GenericDomainEventMessage<>(
+    @Test
+    void projectingDwellingReadModel_TestCase2() {
+        // given
+        var dwellingId = DwellingId.random().raw();
+        var creatureId = CreatureIds.phoenix().raw();
+        givenDwellingEvents(
+                dwellingId,
+                new DwellingBuilt(dwellingId, creatureId, PHOENIX_COST)
+        );
+
+        // when
+        var query = GetDwellingById.query(dwellingId);
+
+        // then
+        awaitUntilAsserted(() -> {
+            var result = getDwellingReadModel(query);
+            assertThat(result).isNotNull();
+            assertThat(result.dwellingId()).isEqualTo(dwellingId);
+            assertThat(result.creatureId()).isEqualTo(creatureId);
+            assertThat(result.costPerTroop()).isEqualTo(PHOENIX_COST);
+            assertThat(result.availableCreatures()).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void projectingDwellingReadModel_TestCase3() {
+        // given
+        var dwellingId = DwellingId.random().raw();
+        var creatureId = CreatureIds.phoenix().raw();
+        givenDwellingEvents(
+                dwellingId,
+                new DwellingBuilt(dwellingId, creatureId, PHOENIX_COST),
+                new AvailableCreaturesChanged(dwellingId, creatureId, 3)
+        );
+
+        // when
+        var query = GetDwellingById.query(dwellingId);
+
+        // then
+        awaitUntilAsserted(() -> {
+            var result = getDwellingReadModel(query);
+            assertThat(result).isNotNull();
+            assertThat(result.dwellingId()).isEqualTo(dwellingId);
+            assertThat(result.creatureId()).isEqualTo(creatureId);
+            assertThat(result.costPerTroop()).isEqualTo(PHOENIX_COST);
+            assertThat(result.availableCreatures()).isEqualTo(3);
+        });
+    }
+
+    @Test
+    void projectingDwellingReadModel_TestCase4() {
+        // given
+        var dwellingId = DwellingId.random().raw();
+        var creatureId = CreatureIds.phoenix().raw();
+        givenDwellingEvents(
+                dwellingId,
+                new DwellingBuilt(dwellingId, creatureId, PHOENIX_COST),
+                new AvailableCreaturesChanged(dwellingId, creatureId, 3),
+                new CreatureRecruited(dwellingId, creatureId, ArmyId.random().raw(), 1, PHOENIX_COST)
+        );
+
+        // when
+        var query = GetDwellingById.query(dwellingId);
+
+        // then
+        awaitUntilAsserted(() -> {
+            var result = getDwellingReadModel(query);
+            assertThat(result).isNotNull();
+            assertThat(result.dwellingId()).isEqualTo(dwellingId);
+            assertThat(result.creatureId()).isEqualTo(creatureId);
+            assertThat(result.costPerTroop()).isEqualTo(PHOENIX_COST);
+            assertThat(result.availableCreatures()).isEqualTo(2);
+        });
+    }
+
+    private DwellingReadModel getDwellingReadModel(GetDwellingById query) {
+        return queryGateway.query(query, DwellingReadModel.class).join();
+    }
+
+    private void givenDwellingEvents(String dwellingId, DwellingEvent... events) {
+        for (int i = 0; i < events.length; i++) {
+            eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]));
+        }
+    }
+
+    private DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
+        return new GenericDomainEventMessage<>(
                 "Dwelling",
                 dwellingId,
                 sequenceNumber,
-                new DwellingBuilt(dwellingId, dwellingId, new HashMap<>())
-        ));
+                payload
+        );
     }
 
     private void awaitUntilAsserted(Runnable assertion) {
