@@ -186,16 +186,16 @@ class RecruitCreatureTest extends DwellingTest {
         return recruitCreature(angelId, recruit);
     }
 
-    private RecruitCreature recruitCreature(CreatureId creatureId, int recruit) {
-        return RecruitCreature.command(dwellingId.raw(), creatureId.raw(), armyId.raw(), recruit);
+    private RecruitCreature recruitCreature(CreatureId creatureId, int quantity) {
+        return RecruitCreature.command(dwellingId.raw(), creatureId.raw(), armyId.raw(), quantity);
     }
 
-    private CreatureRecruited creatureRecruited(int recruit) {
+    private CreatureRecruited creatureRecruited(int quantity) {
         return CreatureRecruited.event(dwellingId,
                                        angelId,
                                        armyId,
-                                       Amount.of(recruit),
-                                       costPerTroop.multiply(Amount.of(recruit)));
+                                       Amount.of(quantity),
+                                       costPerTroop.multiply(Amount.of(quantity)));
     }
 
     private AvailableCreaturesChanged availableCreaturesChanged(int changedTo) {

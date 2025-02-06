@@ -13,7 +13,7 @@ public record CreatureRecruited(
         String dwellingId,
         String creatureId,
         String toArmy,
-        Integer recruited,
+        Integer quantity,
         Map<String, Integer> totalCost
 ) implements DwellingEvent {
 
@@ -21,14 +21,14 @@ public record CreatureRecruited(
             DwellingId dwellingId,
             CreatureId creatureId,
             ArmyId toArmy,
-            Amount recruited,
+            Amount quantity,
             Cost totalCost
     ) {
         return new CreatureRecruited(
                 dwellingId.raw(),
                 creatureId.raw(),
                 toArmy.raw(),
-                recruited.raw(),
+                quantity.raw(),
                 totalCost.raw()
         );
     }
