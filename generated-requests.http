@@ -1,0 +1,36 @@
+### BuildDwelling
+@dwellingId = dwelling-1
+PUT http://localhost:8080/dwellings/{{dwellingId}}
+Content-Type: application/json
+
+{
+  "creatureId": "angel",
+  "costPerTroop": {
+    "gold": 3000,
+    "gems": 1
+  }
+}
+
+### IncreaseAvailableCreatures
+PUT http://localhost:8080/dwellings/{{dwellingId}}/available-creatures-increases
+Content-Type: application/json
+
+{
+  "creatureId": "angel",
+  "increaseBy": 1
+}
+
+### RecruitCreature
+PUT http://localhost:8080/dwellings/{{dwellingId}}/creature-recruitments
+Content-Type: application/json
+
+{
+  "creatureId": "angel",
+  "armyId": "army-1",
+  "quantity": 3
+}
+
+### Dwelling read model
+GET http://localhost:8080/dwellings/{{dwellingId}}
+Content-Type: application/json
+

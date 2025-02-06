@@ -71,9 +71,14 @@ public class Cost {
     public static Cost fromRaw(Map<String, Integer> raw) {
         Map<ResourceType, Amount> resources = raw.entrySet().stream()
                                                  .collect(Collectors.toMap(
-                                                         entry -> ResourceType.valueOf(entry.getKey()),
+                                                         entry -> ResourceType.from(entry.getKey()),
                                                          entry -> new Amount(entry.getValue())
                                                  ));
         return new Cost(resources);
+    }
+
+    // required by Jackson
+    public Map<ResourceType, Amount> getResources() {
+        return new HashMap<>(resources);
     }
 }
