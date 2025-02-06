@@ -21,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
@@ -73,10 +74,10 @@ class GetDwellingByIdTest {
         awaitUntilAsserted(() -> {
             var result = getDwellingReadModel(query);
             assertThat(result).isNotNull();
-            assertThat(result.dwellingId()).isEqualTo(dwellingId);
-            assertThat(result.creatureId()).isEqualTo(creatureId);
-            assertThat(result.costPerTroop()).isEqualTo(PHOENIX_COST);
-            assertThat(result.availableCreatures()).isEqualTo(0);
+            assertThat(result.getDwellingId()).isEqualTo(dwellingId);
+            assertThat(result.getCreatureId()).isEqualTo(creatureId);
+            assertThat(result.getCostPerTroop()).isEqualTo(PHOENIX_COST);
+            assertThat(result.getAvailableCreatures()).isEqualTo(0);
         });
     }
 
@@ -98,10 +99,10 @@ class GetDwellingByIdTest {
         awaitUntilAsserted(() -> {
             var result = getDwellingReadModel(query);
             assertThat(result).isNotNull();
-            assertThat(result.dwellingId()).isEqualTo(dwellingId);
-            assertThat(result.creatureId()).isEqualTo(creatureId);
-            assertThat(result.costPerTroop()).isEqualTo(PHOENIX_COST);
-            assertThat(result.availableCreatures()).isEqualTo(3);
+            assertThat(result.getDwellingId()).isEqualTo(dwellingId);
+            assertThat(result.getCreatureId()).isEqualTo(creatureId);
+            assertThat(result.getCostPerTroop()).isEqualTo(PHOENIX_COST);
+            assertThat(result.getAvailableCreatures()).isEqualTo(3);
         });
     }
 
@@ -124,10 +125,10 @@ class GetDwellingByIdTest {
         awaitUntilAsserted(() -> {
             var result = getDwellingReadModel(query);
             assertThat(result).isNotNull();
-            assertThat(result.dwellingId()).isEqualTo(dwellingId);
-            assertThat(result.creatureId()).isEqualTo(creatureId);
-            assertThat(result.costPerTroop()).isEqualTo(PHOENIX_COST);
-            assertThat(result.availableCreatures()).isEqualTo(2);
+            assertThat(result.getDwellingId()).isEqualTo(dwellingId);
+            assertThat(result.getCreatureId()).isEqualTo(creatureId);
+            assertThat(result.getCostPerTroop()).isEqualTo(PHOENIX_COST);
+            assertThat(result.getAvailableCreatures()).isEqualTo(2);
         });
     }
 
