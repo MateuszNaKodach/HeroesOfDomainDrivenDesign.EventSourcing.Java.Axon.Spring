@@ -60,7 +60,7 @@ public class Cost {
         return resources.getOrDefault(type, Amount.zero());
     }
 
-    public Map<String, Integer> toRaw() {
+    public Map<String, Integer> raw() {
         return resources.entrySet().stream()
                         .collect(Collectors.toMap(
                                 entry -> entry.getKey().name(),

@@ -3,6 +3,13 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.OnlyNotBuiltBuildingCanBeBuild;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.OnlyBuiltDwellingCanHaveAvailableCreatures;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreaturesNotExceedAvailableCreatures;
+import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.Cost;
 import com.dddheroes.heroesofddd.shared.CreatureId;
 import org.axonframework.commandhandling.CommandHandler;
@@ -21,6 +28,7 @@ public class Dwelling {
     private DwellingId dwellingId;
     private CreatureId creatureId;
     private Cost costPerTroop;
+    private Amount availableCreatures;
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
@@ -31,7 +39,7 @@ public class Dwelling {
                 new DwellingBuilt(
                         command.dwellingId().raw(),
                         command.creatureId().raw(),
-                        command.costPerTroop().toRaw()
+                        command.costPerTroop().raw()
                 )
         );
     }
@@ -41,6 +49,45 @@ public class Dwelling {
         this.dwellingId = new DwellingId(event.dwellingId());
         this.creatureId = new CreatureId(event.creatureId());
         this.costPerTroop = Cost.fromRaw(event.costPerTroop());
+        this.availableCreatures = Amount.zero();
+    }
+
+    @CommandHandler
+    void handle(IncreaseAvailableCreatures command) {
+        new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
+        // todo: check creatureId for the dwelling!
+
+        apply(
+                new AvailableCreaturesChanged(
+                        command.dwellingId().raw(),
+                        command.creatureId().raw(),
+                        availableCreatures.plus(command.increaseBy()).raw()
+                )
+        );
+    }
+
+    @EventSourcingHandler
+    void on(AvailableCreaturesChanged event) {
+        this.availableCreatures = Amount.of(event.changedTo());
+    }
+
+    @CommandHandler
+    void handle(RecruitCreature command) {
+        new RecruitCreaturesNotExceedAvailableCreatures(availableCreatures, command.recruit()).verify();
+
+        apply(
+                new CreatureRecruited(
+                        command.dwellingId().raw(),
+                        command.creatureId().raw(),
+                        command.recruit().raw(),
+                        costPerTroop.multiply(command.recruit()).raw()
+                )
+        );
+    }
+
+    @EventSourcingHandler
+    void on(CreatureRecruited event) {
+        this.availableCreatures = this.availableCreatures.minus(Amount.of(event.recruited()));
     }
 
     Dwelling() {

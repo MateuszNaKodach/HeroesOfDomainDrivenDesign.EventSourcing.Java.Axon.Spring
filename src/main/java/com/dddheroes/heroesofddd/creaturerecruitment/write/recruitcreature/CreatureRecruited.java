@@ -1,13 +1,14 @@
-package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
+package com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 
 import java.util.Map;
 
-public record DwellingBuilt(
+public record CreatureRecruited(
         String dwellingId,
         String creatureId,
-        Map<String, Integer> costPerTroop
+        Integer recruited,
+        Map<String, Integer> totalCost
 ) implements DwellingEvent {
 
 }

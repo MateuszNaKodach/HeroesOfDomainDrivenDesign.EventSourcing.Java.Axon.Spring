@@ -28,6 +28,6 @@ class DwellingTest {
     void givenNotBuiltDwellingWhenBuildThenBuilt() {
         fixture.givenNoPriorActivity()
                .when(new BuildDwelling(dwellingId, angelId, costPerTroop))
-               .expectEvents(new DwellingBuilt(dwellingId.raw(), angelId.raw(), costPerTroop.toRaw()));
+               .expectEvents(new DwellingBuilt(dwellingId.raw(), angelId.raw(), costPerTroop.raw()));
     }
 }
