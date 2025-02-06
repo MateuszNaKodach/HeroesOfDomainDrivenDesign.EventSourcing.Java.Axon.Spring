@@ -16,7 +16,7 @@ class GetDwellingByIdQueryHandler {
     }
 
     @QueryHandler
-    Optional<DwellingReadModel> handle(GetDwellingById query){
-        return dwellingReadModelRepository.findById(query.dwellingId().raw());
+    DwellingReadModel handle(GetDwellingById query){
+        return dwellingReadModelRepository.findById(query.dwellingId().raw()).orElse(null);
     }
 }
