@@ -44,16 +44,13 @@ class Army {
 
     @EventSourcingHandler
     void on(CreatureAddedToArmy event) {
+        this.armyId = new ArmyId(event.armyId());
         creatureStacks.merge(new CreatureId(event.creatureId()), new Amount(event.quantity()), Amount::plus);
     }
 
     @CommandHandler
     void handle(RemoveCreatureFromArmy command) {
-        new OnlyPresentCreaturesCanBeRemoved(
-                command.creatureId(),
-                command.quantity(),
-                creatureStacks
-        ).verify();
+        new OnlyPresentCreaturesCanBeRemoved(command.creatureId(), command.quantity(), creatureStacks).verify();
 
         apply(
                 CreatureRemovedFromArmy.event(
