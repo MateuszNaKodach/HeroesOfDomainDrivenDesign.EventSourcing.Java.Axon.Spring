@@ -73,11 +73,11 @@ class Dwelling {
     }
 
     @CommandHandler
-    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
+//    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     void handle(RecruitCreature command) {
-        if(dwellingId == null){
-            throw new DomainRule.ViolatedException("Only not built building can be build");
-        }
+//        if(dwellingId == null){
+//            throw new DomainRule.ViolatedException("Only not built building can be build");
+//        }
         new RecruitCreaturesNotExceedAvailableCreatures(
                 creatureId,
                 availableCreatures,
