@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.creaturerecruitment.read.dwelling;
+package com.dddheroes.heroesofddd.creaturerecruitment.read;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
@@ -9,9 +9,9 @@ import org.springframework.stereotype.Component;
 @Component
 class DwellingReadModelProjector {
 
-    private final DwellingReadModelStateRepository repository;
+    private final DwellingReadModelRepository repository;
 
-    DwellingReadModelProjector(DwellingReadModelStateRepository repository) {
+    DwellingReadModelProjector(DwellingReadModelRepository repository) {
         this.repository = repository;
     }
 

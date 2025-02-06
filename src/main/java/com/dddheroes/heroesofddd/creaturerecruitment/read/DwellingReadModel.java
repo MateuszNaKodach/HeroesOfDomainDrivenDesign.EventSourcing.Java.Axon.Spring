@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.creaturerecruitment.read.dwelling;
+package com.dddheroes.heroesofddd.creaturerecruitment.read;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,10 +11,10 @@ import java.util.Map;
 
 @Entity
 @Table(name = "read_model_dwelling")
-class DwellingReadModel {
+public class DwellingReadModel {
 
     @Id
-    private String id;
+    private String dwellingId;
 
     private String creatureId;
 
@@ -24,15 +24,11 @@ class DwellingReadModel {
 
     private Integer availableCreatures;
 
-    DwellingReadModel(String id, String creatureId, Map<String, Integer> costPerTroop, Integer availableCreatures) {
-        this.id = id;
+    DwellingReadModel(String dwellingId, String creatureId, Map<String, Integer> costPerTroop, Integer availableCreatures) {
+        this.dwellingId = dwellingId;
         this.creatureId = creatureId;
         this.costPerTroop = costPerTroop;
         this.availableCreatures = availableCreatures;
-    }
-
-    protected DwellingReadModel() {
-        // Required by JPA
     }
 
     DwellingReadModel withAvailableCreatures(Integer availableCreatures) {
@@ -43,5 +39,9 @@ class DwellingReadModel {
     DwellingReadModel withAvailableCreaturesDecreasedBy(Integer decreasedBy) {
         this.availableCreatures = this.availableCreatures - decreasedBy;
         return this;
+    }
+
+    protected DwellingReadModel() {
+        // Required by JPA
     }
 }
