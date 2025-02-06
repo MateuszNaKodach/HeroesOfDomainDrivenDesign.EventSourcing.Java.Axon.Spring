@@ -3,8 +3,10 @@ package com.dddheroes.heroesofddd.armies.write.addcreature;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureId;
+import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 public record AddCreatureToArmy(
+        @TargetAggregateIdentifier
         ArmyId armyId,
         CreatureId creatureId,
         Amount quantity
