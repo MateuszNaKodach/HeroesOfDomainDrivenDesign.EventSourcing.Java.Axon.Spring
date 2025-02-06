@@ -1,0 +1,12 @@
+###
+@dwellingId = dwelling-1
+PUT http://localhost:8080/dwellings/{{dwellingId}}
+Content-Type: application/json
+
+{
+  "creatureId": "angel",
+  "costPerTroop": {
+    "gold": 3000,
+    "gems": 1
+  }
+}
