@@ -4,6 +4,7 @@ import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
 import com.dddheroes.heroesofddd.armies.write.addcreature.CreatureAddedToArmy;
 import com.dddheroes.heroesofddd.armies.write.addcreature.CanHaveMax7CreatureStacksInArmy;
 import com.dddheroes.heroesofddd.armies.write.removecreature.CreatureRemovedFromArmy;
+import com.dddheroes.heroesofddd.armies.write.removecreature.OnlyPresentCreaturesCanBeRemoved;
 import com.dddheroes.heroesofddd.armies.write.removecreature.RemoveCreatureFromArmy;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
@@ -48,10 +49,11 @@ class Army {
 
     @CommandHandler
     void handle(RemoveCreatureFromArmy command) {
-        var currentQuantity = creatureStacks.getOrDefault(command.creatureId(), Amount.zero());
-        if (currentQuantity.raw() < command.quantity().raw()) {
-            throw new IllegalStateException("Not enough creatures to remove");
-        }
+        new OnlyPresentCreaturesCanBeRemoved(
+                command.creatureId(),
+                command.quantity(),
+                creatureStacks
+        ).verify();
 
         apply(
                 CreatureRemovedFromArmy.event(

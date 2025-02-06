@@ -7,20 +7,19 @@ import com.dddheroes.heroesofddd.shared.DomainRule;
 import java.util.Map;
 
 public record OnlyPresentCreaturesCanBeRemoved(
-        CreatureId creatureToAdd,
-        Map<CreatureId, Amount> creatureStacksBeforeAdd
+        CreatureId creatureToRemove,
+        Amount quantityToRemove,
+        Map<CreatureId, Amount> creatureStacksBeforeRemoved
 ) implements DomainRule {
-
-    private static final int MAX_CREATURE_STACKS = 7;
 
     @Override
     public boolean isViolated() {
-        return creatureStacksBeforeAdd.size() >= MAX_CREATURE_STACKS
-                && !creatureStacksBeforeAdd.containsKey(creatureToAdd);
+        return creatureStacksBeforeRemoved
+                .getOrDefault(creatureToRemove, Amount.zero()).raw() < quantityToRemove.raw();
     }
 
     @Override
     public String message() {
-        return "Cannot add more than 7 different creature stacks to the army";
+        return "Only present creatures can be removed";
     }
 }
