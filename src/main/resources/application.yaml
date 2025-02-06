@@ -20,4 +20,4 @@ axon:
   serializer:
     general: jackson
   axonserver:
-    enabled: false
+    enabled: true

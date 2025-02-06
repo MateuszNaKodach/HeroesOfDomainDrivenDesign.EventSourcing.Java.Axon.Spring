@@ -76,4 +76,9 @@ public class Cost {
                                                  ));
         return new Cost(resources);
     }
+
+    // required by Jackson
+    public Map<ResourceType, Amount> getResources() {
+        return new HashMap<>(resources);
+    }
 }
