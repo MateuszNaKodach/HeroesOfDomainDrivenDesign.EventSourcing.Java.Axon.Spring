@@ -1,6 +1,6 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write;
 
-public interface DwellingEvent {
+public interface DwellingCommand {
 
-    String dwellingId();
+    DwellingId dwellingId();
 }
