@@ -68,7 +68,7 @@ public class Dwelling {
 
     @EventSourcingHandler
     void on(AvailableCreaturesChanged event) {
-        this.availableCreatures = Amount.of(event.changedTo());
+        this.availableCreatures = new Amount(event.changedTo());
     }
 
     @CommandHandler
@@ -88,7 +88,7 @@ public class Dwelling {
 
     @EventSourcingHandler
     void on(CreatureRecruited event) {
-        this.availableCreatures = this.availableCreatures.minus(Amount.of(event.recruited()));
+        this.availableCreatures = this.availableCreatures.minus(new Amount(event.recruited()));
     }
 
     Dwelling() {

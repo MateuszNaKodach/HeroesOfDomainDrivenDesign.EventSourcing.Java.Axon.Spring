@@ -1,18 +1,18 @@
-package com.dddheroes.heroesofddd.creaturerecruitment.write;
+package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.Cost;
 import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.DomainRule;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
 
-import java.util.Collections;
 import java.util.List;
 
-class DwellingTest {
+class BuildDwellingTest {
 
     private final DwellingId dwellingId = DwellingId.random();
     private final CreatureId angelId = CreatureId.of("angel");
@@ -40,6 +40,23 @@ class DwellingTest {
         fixture.given(givenEvents)
                .when(whenCommand)
                .expectEvents(thenEvent);
+    }
+
+    @Test
+    void givenBuiltDwellingWhenBuildThenException() {
+        // given
+        var givenEvents = List.of(
+                dwellingBuilt()
+        );
+
+        // when
+        var whenCommand = buildDwelling();
+
+        // then
+        fixture.given(givenEvents)
+               .when(whenCommand)
+               .expectException(DomainRule.ViolatedException.class)
+               .expectExceptionMessage("Only not built building can be build");
     }
 
     private DwellingBuilt dwellingBuilt() {
