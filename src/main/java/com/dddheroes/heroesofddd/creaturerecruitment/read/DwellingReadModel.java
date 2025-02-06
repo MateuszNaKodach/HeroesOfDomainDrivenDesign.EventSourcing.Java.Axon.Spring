@@ -10,17 +10,11 @@ import jakarta.persistence.Table;
 import org.axonframework.eventhandling.EventHandler;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 public class DwellingReadModel {
-
-    @org.springframework.stereotype.Repository
-    public interface Repository extends JpaRepository<State, String> {
-
-    }
 
     @Entity
     @Table(name = "read_model_dwelling")
@@ -62,9 +56,9 @@ public class DwellingReadModel {
     @Component
     public static class Projection {
 
-        private final DwellingReadModel.Repository repository;
+        private final StateRepository repository;
 
-        public Projection(DwellingReadModel.Repository repository) {
+        public Projection(StateRepository repository) {
             this.repository = repository;
         }
 

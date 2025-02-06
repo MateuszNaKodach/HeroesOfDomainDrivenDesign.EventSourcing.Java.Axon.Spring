@@ -12,6 +12,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Recru
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.Cost;
 import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.DomainRule;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
@@ -31,7 +32,7 @@ class Dwelling {
     private Amount availableCreatures;
 
     @CommandHandler
-    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
+    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
     void handle(BuildDwelling command) {
         new OnlyNotBuiltBuildingCanBeBuild(dwellingId).verify();
 
@@ -72,7 +73,11 @@ class Dwelling {
     }
 
     @CommandHandler
+    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     void handle(RecruitCreature command) {
+        if(dwellingId == null){
+            throw new DomainRule.ViolatedException("Only not built building can be build");
+        }
         new RecruitCreaturesNotExceedAvailableCreatures(
                 creatureId,
                 availableCreatures,
