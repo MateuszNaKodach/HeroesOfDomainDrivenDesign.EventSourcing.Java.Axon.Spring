@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.calendar.write.startday;
+package com.dddheroes.heroesofddd.calendar.write.finishday;
 
 import com.dddheroes.heroesofddd.calendar.write.CalendarCommand;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
@@ -7,7 +7,7 @@ import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
-public record StartDay(
+public record FinishDay(
         @TargetAggregateIdentifier
         CalendarId calendarId,
         Month month,
@@ -15,7 +15,7 @@ public record StartDay(
         Day day
 ) implements CalendarCommand {
 
-    public static StartDay command(String calendarId, Integer month, Integer week, Integer day) {
-        return new StartDay(CalendarId.of(calendarId), Month.of(month), Week.of(week), Day.of(day));
+    public static FinishDay command(String calendarId, Integer month, Integer week, Integer day) {
+        return new FinishDay(CalendarId.of(calendarId), Month.of(month), Week.of(week), Day.of(day));
     }
 }
