@@ -10,6 +10,8 @@ import com.dddheroes.heroesofddd.shared.DomainRule;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class StartDayTest extends CalendarTest {
 
@@ -64,6 +66,28 @@ public class StartDayTest extends CalendarTest {
                .when(whenCommand)
                .expectException(DomainRule.ViolatedException.class)
                .expectExceptionMessage("Cannot skip days");
+    }
+
+    @Test
+    void givenLastDayOfFinished_WhenStartDayOfNextWeek_ThenNewWeekStarted() {
+        // given
+        var calendarId = CalendarId.random();
+        var givenEvents = IntStream.rangeClosed(1, 7)
+                                   .mapToObj(day -> List.of(
+                                           DayStarted.event(calendarId, Month.of(1), Week.of(1), Day.of(day)),
+                                           DayFinished.event(calendarId, Month.of(1), Week.of(1), Day.of(day))
+                                   ))
+                                   .flatMap(List::stream)
+                                   .collect(Collectors.toList());
+
+        // when
+        var whenCommand = StartDay.command(calendarId.raw(), 1, 2, 1);
+
+        // then
+        var thenEvent = DayStarted.event(calendarId, Month.of(1), Week.of(2), Day.of(1));
+        fixture.given(givenEvents)
+               .when(whenCommand)
+               .expectEvents(thenEvent);
     }
 
 }
