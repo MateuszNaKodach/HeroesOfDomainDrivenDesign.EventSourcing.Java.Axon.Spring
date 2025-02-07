@@ -21,3 +21,11 @@ axon:
     general: jackson
   axonserver:
     enabled: true
+  eventhandling:
+    processors:
+      Automation_WhenCreatureRecruitedThenAddToArmy_Processor:
+        mode: pooled
+        dlq:
+          enabled: true
+      ReadModel_Dwelling:
+        mode: pooled

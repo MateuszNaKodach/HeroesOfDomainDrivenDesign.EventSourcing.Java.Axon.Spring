@@ -10,6 +10,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Creat
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.utils.AwaitilityUtils;
 import org.awaitility.Awaitility;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
@@ -24,13 +25,14 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.*;
 import static org.assertj.core.api.Assertions.*;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 class GetDwellingByIdTest {
 
-    public static final Map<String, Integer> PHOENIX_COST = Map.of(
+    private static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
             ResourceType.MERCURY.name(), 1
     );
@@ -149,12 +151,5 @@ class GetDwellingByIdTest {
                 sequenceNumber,
                 payload
         );
-    }
-
-    private void awaitUntilAsserted(Runnable assertion) {
-        Awaitility.await()
-                  .pollInSameThread()
-                  .atMost(Duration.ofSeconds(5))
-                  .untilAsserted(assertion::run);
     }
 }
