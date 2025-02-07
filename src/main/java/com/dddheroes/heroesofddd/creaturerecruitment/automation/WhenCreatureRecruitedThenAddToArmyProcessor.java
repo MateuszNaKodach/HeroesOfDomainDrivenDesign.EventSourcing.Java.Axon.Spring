@@ -4,10 +4,12 @@ import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
+import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenCreatureRecruitedThenAddToArmy_Processor")
+@DisallowReplay
 @Component
 class WhenCreatureRecruitedThenAddToArmyProcessor {
 
