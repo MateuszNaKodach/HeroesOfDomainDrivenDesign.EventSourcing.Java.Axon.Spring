@@ -18,7 +18,7 @@ public record AddCreatureToArmy(
         }
     }
 
-    public AddCreatureToArmy command(String armyId, String creatureId, int quantity) {
+    public static AddCreatureToArmy command(String armyId, String creatureId, int quantity) {
         return new AddCreatureToArmy(new ArmyId(armyId), new CreatureId(creatureId), new Amount(quantity));
     }
 }
