@@ -14,7 +14,7 @@ public record CannotSkipDays(
 
     @Override
     public boolean isViolated() {
-        return isStartForTheNextDay();
+        return !isStartForTheNextDay();
     }
 
     @Override
@@ -23,7 +23,7 @@ public record CannotSkipDays(
     }
 
     public boolean isStartForTheNextDay() {
-        if (currentDay.raw() == 0) {
+        if (currentDay == null) {
             return true; // First day
         }
 

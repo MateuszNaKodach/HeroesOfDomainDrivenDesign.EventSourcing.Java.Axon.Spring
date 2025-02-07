@@ -14,9 +14,10 @@ public record CanOnlyFinishCurrentDay(
 
     @Override
     public boolean isViolated() {
-        return command.month().equals(currentMonth)
+        boolean isCurrentDay = command.month().equals(currentMonth)
                 && command.week().equals(currentWeek)
                 && command.day().equals(currentDay);
+        return !isCurrentDay;
     }
 
     @Override
