@@ -20,7 +20,7 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
     }
 
     @EventHandler
-    void on(CreatureRecruited event) {
+    void react(CreatureRecruited event) {
         var command = AddCreatureToArmy.command(
                 event.toArmy(),
                 event.creatureId(),
