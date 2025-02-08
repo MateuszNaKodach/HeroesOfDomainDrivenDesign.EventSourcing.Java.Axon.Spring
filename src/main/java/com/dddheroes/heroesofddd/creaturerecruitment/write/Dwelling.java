@@ -56,7 +56,7 @@ class Dwelling {
     @CommandHandler
     void handle(IncreaseAvailableCreatures command) {
         new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
-        // todo: check creatureId for the dwelling!
+        // todo: check weekOf for the dwelling!
 
         apply(
                 AvailableCreaturesChanged.event(
