@@ -27,7 +27,7 @@ class Calendar {
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
         // performance downside in comparison to constructor
-    void handle(StartDay command) {
+    void decide(StartDay command) {
         new CannotSkipDays(command, currentMonth, currentWeek, currentDay).verify();
 
         apply(
@@ -41,7 +41,7 @@ class Calendar {
     }
 
     @EventSourcingHandler
-    void on(DayStarted event) {
+    void evolve(DayStarted event) {
         calendarId = new CalendarId(event.calendarId());
         currentMonth = new Month(event.month());
         currentWeek = new Week(event.week());
@@ -49,7 +49,7 @@ class Calendar {
     }
 
     @CommandHandler
-    void handle(FinishDay command) {
+    void decide(FinishDay command) {
         new CanOnlyFinishCurrentDay(command, currentMonth, currentWeek, currentDay).verify();
 
         apply(

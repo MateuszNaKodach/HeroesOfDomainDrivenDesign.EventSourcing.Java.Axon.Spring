@@ -31,7 +31,7 @@ class Army {
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
-    void handle(AddCreatureToArmy command) {
+    void decide(AddCreatureToArmy command) {
         new CanHaveMax7CreatureStacksInArmy(command.creatureId(), creatureStacks).verify();
 
         apply(
@@ -44,13 +44,13 @@ class Army {
     }
 
     @EventSourcingHandler
-    void on(CreatureAddedToArmy event) {
+    void evolve(CreatureAddedToArmy event) {
         this.armyId = new ArmyId(event.armyId());
         creatureStacks.merge(new CreatureId(event.creatureId()), new Amount(event.quantity()), Amount::plus);
     }
 
     @CommandHandler
-    void handle(RemoveCreatureFromArmy command) {
+    void decide(RemoveCreatureFromArmy command) {
         new CanRemoveOnlyPresentCreatures(command.creatureId(), command.quantity(), creatureStacks).verify();
 
         apply(
@@ -63,7 +63,7 @@ class Army {
     }
 
     @EventSourcingHandler
-    void on(CreatureRemovedFromArmy event) {
+    void evolve(CreatureRemovedFromArmy event) {
         var creatureId = new CreatureId(event.creatureId());
         var currentQuantity = creatureStacks.get(creatureId);
         var removedQuantity = new Amount(event.quantity());

@@ -33,7 +33,7 @@ class Dwelling {
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
-    void handle(BuildDwelling command) {
+    void decide(BuildDwelling command) {
         new OnlyNotBuiltBuildingCanBeBuild(dwellingId).verify();
 
         apply(
@@ -46,7 +46,7 @@ class Dwelling {
     }
 
     @EventSourcingHandler
-    void on(DwellingBuilt event) {
+    void evolve(DwellingBuilt event) {
         this.dwellingId = new DwellingId(event.dwellingId());
         this.creatureId = new CreatureId(event.creatureId());
         this.costPerTroop = Cost.fromRaw(event.costPerTroop());
@@ -54,7 +54,7 @@ class Dwelling {
     }
 
     @CommandHandler
-    void handle(IncreaseAvailableCreatures command) {
+    void decide(IncreaseAvailableCreatures command) {
         new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
         // todo: check creatureId for the dwelling!
 
@@ -68,13 +68,13 @@ class Dwelling {
     }
 
     @EventSourcingHandler
-    void on(AvailableCreaturesChanged event) {
+    void evolve(AvailableCreaturesChanged event) {
         this.availableCreatures = new Amount(event.changedTo());
     }
 
     @CommandHandler
 //    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
-    void handle(RecruitCreature command) {
+    void decide(RecruitCreature command) {
 //        if(dwellingId == null){
 //            throw new DomainRule.ViolatedException("Only not built building can be build");
 //        }
@@ -97,7 +97,7 @@ class Dwelling {
     }
 
     @EventSourcingHandler
-    void on(CreatureRecruited event) {
+    void evolve(CreatureRecruited event) {
         // todo: consider if it's OK or RecruitCreature should cause also AvailableCreaturesChanged event
         this.availableCreatures = this.availableCreatures.minus(new Amount(event.quantity()));
     }
