@@ -22,6 +22,6 @@ public record CanOnlyFinishCurrentDay(
 
     @Override
     public String message() {
-        return "Cannot skip days";
+        return "Can only finish current day";
     }
 }
