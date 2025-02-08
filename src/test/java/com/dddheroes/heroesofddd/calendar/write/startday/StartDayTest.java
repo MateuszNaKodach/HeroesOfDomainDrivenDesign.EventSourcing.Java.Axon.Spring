@@ -26,8 +26,8 @@ public class StartDayTest extends CalendarTest {
         // then
         var thenEvent = DayStarted.event(calendarId, Month.of(1), Week.of(1), Day.of(1));
         fixture.givenNoPriorActivity()
-                .when(whenCommand)
-                .expectEvents(thenEvent);
+               .when(whenCommand)
+               .expectEvents(thenEvent);
     }
 
     @Test
@@ -90,4 +90,35 @@ public class StartDayTest extends CalendarTest {
                .expectEvents(thenEvent);
     }
 
+    @Test
+    void givenLastDayOfMonthFinished_WhenStartDayOfNextMonth_ThenNewMonthStarted() {
+        // given
+        var calendarId = CalendarId.random();
+        var givenEvents = IntStream.rangeClosed(1, 4)
+                                   .mapToObj(week -> IntStream.rangeClosed(1, 7)
+                                                              .mapToObj(day -> List.of(
+                                                                      DayStarted.event(calendarId,
+                                                                                       Month.of(1),
+                                                                                       Week.of(week),
+                                                                                       Day.of(day)),
+                                                                      DayFinished.event(calendarId,
+                                                                                        Month.of(1),
+                                                                                        Week.of(week),
+                                                                                        Day.of(day))
+                                                              ))
+                                                              .flatMap(List::stream)
+                                                              .collect(Collectors.toList())
+                                   )
+                                   .flatMap(List::stream)
+                                   .collect(Collectors.toList());
+
+        // when
+        var whenCommand = StartDay.command(calendarId.raw(), 2, 1, 1);
+
+        // then
+        var thenEvent = DayStarted.event(calendarId, Month.of(2), Week.of(1), Day.of(1));
+        fixture.given(givenEvents)
+               .when(whenCommand)
+               .expectEvents(thenEvent);
+    }
 }
