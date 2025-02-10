@@ -8,8 +8,6 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.eventhandling.SequenceNumber;
-import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.stereotype.Component;
 
@@ -49,6 +47,6 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
                 dwelling.getCreatureId(),
                 increaseBy
         );
-        commandGateway.send(command);
+        commandGateway.sendAndWait(command);
     }
 }
