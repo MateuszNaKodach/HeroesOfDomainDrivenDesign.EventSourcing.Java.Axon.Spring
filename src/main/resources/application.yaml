@@ -27,5 +27,13 @@ axon:
         mode: pooled
         dlq:
           enabled: true
+      Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor:
+        mode: pooled
+        dlq:
+          enabled: true
+      Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor:
+        mode: pooled
+        dlq:
+          enabled: true
       ReadModel_Dwelling:
         mode: pooled

@@ -1,0 +1,12 @@
+package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures;
+
+import org.axonframework.config.ProcessingGroup;
+import org.axonframework.eventhandling.DisallowReplay;
+import org.springframework.stereotype.Component;
+
+@ProcessingGroup("Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor")
+@DisallowReplay
+@Component
+class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
+
+}
