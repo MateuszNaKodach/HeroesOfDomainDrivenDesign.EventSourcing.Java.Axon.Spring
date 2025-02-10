@@ -1,7 +1,7 @@
 # Heroes of Domain-Driven Design (Java)
 Shows how to use Domain-Driven Design, Event Storming, Event Modeling and Event Sourcing in Heroes of Might & Magic III domain.
 
-👉 See implementation also in: [Ruby](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Ruby) | **Java + Spring + Axon**
+👉 See also implementations in: [Ruby](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Ruby) | **Java + Spring + Axon**
 
 👉 [Let's explore the Heroes of Domain-Driven Design blogpost series](https://dddheroes.com/)
 - There you will get familiar with the whole Software Development process: from knowledge crunching with domain experts, designing solution using Event Modeling, to implementation using DDD Building Blocks.
@@ -48,7 +48,7 @@ Slices:
 - Write: [BuildDwelling -> DwellingBuilt](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java)
 - Write: [IncreaseAvailableCreatures -> AvailableCreaturesChanged](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesTest.java)
 - Write: [RecruitCreature -> CreatureRecruited](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature)
-- Read: [(DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) -> DwellingReadModel][DwellingReadModelProjector.java](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java)
+- Read: (DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) -> DwellingReadModel [projector](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java)
   - GetDwellingById: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdQueryHandler.java) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdTest.java)
 
 Aggregates:
@@ -78,7 +78,7 @@ Slices:
 Aggregates:
 - [Calendar](heroesofddd_rails_application/lib/heroes/calendar/write/calendar.rb)
 
-## Screaming Architecture
+## 🏛️ Screaming Architecture
 // todo: fix this descirption, add screen
 All of this is an example of screaming architecture, where you can see the possible operations (command, queries) what may happen in your app (events) and what are the rules.
 
