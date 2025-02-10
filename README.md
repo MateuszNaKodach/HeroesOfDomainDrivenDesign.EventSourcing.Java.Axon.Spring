@@ -50,7 +50,8 @@ Slices:
 - Write: [RecruitCreature -> CreatureRecruited](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature)
 - Read: (DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) -> DwellingReadModel [projector](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java)
   - GetDwellingById: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdQueryHandler.java) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdTest.java)
-  - GetAllDwellngs: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java)
+  - GetAllDwellings: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java)
+- Automation: [WhenCreatureRecruitedThenAddToArmy](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/automation/WhenCreatureRecruitedThenAddToArmyProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/automation/WhenCreatureRecruitedThenAddToArmyTest.java)
 
 Aggregates:
 - [Dwelling](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/Dwelling.java)
@@ -78,6 +79,16 @@ Slices:
 
 Aggregates:
 - [Calendar](src/main/java/com/dddheroes/heroesofddd/calendar/write/Calendar.java)
+
+### 🎖️ Armies
+
+Slices:
+- Write: [AddCreatureToArmy -> CreatureAddedToArmy](src/main/java/com/dddheroes/heroesofddd/armies/write/addcreature) | [test](src/test/java/com/dddheroes/heroesofddd/armies/write/addcreature/AddCreatureToArmyTest.java)
+- Write: [RemoveCreatureFromArmy -> CreatureRemovedFromArmy](src/main/java/com/dddheroes/heroesofddd/armies/write/removecreature) | [test](src/test/java/com/dddheroes/heroesofddd/armies/write/removecreature/RemoveCreatureFromArmyTest.java)
+
+Aggregates:
+- [Army](src/main/java/com/dddheroes/heroesofddd/armies/write/Army.java)
+
 
 ## 🏛️ Screaming Architecture
 
