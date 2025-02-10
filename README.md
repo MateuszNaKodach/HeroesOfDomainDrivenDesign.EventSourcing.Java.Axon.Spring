@@ -1,19 +1,13 @@
 # Heroes of Domain-Driven Design (Java)
+Shows how to use Domain-Driven Design, Event Storming, Event Modeling and Event Sourcing in Heroes of Might & Magic III domain.
 
-Shows how to use Domain-Driven Design, Event Storming, Event Modeling and Event Sourcing in Heroes of Might & Magic III
-domain.
-
-👉 See also implementations
-in: [Ruby](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Ruby) | **Java + Spring + Axon**
+👉 See also implementations in: [Ruby](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Ruby) | **Java + Spring + Axon**
 
 👉 [Let's explore the Heroes of Domain-Driven Design blogpost series](https://dddheroes.com/)
-
-- There you will get familiar with the whole Software Development process: from knowledge crunching with domain experts,
-  designing solution using Event Modeling, to implementation using DDD Building Blocks.
+- There you will get familiar with the whole Software Development process: from knowledge crunching with domain experts, designing solution using Event Modeling, to implementation using DDD Building Blocks.
 
 This project probably won't be fully-functional HOMM3 engine implementation, because it's done for educational purposes.
-If you'd like to talk with me about mentioned development practices fell free to contact
-on [linkedin.com/in/mateusznakodach/](https://www.linkedin.com/in/mateusznakodach).
+If you'd like to talk with me about mentioned development practices fell free to contact on [linkedin.com/in/mateusznakodach/](https://www.linkedin.com/in/mateusznakodach).
 
 I'm focused on domain modeling on the backend, but I'm going to implement UI like below in the future.
 
@@ -30,14 +24,12 @@ I'm focused on domain modeling on the backend, but I'm going to implement UI lik
 
 Modules (mostly designed using Bounded Context heuristic) are designed and documented on EventModeling below.
 Each slice in a module is in certain color which shows the progress:
-
 - green -> completed
 - yellow -> implementation in progress
 - red -> to do
 - grey -> design in progress
 
 List of modules you can see in package `com.dddheroes.heroesofddd`.
-
 ```
 heroesofddd/
 ├── armies
@@ -46,30 +38,21 @@ heroesofddd/
 ├── creature_recruitment
 ```
 
-Each domain-focused module follows Vertical-Slice Architecture of three possible types: write, read and automation
-following Event Modeling nomenclature.
+Each domain-focused module follows Vertical-Slice Architecture of three possible types: write, read and automation following Event Modeling nomenclature.
 
 ### 👾 Creature Recruitment
 
 ![EventModeling_Module_CreatureRecruitment.png](docs/images/EventModeling_Module_CreatureRecruitment.png)
 
 Slices:
-
--
-Write: [BuildDwelling -> DwellingBuilt](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java)
--
-Write: [IncreaseAvailableCreatures -> AvailableCreaturesChanged](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesTest.java)
--
-Write: [RecruitCreature -> CreatureRecruited](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature)
-- Read: (DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) ->
-  DwellingReadModel [projector](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java)
-    -
-    GetDwellingById: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdQueryHandler.java) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdTest.java)
-    -
-    GetAllDwellngs: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java)
+- Write: [BuildDwelling -> DwellingBuilt](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java)
+- Write: [IncreaseAvailableCreatures -> AvailableCreaturesChanged](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesTest.java)
+- Write: [RecruitCreature -> CreatureRecruited](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature)
+- Read: (DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) -> DwellingReadModel [projector](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java)
+  - GetDwellingById: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdQueryHandler.java) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdTest.java)
+  - GetAllDwellngs: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java)
 
 Aggregates:
-
 - [Dwelling](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/Dwelling.java)
 
 ### 🧙 Astrologers
@@ -77,16 +60,11 @@ Aggregates:
 ![EventModeling_Module_Astrologers.png](docs/images/EventModeling_Module_Astrologers.png)
 
 Slices:
-
--
-Write: [ProclaimWeekSymbol -> WeekSymbolProclaimed](src/main/java/com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbolTest.java)
--
-Automation: [DayStarted(where day==1) -> ProclaimWeekSymbol](src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolTest.java)
--
-Automation: [(WeekSymbolProclaimed, all game dwellings derived from DwellingBuilt events) -> IncreaseAvailableCreatures for each dwelling in the game where creature == symbol](src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest.java)
+- Write: [ProclaimWeekSymbol -> WeekSymbolProclaimed](src/main/java/com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbolTest.java)
+- Automation: [DayStarted(where day==1) -> ProclaimWeekSymbol](src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolTest.java)
+- Automation: [(WeekSymbolProclaimed, all game dwellings derived from DwellingBuilt events) -> IncreaseAvailableCreatures for each dwelling in the game where creature == symbol](src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest.java)
 
 Aggregates:
-
 - [Astrologers](src/main/java/com/dddheroes/heroesofddd/astrologers/write/Astrologers.java)
 
 ### 📅 Calendar
@@ -94,69 +72,51 @@ Aggregates:
 ![EventModeling_Module_Calendar.png](docs/images/EventModeling_Module_CalendarSlices.png)
 
 Slices:
-
--
-Write: [StartDay -> DayStarted](src/main/java/com/dddheroes/heroesofddd/calendar/write/startday) | [test](src/test/java/com/dddheroes/heroesofddd/calendar/write/startday/StartDayTest.java)
--
-Write: [FinishDay -> DayFinished](src/main/java/com/dddheroes/heroesofddd/calendar/write/finishday) | [test](src/test/java/com/dddheroes/heroesofddd/calendar/write/finishday/FinishDayTest.java)
+- Write: [StartDay -> DayStarted](src/main/java/com/dddheroes/heroesofddd/calendar/write/startday) | [test](src/test/java/com/dddheroes/heroesofddd/calendar/write/startday/StartDayTest.java)
+- Write: [FinishDay -> DayFinished](src/main/java/com/dddheroes/heroesofddd/calendar/write/finishday) | [test](src/test/java/com/dddheroes/heroesofddd/calendar/write/finishday/FinishDayTest.java)
 - Read: [DayStarted -> CurrentDateReadModel] -- todo
 
 Aggregates:
-
 - [Calendar](src/main/java/com/dddheroes/heroesofddd/calendar/write/Calendar.java)
 
 ## 🏛️ Screaming Architecture
 
-The project follows a Screaming Architecture pattern organized around vertical slices that mirror Event Modeling
-concepts.
+The project follows a Screaming Architecture pattern organized around vertical slices that mirror Event Modeling concepts.
 
 ![ScreamingArchitecture](docs/images/ScreamingArchitecture.png)
 
-The package structure screams the capabilities of the system by making explicit: commands available to users, events
-that capture what happened, queries for retrieving information, business rules, and system automations.
-This architecture makes it immediately obvious what the system can do, what rules govern those actions, and how
-different parts of the system interact through events.
+The package structure screams the capabilities of the system by making explicit: commands available to users, events that capture what happened, queries for retrieving information, business rules, and system automations.
+This architecture makes it immediately obvious what the system can do, what rules govern those actions, and how different parts of the system interact through events.
 
 Each module is structured into three distinct types of slices:
 
 ### Write Slices
-
-Contains commands that represent user intentions, defines business rules through aggregates, produces domain events, and
-enforces invariants (e.g., RecruitCreature command → CreatureRecruited event, with
-RecruitCreaturesNotExceedAvailableCreatures rule).
+Contains commands that represent user intentions, defines business rules through aggregates, produces domain events, and enforces invariants (e.g., RecruitCreature command → CreatureRecruited event, with RecruitCreaturesNotExceedAvailableCreatures rule).
 
 ### Read Slices
-
-Implements queries and read models optimized for specific use cases, with projectors that transform events into
-queryable state (e.g., GetDwellingById query → DwellingReadModel).
+Implements queries and read models optimized for specific use cases, with projectors that transform events into queryable state (e.g., GetDwellingById query → DwellingReadModel).
 
 ### Automation Slices
-
-Processes events to trigger subsequent actions, implementing system policies and workflows that connect different
-modules (e.g., WhenCreatureRecruitedThenAddToArmyProcessor).
+Processes events to trigger subsequent actions, implementing system policies and workflows that connect different modules (e.g., WhenCreatureRecruitedThenAddToArmyProcessor).
 
 ## 🧪 Testing
-
 Tests using Real postgres Event Store, follows the approach:
-
 - write slice: given(events) -> when(command) -> then(events)
 - read slice: given(events) -> then(read model)
 - automation: when(event, state?) -> then(command)
 
-Tests are focused on observable behavior which implicitly covers the DDD Aggregates, so the domain model can be
-refactored without changes in tests.
+Tests are focused on observable behavior which implicitly covers the DDD Aggregates, so the domain model can be refactored without changes in tests.
 
 ### Example: write slice
 
 ![EventModeling_GWT_TestCase_CreatureRecruitment.png](docs/images/EventModeling_GWT_TestCase_CreatureRecruitment.png)
 
 ```java
-
 @BeforeEach
 void setUp() { // Axon Framework Test Fixture
     fixture = new AggregateTestFixture<>(Dwelling.class);
 }
-
+    
 @Test
 void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
     // given
@@ -175,6 +135,7 @@ void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
            .expectEvents(thenEvent);
 }
 ```
+
 
 -------
 
