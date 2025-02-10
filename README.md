@@ -43,7 +43,7 @@ Each domain-focused module follows Vertical-Slice Architecture of three possible
 // todo: fix this descirption, add screen
 All of this is an example of screaming architecture, where you can see the possible operations (command, queries) what may happen in your app (events) and what are the rules.
 
-![ScreamingArchitecture](docs/images/img.png)
+![ScreamingArchitecture](docs/images/ScreamingArchitecture.png)
 
 
 ### 👾 Creature Recruitment
