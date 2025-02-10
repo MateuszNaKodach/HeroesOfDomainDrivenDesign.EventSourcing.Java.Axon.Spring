@@ -40,12 +40,6 @@ heroesofddd/
 
 Each domain-focused module follows Vertical-Slice Architecture of three possible types: write, read and automation following Event Modeling nomenclature.
 
-// todo: fix this descirption, add screen
-All of this is an example of screaming architecture, where you can see the possible operations (command, queries) what may happen in your app (events) and what are the rules.
-
-![ScreamingArchitecture](docs/images/ScreamingArchitecture.png)
-
-
 ### 👾 Creature Recruitment
 
 ![EventModeling_Module_CreatureRecruitment.png](docs/images/EventModeling_Module_CreatureRecruitment.png)
@@ -84,38 +78,12 @@ Slices:
 Aggregates:
 - [Calendar](heroesofddd_rails_application/lib/heroes/calendar/write/calendar.rb)
 
-## 🤖 Working with AI Large Language Models:
-If you'd like to use the whole source code as your prompt context generate codebase file by:
-`npx ai-digest --whitespace-removal`
+## Screaming Architecture
+// todo: fix this descirption, add screen
+All of this is an example of screaming architecture, where you can see the possible operations (command, queries) what may happen in your app (events) and what are the rules.
 
-## Domain Model purity
-Domain Events are decoupled from infrastructure RailsEventStore events.
-Every domain event is registered with corresponding functions which maps from domain to storage structure and vice-versa (as shown below).
+![ScreamingArchitecture](docs/images/ScreamingArchitecture.png)
 
-```ruby
-WeekSymbolProclaimed = Class.new(RubyEventStore::Event) do
-    def self.from_domain(domain_event)
-      ::EventStore::Heroes::Astrologers::WeekSymbolProclaimed.new(
-        data: {
-          month: domain_event.month,
-          week: domain_event.week,
-          week_of: domain_event.week_of,
-          growth: domain_event.growth
-        }
-      )
-    end
-    
-    def self.to_domain(store_event)
-      data = store_event.data.deep_symbolize_keys
-      ::Heroes::Astrologers::WeekSymbolProclaimed.new(
-        month: data[:month],
-        week: data[:week],
-        week_of: data[:week_of],
-        growth: data[:growth],
-      )
-    end
-end
-```
 
 ## 🧪 Testing
 Tests using Real postgres Event Store, follows the approach:
