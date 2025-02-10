@@ -97,21 +97,29 @@ Tests are focused on observable behavior which implicitly covers the DDD Aggrega
 
 ![EventModeling_GWT_TestCase_CreatureRecruitment.png](docs/images/EventModeling_GWT_TestCase_CreatureRecruitment.png)
 
-```ruby
-def test_given_dwelling_with_3_creature_when_recruit_2_creature_then_success
-  # given
-  given_domain_event(@stream_name, DwellingBuilt.new(@dwelling_id, @creature_id, @cost_per_troop))
-  given_domain_event(@stream_name, AvailableCreaturesChanged.new(@dwelling_id, @creature_id, 3))
+```java
+@BeforeEach
+void setUp() { // Axon Framework Test Fixture
+    fixture = new AggregateTestFixture<>(Dwelling.class);
+}
+    
+@Test
+void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
+    // given
+    var givenEvents = List.of(
+            dwellingBuilt(),
+            availableCreaturesChanged(2)
+    );
 
-  # when
-  recruit_creature = RecruitCreature.new(@dwelling_id, @creature_id, 2)
-  execute_command(recruit_creature, @app_context)
+    // when
+    var whenCommand = recruitCreature(2);
 
-  # then
-  expected_cost = Heroes::SharedKernel::Resources::Cost.resources([ :GOLD, 6000 ], [ :GEM, 2 ])
-  expected_event = CreatureRecruited.new(@dwelling_id, @creature_id, 2, expected_cost)
-  then_domain_event(@stream_name, expected_event)
-end
+    // then
+    var thenEvent = creatureRecruited(2);
+    fixture.given(givenEvents)
+           .when(whenCommand)
+           .expectEvents(thenEvent);
+}
 ```
 
 
