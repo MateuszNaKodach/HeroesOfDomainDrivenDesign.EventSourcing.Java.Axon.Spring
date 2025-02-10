@@ -72,12 +72,12 @@ Aggregates:
 ![EventModeling_Module_Calendar.png](docs/images/EventModeling_Module_CalendarSlices.png)
 
 Slices:
-- Write: [StartDay -> DayStarted](heroesofddd_rails_application/lib/heroes/calendar/write/start_day/command_start_day.rb) | [test](heroesofddd_rails_application/test/lib/heroes/calendar/write/start_day_application_test.rb)
-- Write: [FinishDay -> DayFinished](heroesofddd_rails_application/lib/heroes/calendar/write/finish_day/command_finish_day.rb) | [test](heroesofddd_rails_application/test/lib/heroes/calendar/write/finish_day_application_test.rb)
-- Read: [DayStarted -> CurrentDateReadModel](heroesofddd_rails_application/lib/heroes/calendar/read/current_date_read_model.rb) | [test](heroesofddd_rails_application/test/lib/heroes/calendar/read/current_date_read_model_application_test.rb)
+- Write: [StartDay -> DayStarted](src/main/java/com/dddheroes/heroesofddd/calendar/write/startday) | [test](src/test/java/com/dddheroes/heroesofddd/calendar/write/startday/StartDayTest.java)
+- Write: [FinishDay -> DayFinished](src/main/java/com/dddheroes/heroesofddd/calendar/write/finishday) | [test](src/test/java/com/dddheroes/heroesofddd/calendar/write/finishday/FinishDayTest.java)
+- Read: [DayStarted -> CurrentDateReadModel] -- todo
 
 Aggregates:
-- [Calendar](heroesofddd_rails_application/lib/heroes/calendar/write/calendar.rb)
+- [Calendar](src/main/java/com/dddheroes/heroesofddd/calendar/write/Calendar.java)
 
 ## 🏛️ Screaming Architecture
 // todo: fix this descirption, add screen
