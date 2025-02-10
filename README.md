@@ -50,6 +50,7 @@ Slices:
 - Write: [RecruitCreature -> CreatureRecruited](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature)
 - Read: (DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) -> DwellingReadModel [projector](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java)
   - GetDwellingById: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdQueryHandler.java) | [test](src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdTest.java)
+  - GetAllDwellngs: [query](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java)
 
 Aggregates:
 - [Dwelling](src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/Dwelling.java)
@@ -59,12 +60,12 @@ Aggregates:
 ![EventModeling_Module_Astrologers.png](docs/images/EventModeling_Module_Astrologers.png)
 
 Slices:
-- Write: [ProclaimWeekSymbol -> WeekSymbolProclaimed](heroesofddd_rails_application/lib/heroes/astrologers/write/proclaim_week_symbol/command_proclaim_week_symbol.rb) | [test](heroesofddd_rails_application/test/lib/heroes/astrologers/write/proclaim_week_symbol_application_test.rb)
-- Automation: [DayStarted(where day==1) -> ProclaimWeekSymbol](heroesofddd_rails_application/lib/heroes/astrologers/automation/when_week_started_then_proclaim_week_symbol.rb) | [test](heroesofddd_rails_application/test/lib/heroes/astrologers/automation/when_week_started_then_proclaim_week_symbol_test.rb)
-- Automation: [(WeekSymbolProclaimed, all game dwellings derived from DwellingBuilt events) -> IncreaseAvailableCreatures for each dwelling in the game where creature == symbol](heroesofddd_rails_application/lib/heroes/astrologers/automation/when_week_symbol_proclaimed_then_increase_dwelling_available_creatures.rb) | [test](heroesofddd_rails_application/test/lib/heroes/astrologers/automation/when_week_symbol_proclaimed_then_increase_dwelling_available_creatures_test.rb)
+- Write: [ProclaimWeekSymbol -> WeekSymbolProclaimed](src/main/java/com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbolTest.java)
+- Automation: [DayStarted(where day==1) -> ProclaimWeekSymbol](src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolTest.java)
+- Automation: [(WeekSymbolProclaimed, all game dwellings derived from DwellingBuilt events) -> IncreaseAvailableCreatures for each dwelling in the game where creature == symbol](src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.java) | [test](src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest.java)
 
 Aggregates:
-- [WeekSymbol](heroesofddd_rails_application/lib/heroes/astrologers/write/week_symbol.rb)
+- [Astrologers](src/main/java/com/dddheroes/heroesofddd/astrologers/write/Astrologers.java)
 
 ### 📅 Calendar
 
