@@ -80,11 +80,24 @@ Aggregates:
 - [Calendar](src/main/java/com/dddheroes/heroesofddd/calendar/write/Calendar.java)
 
 ## 🏛️ Screaming Architecture
-// todo: fix this descirption, add screen
-All of this is an example of screaming architecture, where you can see the possible operations (command, queries) what may happen in your app (events) and what are the rules.
+
+The project follows a Screaming Architecture pattern organized around vertical slices that mirror Event Modeling concepts.
 
 ![ScreamingArchitecture](docs/images/ScreamingArchitecture.png)
 
+The package structure screams the capabilities of the system by making explicit: commands available to users, events that capture what happened, queries for retrieving information, business rules, and system automations.
+This architecture makes it immediately obvious what the system can do, what rules govern those actions, and how different parts of the system interact through events.
+
+Each module is structured into three distinct types of slices:
+
+### Write Slices
+Contains commands that represent user intentions, defines business rules through aggregates, produces domain events, and enforces invariants (e.g., RecruitCreature command → CreatureRecruited event, with RecruitCreaturesNotExceedAvailableCreatures rule).
+
+### Read Slices
+Implements queries and read models optimized for specific use cases, with projectors that transform events into queryable state (e.g., GetDwellingById query → DwellingReadModel).
+
+### Automation Slices
+Processes events to trigger subsequent actions, implementing system policies and workflows that connect different modules (e.g., WhenCreatureRecruitedThenAddToArmyProcessor).
 
 ## 🧪 Testing
 Tests using Real postgres Event Store, follows the approach:
