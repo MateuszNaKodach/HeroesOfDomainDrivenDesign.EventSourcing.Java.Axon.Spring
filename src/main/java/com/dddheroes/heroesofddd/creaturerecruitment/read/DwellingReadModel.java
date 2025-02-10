@@ -8,6 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Entity
 @Table(name = "read_model_dwelling")
@@ -24,7 +25,7 @@ public class DwellingReadModel {
 
     private Integer availableCreatures;
 
-    DwellingReadModel(String dwellingId,
+    public DwellingReadModel(String dwellingId,
                       String creatureId,
                       Map<String, Integer> costPerTroop,
                       Integer availableCreatures
@@ -63,5 +64,22 @@ public class DwellingReadModel {
 
     protected DwellingReadModel() {
         // Required by JPA
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DwellingReadModel that = (DwellingReadModel) o;
+        return Objects.equals(dwellingId, that.dwellingId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(dwellingId);
     }
 }

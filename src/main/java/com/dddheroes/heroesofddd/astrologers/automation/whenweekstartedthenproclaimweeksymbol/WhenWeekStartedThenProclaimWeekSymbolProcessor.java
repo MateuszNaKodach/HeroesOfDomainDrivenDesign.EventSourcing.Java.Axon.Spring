@@ -10,7 +10,7 @@ import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 
-@ProcessingGroup("Automation_WhenWeekStartedThenProclaimWeekSymbolProcessor_Processor")
+@ProcessingGroup("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor")
 @DisallowReplay
 @Component
 class WhenWeekStartedThenProclaimWeekSymbolProcessor {
