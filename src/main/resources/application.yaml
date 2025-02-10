@@ -37,3 +37,5 @@ axon:
           enabled: true
       ReadModel_Dwelling:
         mode: pooled
+      Read_GetAllDwellings_QueryCache:
+        mode: subscribing
