@@ -24,7 +24,7 @@ public record CannotSkipDays(
 
     public boolean isStartForTheNextDay() {
         if (currentDay == null) {
-            return true; // First week
+            return true; // First day
         }
 
         int nextDay = currentDay.raw() + 1;
