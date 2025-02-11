@@ -65,8 +65,8 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
         assertCommandNotExecuted(notExpectedCommand);
     }
 
-    @Test
-    void whenWeekSymbolProclaimed_thenIncreaseAllDwellingsBuiltTillTheProclamation() {
+    @RepeatedTest(5) // repeat the test, to prove that there is no race condition
+    void whenWeekSymbolProclaimed_thenIncreaseAllDwellingsBuiltBeforeTheProclamation() {
         // given
         var astrologersId = AstrologersId.random();
         var angelDwellingId1 = dwellingBuiltEvent("angel");
@@ -86,7 +86,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
         // week 1 - only 1 dwelling built
         var week1ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 1);
         assertCommandExecuted(week1ExpectedCommand1);
-        var week1NotExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 2);
+        var week1NotExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 1);
         assertCommandNotExecuted(week1NotExpectedCommand1);
 
         // week 2 - 2 dwellings built

@@ -7,11 +7,16 @@ import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("ReadModel_Dwelling")
 @Component
 class DwellingReadModelProjector {
+
+    private static final Logger log = LoggerFactory.getLogger(
+            DwellingReadModelProjector.class);
 
     private final DwellingReadModelRepository repository;
 
@@ -21,6 +26,7 @@ class DwellingReadModelProjector {
 
     @EventHandler
     void on(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+        log.info("EVENT | DwellingBuilt: {}", event);
         var state = new DwellingReadModel(
                 gameId,
                 event.dwellingId(),

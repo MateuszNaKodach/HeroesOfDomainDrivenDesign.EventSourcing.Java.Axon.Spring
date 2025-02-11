@@ -11,12 +11,17 @@ import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.queryhandling.QueryGateway;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-@ProcessingGroup("Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor")
+//@ProcessingGroup("Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor")
+@ProcessingGroup("ReadModel_Dwelling") // cause we need to process sequentially along with the ReadModel, because of the Query
 @DisallowReplay
 @Component
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.class);
 
     private final QueryGateway queryGateway;
     private final CommandGateway commandGateway;
@@ -31,6 +36,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
 
     @EventHandler
     void react(WeekSymbolProclaimed event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+        log.info("EVENT | WeekSymbolProclaimed: {}", event);
         // todo: separate dwelling per game. Now we read all of them
         // I want be consistent here. With DBC it'd be nice to query all types and by tags like game.
         // use EventStore, @SequenceNumber long sequenceNumber
