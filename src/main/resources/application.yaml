@@ -25,17 +25,22 @@ axon:
     processors:
       Automation_WhenCreatureRecruitedThenAddToArmy_Processor:
         mode: pooled
+        sequencing-policy: gameIdSequencingPolicy
         dlq:
           enabled: true
       Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor:
         mode: pooled
+        sequencing-policy: gameIdSequencingPolicy
         dlq:
           enabled: true
       Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor:
         mode: pooled
+        sequencing-policy: gameIdSequencingPolicy
         dlq:
           enabled: true
       ReadModel_Dwelling:
         mode: pooled
+        sequencing-policy: gameIdSequencingPolicy
       Read_GetAllDwellings_QueryCache:
         mode: subscribing
+        sequencing-policy: gameIdSequencingPolicy

@@ -36,7 +36,7 @@ class Astrologers {
     @EventSourcingHandler
     void evolve(WeekSymbolProclaimed event) {
         this.astrologersId = new AstrologersId(event.astrologersId());
-        this.week = new MonthWeek(event.month(), event.day());
+        this.week = new MonthWeek(event.month(), event.week());
     }
 
     Astrologers() {

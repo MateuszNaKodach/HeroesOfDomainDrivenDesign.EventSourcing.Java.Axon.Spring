@@ -3,7 +3,6 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaime
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersEvent;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersId;
-import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.WeekSymbolProclaimed;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
@@ -25,10 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import java.util.UUID;
-
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @Import(TestcontainersConfiguration.class)
@@ -44,31 +40,63 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
     private CommandGateway commandGateway;
 
     @Test
-    void test() {
+    void whenWeekSymbolProclaimed_thenIncreaseDwellingsAvailableCreaturesIfSymbolSameAsSymbol() {
         // given
-        var angelDwellingId1 = givenDwellingBuiltEvent("angel");
-        var angelDwellingId2 = givenDwellingBuiltEvent("angel");
-        var titanDwellingId = givenDwellingBuiltEvent("titan");
+        var angelDwellingId1 = dwellingBuiltEvent("angel");
+        var angelDwellingId2 = dwellingBuiltEvent("angel");
+        var titanDwellingId = dwellingBuiltEvent("titan");
 
         // when
         var astrologersId = AstrologersId.random();
-        whenAstrologersEvents(
+        astrologersEvents(
                 astrologersId.raw(),
                 new WeekSymbolProclaimed(astrologersId.raw(), 1, 1, "angel", 3)
         );
 
         // then
         var expectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1)).sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(expectedCommand1);
 
         var expectedCommand2 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1)).sendAndWait(expectedCommand2, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(expectedCommand2);
 
         var notExpectedCommand = IncreaseAvailableCreatures.command(titanDwellingId, "titan", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, never()).sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID)));
+        assertCommandNotExecuted(notExpectedCommand);
     }
 
-    private String givenDwellingBuiltEvent(String creatureId) {
+    @Test
+    void whenWeekSymbolProclaimed_thenIncreaseAllDwellingsBuiltBeforeTheProclamation() {
+        // given
+        var astrologersId = AstrologersId.random();
+        var angelDwellingId1 = dwellingBuiltEvent("angel");
+        astrologersEvents(
+                astrologersId.raw(),
+                new WeekSymbolProclaimed(astrologersId.raw(), 1, 1, "angel", 1)
+        );
+        var angelDwellingId2 = dwellingBuiltEvent("angel");
+
+        // when
+        astrologersEvents(
+                astrologersId.raw(),
+                new WeekSymbolProclaimed(astrologersId.raw(), 1, 2, "angel", 2)
+        );
+
+        // then
+        // week 1 - only 1 dwelling built
+        var week1ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 1);
+        assertCommandExecuted(week1ExpectedCommand1);
+        var week1NotExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 1);
+        assertCommandNotExecuted(week1NotExpectedCommand1);
+
+        // week 2 - 2 dwellings built
+        var week2ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 2);
+        assertCommandExecuted(week2ExpectedCommand1);
+        var week2ExpectedCommand2 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 2);
+        assertCommandExecuted(week2ExpectedCommand2);
+    }
+
+
+    private String dwellingBuiltEvent(String creatureId) {
         var dwellingId = DwellingId.random();
         var costPerTroop = Cost.resources(ResourceType.GOLD, Amount.of(1000));
         var event = DwellingBuilt.event(dwellingId, CreatureId.of(creatureId), costPerTroop);
@@ -76,9 +104,10 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
         return dwellingId.raw();
     }
 
-    private void whenAstrologersEvents(String gameId, AstrologersEvent... events) {
-        for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(astrologersDomainEvent(gameId, i, events[i]));
+    private void astrologersEvents(String gameId, WeekSymbolProclaimed... events) {
+        for (var event : events) {
+            var aggregateSequence = event.week() - 1;
+            eventGateway.publish(astrologersDomainEvent(gameId, aggregateSequence, event));
         }
     }
 
@@ -117,5 +146,14 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
                 sequenceNumber,
                 payload
         ).andMetaData(GameMetaData.withId(GAME_ID));
+    }
+
+    private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand1) {
+        awaitUntilAsserted(() -> verify(commandGateway, times(1))
+                .sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
+    }
+
+    private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
+        verify(commandGateway, never()).sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID));
     }
 }
