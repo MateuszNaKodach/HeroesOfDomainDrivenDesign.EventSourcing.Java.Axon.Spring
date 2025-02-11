@@ -64,6 +64,6 @@ public class FinishDayTest extends CalendarTest {
         fixture.given(givenEvents)
                .when(whenCommand)
                .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Can only finish current day");
+               .expectExceptionMessage("Can only finish current week");
     }
 }

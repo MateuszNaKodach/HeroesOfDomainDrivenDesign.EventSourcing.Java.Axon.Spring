@@ -22,6 +22,6 @@ public record CanOnlyFinishCurrentDay(
 
     @Override
     public String message() {
-        return "Can only finish current day";
+        return "Can only finish current week";
     }
 }

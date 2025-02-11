@@ -8,7 +8,7 @@ import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;
 public record WeekSymbolProclaimed(
         String astrologersId,
         Integer month,
-        Integer day,
+        Integer week,
         String weekOf,
         Integer growth
 ) implements AstrologersEvent {
