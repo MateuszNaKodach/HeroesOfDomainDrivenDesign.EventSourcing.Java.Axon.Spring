@@ -9,7 +9,6 @@ import java.util.Objects;
 
 @Entity
 @Table(
-        schema = "astrologers",
         name = "read_model_built_dwelling",
         indexes = @Index(name = "idx_game_id", columnList = "gameId")
 )

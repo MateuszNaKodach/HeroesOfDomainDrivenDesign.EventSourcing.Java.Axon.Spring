@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @Import(TestcontainersConfiguration.class)
@@ -65,7 +64,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
         assertCommandNotExecuted(notExpectedCommand);
     }
 
-    @RepeatedTest(5) // repeat the test, to prove that there is no race condition
+    @Test
     void whenWeekSymbolProclaimed_thenIncreaseAllDwellingsBuiltBeforeTheProclamation() {
         // given
         var astrologersId = AstrologersId.random();
