@@ -8,7 +8,11 @@ import jakarta.persistence.Table;
 import java.util.Objects;
 
 @Entity
-@Table(name = "read_model_dwelling", indexes = @Index(name = "idx_game_id", columnList = "gameId"))
+@Table(
+        schema = "astrologers",
+        name = "read_model_built_dwelling",
+        indexes = @Index(name = "idx_game_id", columnList = "gameId")
+)
 public class BuiltDwellingReadModel {
 
     private String gameId;

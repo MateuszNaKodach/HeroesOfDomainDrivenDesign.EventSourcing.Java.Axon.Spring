@@ -12,7 +12,11 @@ import java.util.Map;
 import java.util.Objects;
 
 @Entity
-@Table(name = "read_model_dwelling", indexes = @Index(name = "idx_game_id", columnList = "gameId"))
+@Table(
+        schema = "creature_recruitment",
+        name = "read_model_dwelling",
+        indexes = @Index(name = "idx_game_id", columnList = "gameId")
+)
 public class DwellingReadModel {
 
     private String gameId;
