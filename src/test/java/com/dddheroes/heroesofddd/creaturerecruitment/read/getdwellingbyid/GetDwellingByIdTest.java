@@ -148,16 +148,16 @@ class GetDwellingByIdTest {
 
     private void givenDwellingEvents(String dwellingId, DwellingEvent... events) {
         for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]).andMetaData(GameMetaData.withId(GAME_ID)));
+            eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]));
         }
     }
 
-    private DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
+    private static DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
         return new GenericDomainEventMessage<>(
                 "Dwelling",
                 dwellingId,
                 sequenceNumber,
                 payload
-        );
+        ).andMetaData(GameMetaData.withId(GAME_ID));
     }
 }

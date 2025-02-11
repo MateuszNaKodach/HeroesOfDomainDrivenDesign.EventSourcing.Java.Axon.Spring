@@ -12,6 +12,8 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatu
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.Cost;
 import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.GameId;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
@@ -32,6 +34,8 @@ import static org.mockito.Mockito.*;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
+
+    private static final String GAME_ID = GameId.random().raw();
 
     @Autowired
     private EventGateway eventGateway;
@@ -55,13 +59,13 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
         // then
         var expectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1)).sendAndWait(expectedCommand1));
+        awaitUntilAsserted(() -> verify(commandGateway, times(1)).sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
 
         var expectedCommand2 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1)).sendAndWait(expectedCommand2));
+        awaitUntilAsserted(() -> verify(commandGateway, times(1)).sendAndWait(expectedCommand2, GameMetaData.withId(GAME_ID)));
 
         var notExpectedCommand = IncreaseAvailableCreatures.command(titanDwellingId, "titan", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, never()).sendAndWait(notExpectedCommand));
+        awaitUntilAsserted(() -> verify(commandGateway, never()).sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID)));
     }
 
     private String givenDwellingBuiltEvent(String creatureId) {
@@ -112,6 +116,6 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
                 identifier,
                 sequenceNumber,
                 payload
-        );
+        ).andMetaData(GameMetaData.withId(GAME_ID));
     }
 }
