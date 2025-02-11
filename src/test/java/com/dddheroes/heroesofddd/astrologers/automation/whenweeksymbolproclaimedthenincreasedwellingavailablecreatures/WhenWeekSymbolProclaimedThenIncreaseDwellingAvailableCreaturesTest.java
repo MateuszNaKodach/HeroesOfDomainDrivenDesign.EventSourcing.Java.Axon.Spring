@@ -155,7 +155,6 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
     }
 
     private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
-        awaitUntilAsserted(() -> verify(commandGateway, never())
-                .sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID)));
+        verify(commandGateway, never()).sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID));
     }
 }

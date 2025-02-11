@@ -1,8 +1,7 @@
 package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures;
 
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.WeekSymbolProclaimed;
-import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
-import com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellings;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -10,51 +9,51 @@ import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
-import org.axonframework.queryhandling.QueryGateway;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-//@ProcessingGroup("Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor")
-@ProcessingGroup("ReadModel_Dwelling") // cause we need to process sequentially along with the ReadModel, because of the Query
+@ProcessingGroup("ReadModel_Dwelling")
 @DisallowReplay
 @Component
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.class);
-
-    private final QueryGateway queryGateway;
     private final CommandGateway commandGateway;
 
+    // it may be easier to use live model, but AF4 do not allow me to read events just till some position
+    private final BuiltDwellingReadModelRepository repository;
+
     WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor(
-            QueryGateway queryGateway,
-            CommandGateway commandGateway
+            CommandGateway commandGateway,
+            BuiltDwellingReadModelRepository repository
     ) {
-        this.queryGateway = queryGateway;
         this.commandGateway = commandGateway;
+        this.repository = repository;
     }
 
     @EventHandler
     void react(WeekSymbolProclaimed event, @MetaDataValue(GameMetaData.KEY) String gameId) {
-        log.info("EVENT | WeekSymbolProclaimed: {}", event);
-        // todo: separate dwelling per game. Now we read all of them
-        // I want be consistent here. With DBC it'd be nice to query all types and by tags like game.
-        // use EventStore, @SequenceNumber long sequenceNumber
-
         var creature = event.weekOf();
         var increaseBy = event.growth();
-        var toProcess = queryGateway.query(GetAllDwellings.query(gameId), GetAllDwellings.Result.class);
-        toProcess.thenAccept(r -> r.dwellings()
-                                   .stream().filter(dwelling -> dwelling.getCreatureId().equals(creature))
-                                   .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy)));
+        repository.findAllByGameId(gameId).stream()
+                  .filter(dwelling -> dwelling.getCreatureId().equals(creature))
+                  .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy));
     }
 
-    private void increaseAvailableCreatures(DwellingReadModel dwelling, Integer increaseBy) {
+    private void increaseAvailableCreatures(BuiltDwellingReadModel dwelling, Integer increaseBy) {
         var command = IncreaseAvailableCreatures.command(
                 dwelling.getDwellingId(),
                 dwelling.getCreatureId(),
                 increaseBy
         );
         commandGateway.sendAndWait(command, GameMetaData.withId(dwelling.getGameId()));
+    }
+
+    @EventHandler
+    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+        var state = new BuiltDwellingReadModel(
+                gameId,
+                event.dwellingId(),
+                event.creatureId()
+        );
+        repository.save(state);
     }
 }
