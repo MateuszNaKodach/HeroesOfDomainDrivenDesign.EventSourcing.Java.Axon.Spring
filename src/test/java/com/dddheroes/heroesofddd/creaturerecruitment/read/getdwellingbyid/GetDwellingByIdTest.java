@@ -9,6 +9,8 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatu
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
+import com.dddheroes.heroesofddd.shared.GameId;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import com.dddheroes.heroesofddd.utils.AwaitilityUtils;
 import org.awaitility.Awaitility;
@@ -16,6 +18,7 @@ import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.queryhandling.QueryGateway;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +35,7 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 class GetDwellingByIdTest {
 
+    private static final String GAME_ID = GameId.random().raw();
     private static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
             ResourceType.MERCURY.name(), 1
@@ -50,7 +54,7 @@ class GetDwellingByIdTest {
         var dwellingId = DwellingId.random().raw();
 
         // when
-        var query = GetDwellingById.query(dwellingId);
+        var query = getDwellingById(dwellingId);
 
         // then
         awaitUntilAsserted(() -> {
@@ -70,7 +74,7 @@ class GetDwellingByIdTest {
         );
 
         // when
-        var query = GetDwellingById.query(dwellingId);
+        var query = getDwellingById(dwellingId);
 
         // then
         awaitUntilAsserted(() -> {
@@ -95,7 +99,7 @@ class GetDwellingByIdTest {
         );
 
         // when
-        var query = GetDwellingById.query(dwellingId);
+        var query = getDwellingById(dwellingId);
 
         // then
         awaitUntilAsserted(() -> {
@@ -121,7 +125,7 @@ class GetDwellingByIdTest {
         );
 
         // when
-        var query = GetDwellingById.query(dwellingId);
+        var query = getDwellingById(dwellingId);
 
         // then
         awaitUntilAsserted(() -> {
@@ -134,6 +138,10 @@ class GetDwellingByIdTest {
         });
     }
 
+    private static GetDwellingById getDwellingById(String dwellingId) {
+        return GetDwellingById.query(GAME_ID, dwellingId);
+    }
+
     private DwellingReadModel getDwellingReadModel(GetDwellingById query) {
         return queryGateway.query(query, DwellingReadModel.class).join();
     }
@@ -144,12 +152,12 @@ class GetDwellingByIdTest {
         }
     }
 
-    private DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
+    private static DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
         return new GenericDomainEventMessage<>(
                 "Dwelling",
                 dwellingId,
                 sequenceNumber,
                 payload
-        );
+        ).andMetaData(GameMetaData.withId(GAME_ID));
     }
 }

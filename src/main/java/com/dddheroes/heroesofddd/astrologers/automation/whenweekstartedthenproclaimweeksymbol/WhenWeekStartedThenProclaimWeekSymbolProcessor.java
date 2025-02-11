@@ -4,16 +4,20 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproc
 import com.dddheroes.heroesofddd.astrologers.write.MonthWeek;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
 import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor")
 @DisallowReplay
 @Component
 class WhenWeekStartedThenProclaimWeekSymbolProcessor {
+
+    public static final int FIRST_DAY_OF_THE_WEEK = 1;
 
     private final CommandGateway commandGateway;
     private final WeekSymbolCalculator weekSymbolCalculator;
@@ -27,8 +31,8 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
     }
 
     @EventHandler
-    void react(DayStarted event) {
-        var isWeekStarted = event.day() == 1;
+    void react(DayStarted event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+        var isWeekStarted = event.day() == FIRST_DAY_OF_THE_WEEK;
         if (isWeekStarted) {
             var weekSymbol = weekSymbolCalculator.apply(MonthWeek.of(event.month(), event.week()));
             var command = ProclaimWeekSymbol.command(
@@ -38,7 +42,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
                     weekSymbol.weekOf().raw(),
                     weekSymbol.growth()
             );
-            commandGateway.sendAndWait(command);
+            commandGateway.sendAndWait(command, GameMetaData.withId(gameId));
         }
     }
 }

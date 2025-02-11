@@ -9,10 +9,16 @@ on:
   pull_request:
     branches: [ "master" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    timeout-minutes: 10
 
     steps:
       - name: 🛎️ Checkout repository
@@ -31,8 +37,8 @@ jobs:
       - name: 🧪 Run tests
         run: mvn -B test --file pom.xml
 
-      - name: 📦 Package application
-        run: mvn -B package --file pom.xml
+#      - name: 📦 Package application
+#        run: mvn -B package --file pom.xml
 
       # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
 #      - name: 📈 Update dependency graph

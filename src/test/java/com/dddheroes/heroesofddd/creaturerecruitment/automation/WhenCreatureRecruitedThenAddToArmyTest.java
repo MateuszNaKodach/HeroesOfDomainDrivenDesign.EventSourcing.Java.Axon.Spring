@@ -9,6 +9,8 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatu
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
+import com.dddheroes.heroesofddd.shared.GameId;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 class WhenCreatureRecruitedThenAddToArmyTest {
 
+    private static final String GAME_ID = GameId.random().raw();
     private static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
             ResourceType.MERCURY.name(), 1
@@ -58,7 +61,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1))
+                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), GameMetaData.withId(GAME_ID))
         );
     }
 
@@ -74,6 +77,6 @@ class WhenCreatureRecruitedThenAddToArmyTest {
                 dwellingId,
                 sequenceNumber,
                 payload
-        );
+        ).andMetaData(GameMetaData.withId(GAME_ID));
     }
 }

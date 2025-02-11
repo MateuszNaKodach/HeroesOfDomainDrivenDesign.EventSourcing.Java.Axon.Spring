@@ -5,6 +5,8 @@ import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWe
 import com.dddheroes.heroesofddd.calendar.write.CalendarEvent;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
+import com.dddheroes.heroesofddd.shared.GameId;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
@@ -23,6 +25,8 @@ import static org.mockito.Mockito.*;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 class WhenWeekStartedThenProclaimWeekSymbolTest {
+
+    private static final String GAME_ID = GameId.random().raw();
 
     @Autowired
     private EventGateway eventGateway;
@@ -45,7 +49,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()))
+                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(GameMetaData.withId(GAME_ID)))
         );
     }
 
@@ -55,12 +59,13 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
         }
     }
 
-    private DomainEventMessage<?> calendarDomainEvent(String identifier, int sequenceNumber, CalendarEvent payload) {
+    private static DomainEventMessage<?> calendarDomainEvent(String identifier, int sequenceNumber,
+                                                             CalendarEvent payload) {
         return new GenericDomainEventMessage<>(
                 "Calendar",
                 identifier,
                 sequenceNumber,
                 payload
-        );
+        ).andMetaData(GameMetaData.withId(GAME_ID));
     }
 }

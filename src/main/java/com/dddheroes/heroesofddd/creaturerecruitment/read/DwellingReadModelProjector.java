@@ -3,8 +3,10 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("ReadModel_Dwelling")
@@ -18,8 +20,9 @@ class DwellingReadModelProjector {
     }
 
     @EventHandler
-    void on(DwellingBuilt event) {
+    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
         var state = new DwellingReadModel(
+                gameId,
                 event.dwellingId(),
                 event.creatureId(),
                 event.costPerTroop(),

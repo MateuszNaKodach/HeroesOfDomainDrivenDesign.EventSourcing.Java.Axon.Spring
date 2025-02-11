@@ -4,10 +4,12 @@ import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.WeekSymbol
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellings;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.stereotype.Component;
 
@@ -28,14 +30,14 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     }
 
     @EventHandler
-    void react(WeekSymbolProclaimed event) {
+    void react(WeekSymbolProclaimed event, @MetaDataValue(GameMetaData.KEY) String gameId) {
         // todo: separate dwelling per game. Now we read all of them
         // I want be consistent here. With DBC it'd be nice to query all types and by tags like game.
         // use EventStore, @SequenceNumber long sequenceNumber
 
         var creature = event.weekOf();
         var increaseBy = event.growth();
-        var toProcess = queryGateway.query(GetAllDwellings.query(), GetAllDwellings.Result.class);
+        var toProcess = queryGateway.query(GetAllDwellings.query(gameId), GetAllDwellings.Result.class);
         toProcess.thenAccept(r -> r.dwellings()
                                    .stream().filter(dwelling -> dwelling.getCreatureId().equals(creature))
                                    .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy)));
@@ -47,6 +49,6 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
                 dwelling.getCreatureId(),
                 increaseBy
         );
-        commandGateway.sendAndWait(command);
+        commandGateway.sendAndWait(command, GameMetaData.withId(dwelling.getGameId()));
     }
 }
