@@ -56,16 +56,13 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
         // then
         var expectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(expectedCommand1);
 
         var expectedCommand2 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(expectedCommand2, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(expectedCommand2);
 
         var notExpectedCommand = IncreaseAvailableCreatures.command(titanDwellingId, "titan", 3);
-        awaitUntilAsserted(() -> verify(commandGateway, never())
-                .sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID)));
+        assertCommandNotExecuted(notExpectedCommand);
     }
 
     @Test
@@ -82,25 +79,21 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
         // when
         astrologersEvents(
                 astrologersId.raw(),
-                new WeekSymbolProclaimed(astrologersId.raw(), 1, 1, "angel", 2)
+                new WeekSymbolProclaimed(astrologersId.raw(), 1, 2, "angel", 2)
         );
 
         // then
         // week 1 - only 1 dwelling built
         var week1ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 1);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(week1ExpectedCommand1, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(week1ExpectedCommand1);
         var week1NotExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 2);
-        awaitUntilAsserted(() -> verify(commandGateway, never())
-                .sendAndWait(week1NotExpectedCommand1, GameMetaData.withId(GAME_ID)));
+        assertCommandNotExecuted(week1NotExpectedCommand1);
 
         // week 2 - 2 dwellings built
         var week2ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 2);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(week2ExpectedCommand1, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(week2ExpectedCommand1);
         var week2ExpectedCommand2 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 2);
-        awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(week2ExpectedCommand2, GameMetaData.withId(GAME_ID)));
+        assertCommandExecuted(week2ExpectedCommand2);
     }
 
 
@@ -154,5 +147,15 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
                 sequenceNumber,
                 payload
         ).andMetaData(GameMetaData.withId(GAME_ID));
+    }
+
+    private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand1) {
+        awaitUntilAsserted(() -> verify(commandGateway, times(1))
+                .sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
+    }
+
+    private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
+        awaitUntilAsserted(() -> verify(commandGateway, never())
+                .sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID)));
     }
 }
