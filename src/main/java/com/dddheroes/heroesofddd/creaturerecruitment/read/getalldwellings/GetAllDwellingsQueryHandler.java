@@ -3,9 +3,11 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import com.google.common.collect.Streams;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
 
@@ -24,20 +26,30 @@ class GetAllDwellingsQueryHandler {
 
     @QueryHandler
     GetAllDwellings.Result handle(GetAllDwellings query) {
-        var dwellings = dwellingReadModelRepository.findAll();
-        var result = Streams.concat(dwellings.stream(), cache.stream()) // todo: check ordering
+        var gameId = query.gameId().raw();
+        var dwellings = dwellingReadModelRepository.findAllByGameId(gameId);
+        var result = Streams.concat(
+                                    dwellings.stream(),
+                                    cache.stream().filter(it -> it.getGameId().equals(gameId))
+                            ) // todo: check ordering
                             .distinct()
                             .toList();
         return new GetAllDwellings.Result(result);
     }
 
     @EventHandler
-    void evolve(DwellingBuilt event) {
+    void evolve(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
         while (cache.size() > 20) {
             cache.pollFirst();
         }
-        var item = new DwellingReadModel(event.dwellingId(), event.creatureId(), event.costPerTroop(), 0);
-        if (!cache.contains(item)) { // todo: check concurrency issues
+        var item = new DwellingReadModel(
+                gameId,
+                event.dwellingId(),
+                event.creatureId(),
+                event.costPerTroop(),
+                0
+        );
+        if (!cache.contains(item)) { // todo: check if there are any concurrency issues
             cache.push(item);
         }
     }
