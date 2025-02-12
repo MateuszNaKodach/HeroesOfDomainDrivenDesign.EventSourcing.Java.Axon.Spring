@@ -3,7 +3,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.Cost;
+import com.dddheroes.heroesofddd.shared.Resources;
 import com.dddheroes.heroesofddd.shared.CreatureId;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.test.aggregate.AggregateTestFixture;
@@ -13,8 +13,8 @@ public class DwellingTest {
 
     protected final DwellingId dwellingId = DwellingId.random();
     protected final CreatureId angelId = CreatureId.of("angel");
-    protected final Cost costPerTroop = Cost
-            .resources(ResourceType.GOLD, Amount.of(3000))
+    protected final Resources costPerTroop = Resources
+            .from(ResourceType.GOLD, Amount.of(3000))
             .plus(ResourceType.GEMS, Amount.of(1));
 
     protected AggregateTestFixture<?> fixture;

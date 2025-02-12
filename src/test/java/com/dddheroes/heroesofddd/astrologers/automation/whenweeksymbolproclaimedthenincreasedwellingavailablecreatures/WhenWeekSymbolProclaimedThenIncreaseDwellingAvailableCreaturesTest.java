@@ -9,7 +9,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.Cost;
+import com.dddheroes.heroesofddd.shared.Resources;
 import com.dddheroes.heroesofddd.shared.CreatureId;
 import com.dddheroes.heroesofddd.shared.GameId;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
@@ -98,7 +98,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     private String dwellingBuiltEvent(String creatureId) {
         var dwellingId = DwellingId.random();
-        var costPerTroop = Cost.resources(ResourceType.GOLD, Amount.of(1000));
+        var costPerTroop = Resources.from(ResourceType.GOLD, Amount.of(1000));
         var event = DwellingBuilt.event(dwellingId, CreatureId.of(creatureId), costPerTroop);
         eventGateway.publish(dwellingDomainEvent(dwellingId.raw(), 0, event));
         return dwellingId.raw();
