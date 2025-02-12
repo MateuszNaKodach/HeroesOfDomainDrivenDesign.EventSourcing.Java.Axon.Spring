@@ -18,11 +18,11 @@ import org.axonframework.spring.stereotype.Aggregate;
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
 @Aggregate
-public class ResourcesPool {
+class ResourcesPool {
 
     @AggregateIdentifier
     private ResourcesPoolId resourcesPoolId;
-    private Resources balance;
+    private Resources balance = Resources.empty();
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
@@ -33,7 +33,7 @@ public class ResourcesPool {
     @EventSourcingHandler
     void evolve(ResourcesDeposited event) {
         resourcesPoolId = new ResourcesPoolId(event.resourcesPoolId());
-        balance.plus(ResourceType.from(event.type()), new Amount(event.amount()));
+        this.balance = balance.plus(ResourceType.from(event.type()), new Amount(event.amount()));
     }
 
     @CommandHandler
@@ -48,7 +48,7 @@ public class ResourcesPool {
     @EventSourcingHandler
     void evolve(ResourcesWithdrawn event) {
         resourcesPoolId = new ResourcesPoolId(event.resourcesPoolId());
-        balance.minus(ResourceType.from(event.type()), new Amount(event.amount()));
+        this.balance = balance.minus(ResourceType.from(event.type()), new Amount(event.amount()));
     }
 
     ResourcesPool() {

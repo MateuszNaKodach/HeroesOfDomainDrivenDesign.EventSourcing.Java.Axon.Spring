@@ -13,7 +13,7 @@ public record DepositResources(
         Amount amount
 ) implements ResourcesPoolCommand {
 
-    public static DepositResources command(String dwellingId, String type, Integer amount) {
-        return new DepositResources(ResourcesPoolId.of(dwellingId), ResourceType.from(type), Amount.of(amount));
+    public static DepositResources command(String resourcesPoolId, String type, Integer amount) {
+        return new DepositResources(ResourcesPoolId.of(resourcesPoolId), ResourceType.from(type), Amount.of(amount));
     }
 }

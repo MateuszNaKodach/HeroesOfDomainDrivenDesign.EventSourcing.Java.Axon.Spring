@@ -13,7 +13,7 @@ public record WithdrawResources(
         Amount amount
 ) implements ResourcesPoolCommand {
 
-    public static WithdrawResources command(String dwellingId, String type, Integer amount) {
-        return new WithdrawResources(ResourcesPoolId.of(dwellingId), ResourceType.from(type), Amount.of(amount));
+    public static WithdrawResources command(String resourcesPoolId, String type, Integer amount) {
+        return new WithdrawResources(ResourcesPoolId.of(resourcesPoolId), ResourceType.from(type), Amount.of(amount));
     }
 }

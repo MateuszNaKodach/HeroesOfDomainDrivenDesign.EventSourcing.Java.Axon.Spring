@@ -16,6 +16,10 @@ public class Resources {
         return new Resources(Map.of(type, amount));
     }
 
+    public static Resources empty() {
+        return new Resources(Map.of());
+    }
+
     public Resources plus(ResourceType type, Amount amount) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.raw);
         newResources.merge(type, amount, Amount::plus);
