@@ -98,7 +98,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     private String dwellingBuiltEvent(String creatureId) {
         var dwellingId = DwellingId.random();
-        var costPerTroop = Resources.resources(ResourceType.GOLD, Amount.of(1000));
+        var costPerTroop = Resources.from(ResourceType.GOLD, Amount.of(1000));
         var event = DwellingBuilt.event(dwellingId, CreatureId.of(creatureId), costPerTroop);
         eventGateway.publish(dwellingDomainEvent(dwellingId.raw(), 0, event));
         return dwellingId.raw();

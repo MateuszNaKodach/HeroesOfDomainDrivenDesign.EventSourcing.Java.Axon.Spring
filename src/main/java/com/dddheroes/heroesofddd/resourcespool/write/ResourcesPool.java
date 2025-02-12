@@ -2,16 +2,18 @@ package com.dddheroes.heroesofddd.resourcespool.write;
 
 import com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResources;
 import com.dddheroes.heroesofddd.resourcespool.write.deposit.ResourcesDeposited;
+import com.dddheroes.heroesofddd.resourcespool.write.withdraw.CannotWithdrawMoreThanDepositedResources;
+import com.dddheroes.heroesofddd.resourcespool.write.withdraw.ResourcesWithdrawn;
+import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.shared.Resources;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.CreationPolicy;
 import org.axonframework.spring.stereotype.Aggregate;
-
-import java.util.Map;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
@@ -20,7 +22,7 @@ public class ResourcesPool {
 
     @AggregateIdentifier
     private ResourcesPoolId resourcesPoolId;
-    private Map<ResourceType, Amount> resources;
+    private Resources balance;
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
@@ -30,8 +32,23 @@ public class ResourcesPool {
 
     @EventSourcingHandler
     void evolve(ResourcesDeposited event) {
-        resourcesPoolId = ResourcesPoolId.of(event.resourcesPoolId());
-        resources.merge(ResourceType.from(event.type()), new Amount(event.amount()), Amount::plus);
+        resourcesPoolId = new ResourcesPoolId(event.resourcesPoolId());
+        balance.plus(ResourceType.from(event.type()), new Amount(event.amount()));
+    }
+
+    @CommandHandler
+    void decide(WithdrawResources command) {
+        new CannotWithdrawMoreThanDepositedResources(
+                balance,
+                Resources.from(command.type(), command.amount())
+        ).verify();
+        apply(ResourcesWithdrawn.event(command.resourcesPoolId(), command.type(), command.amount()));
+    }
+
+    @EventSourcingHandler
+    void evolve(ResourcesWithdrawn event) {
+        resourcesPoolId = new ResourcesPoolId(event.resourcesPoolId());
+        balance.minus(ResourceType.from(event.type()), new Amount(event.amount()));
     }
 
     ResourcesPool() {

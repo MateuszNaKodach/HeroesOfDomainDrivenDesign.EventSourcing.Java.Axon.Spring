@@ -1,13 +1,13 @@
 package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
-import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.DomainRule;
+import com.dddheroes.heroesofddd.shared.Resources;
 
-public record CannotWithdrawMoreThanDepositedResources(DwellingId dwellingId) implements DomainRule {
+public record CannotWithdrawMoreThanDepositedResources(Resources balance, Resources toWithdraw) implements DomainRule {
 
     @Override
     public boolean isViolated() {
-        return dwellingId != null;
+        return !balance.contains(toWithdraw);
     }
 
     @Override

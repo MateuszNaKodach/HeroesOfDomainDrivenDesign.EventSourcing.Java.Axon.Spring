@@ -14,7 +14,7 @@ public class DwellingTest {
     protected final DwellingId dwellingId = DwellingId.random();
     protected final CreatureId angelId = CreatureId.of("angel");
     protected final Resources costPerTroop = Resources
-            .resources(ResourceType.GOLD, Amount.of(3000))
+            .from(ResourceType.GOLD, Amount.of(3000))
             .plus(ResourceType.GEMS, Amount.of(1));
 
     protected AggregateTestFixture<?> fixture;
