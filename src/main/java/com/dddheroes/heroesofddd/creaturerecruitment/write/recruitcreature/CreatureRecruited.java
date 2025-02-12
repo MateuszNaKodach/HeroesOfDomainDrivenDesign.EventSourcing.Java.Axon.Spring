@@ -4,7 +4,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.Cost;
+import com.dddheroes.heroesofddd.shared.Resources;
 import com.dddheroes.heroesofddd.shared.CreatureId;
 
 import java.util.Map;
@@ -22,7 +22,7 @@ public record CreatureRecruited(
             CreatureId creatureId,
             ArmyId toArmy,
             Amount quantity,
-            Cost totalCost
+            Resources totalCost
     ) {
         return new CreatureRecruited(
                 dwellingId.raw(),

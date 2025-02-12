@@ -10,9 +10,8 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Creat
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreaturesNotExceedAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.Cost;
+import com.dddheroes.heroesofddd.shared.Resources;
 import com.dddheroes.heroesofddd.shared.CreatureId;
-import com.dddheroes.heroesofddd.shared.DomainRule;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
@@ -28,7 +27,7 @@ class Dwelling {
     @AggregateIdentifier
     private DwellingId dwellingId;
     private CreatureId creatureId;
-    private Cost costPerTroop;
+    private Resources costPerTroop;
     private Amount availableCreatures;
 
     @CommandHandler
@@ -49,7 +48,7 @@ class Dwelling {
     void evolve(DwellingBuilt event) {
         this.dwellingId = new DwellingId(event.dwellingId());
         this.creatureId = new CreatureId(event.creatureId());
-        this.costPerTroop = Cost.fromRaw(event.costPerTroop());
+        this.costPerTroop = Resources.fromRaw(event.costPerTroop());
         this.availableCreatures = Amount.zero();
     }
 

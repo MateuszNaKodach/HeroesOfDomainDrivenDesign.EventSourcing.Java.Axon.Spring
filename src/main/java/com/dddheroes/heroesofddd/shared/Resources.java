@@ -5,55 +5,55 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 // todo: think if rename to Resources (internal raw?)
-public class Cost {
+public class Resources {
 
     private final Map<ResourceType, Amount> resources;
 
-    private Cost(Map<ResourceType, Amount> resources) {
+    private Resources(Map<ResourceType, Amount> resources) {
         this.resources = resources;
     }
 
-    public static Cost resources(ResourceType type, Amount amount) {
-        return new Cost(Map.of(type, amount));
+    public static Resources resources(ResourceType type, Amount amount) {
+        return new Resources(Map.of(type, amount));
     }
 
-    public Cost plus(ResourceType type, Amount amount) {
+    public Resources plus(ResourceType type, Amount amount) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.resources);
         newResources.merge(type, amount, Amount::plus);
-        return new Cost(newResources);
+        return new Resources(newResources);
     }
 
-    public Cost minus(ResourceType type, Amount amount) {
+    public Resources minus(ResourceType type, Amount amount) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.resources);
         newResources.merge(type, amount, Amount::minus);
-        return new Cost(newResources);
+        return new Resources(newResources);
     }
 
-    public Cost plus(Map<ResourceType, Amount> additionalResources) {
+    public Resources plus(Map<ResourceType, Amount> additionalResources) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.resources);
         additionalResources.forEach((type, amount) ->
                                             newResources.merge(type, amount, Amount::plus)
         );
-        return new Cost(newResources);
+        return new Resources(newResources);
     }
 
-    public Cost minus(Map<ResourceType, Amount> additionalResources) {
+    public Resources minus(Map<ResourceType, Amount> additionalResources) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.resources);
         additionalResources.forEach((type, amount) ->
                                             newResources.merge(type, amount, Amount::minus)
         );
-        return new Cost(newResources);
+        return new Resources(newResources);
     }
 
-    public Cost multiply(int multiplier) {
-        return new Cost(resources.entrySet().stream()
-                                 .collect(Collectors.toMap(
+    public Resources multiply(int multiplier) {
+        return new Resources(resources.entrySet().stream()
+                                      .collect(Collectors.toMap(
                                          Map.Entry::getKey,
                                          entry -> new Amount(entry.getValue().raw() * multiplier)
                                  )));
     }
 
-    public Cost multiply(Amount amount) {
+    public Resources multiply(Amount amount) {
         return multiply(amount.raw());
     }
 
@@ -69,13 +69,13 @@ public class Cost {
                         ));
     }
 
-    public static Cost fromRaw(Map<String, Integer> raw) {
+    public static Resources fromRaw(Map<String, Integer> raw) {
         Map<ResourceType, Amount> resources = raw.entrySet().stream()
                                                  .collect(Collectors.toMap(
                                                          entry -> ResourceType.from(entry.getKey()),
                                                          entry -> new Amount(entry.getValue())
                                                  ));
-        return new Cost(resources);
+        return new Resources(resources);
     }
 
     // required by Jackson
