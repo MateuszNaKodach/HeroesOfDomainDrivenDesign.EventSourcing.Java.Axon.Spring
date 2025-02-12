@@ -28,11 +28,12 @@ class IncreaseAvailableCreaturesRestApi {
             @PathVariable String dwellingId,
             @RequestBody Body requestBody
     ) {
+        var uow = new AsyncUnitOfWork();
         var command = IncreaseAvailableCreatures.command(
                 dwellingId,
                 requestBody.creatureId(),
                 requestBody.increaseBy()
         );
-        return commandGateway.send(command);
+        return commandGateway.send(command, uow);
     }
 }

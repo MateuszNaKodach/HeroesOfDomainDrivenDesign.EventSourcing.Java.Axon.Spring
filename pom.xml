@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<axon.version>4.10.3</axon.version>
+		<axon.version>5.0.0-SNAPSHOT</axon.version>
 		<java.version>23</java.version>
 		<spring-modulith.version>1.3.1</spring-modulith.version>
 	</properties>
@@ -63,6 +63,7 @@
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-spring-boot-starter</artifactId>
+			<version>${axon.version}</version>
 		</dependency>
 
 		<!-- Runtime dependencies -->
@@ -122,6 +123,7 @@
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-test</artifactId>
+			<version>${axon.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -141,13 +143,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.axonframework</groupId>
-				<artifactId>axon-bom</artifactId>
-				<version>${axon.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>org.axonframework</groupId>-->
+<!--				<artifactId>axon-bom</artifactId>-->
+<!--				<version>${axon.version}</version>-->
+<!--				<type>pom</type>-->
+<!--				<scope>import</scope>-->
+<!--			</dependency>-->
 		</dependencies>
 	</dependencyManagement>
 

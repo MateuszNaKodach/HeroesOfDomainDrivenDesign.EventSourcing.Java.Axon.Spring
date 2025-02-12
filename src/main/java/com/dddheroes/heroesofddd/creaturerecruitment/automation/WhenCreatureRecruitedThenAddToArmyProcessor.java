@@ -6,8 +6,9 @@ import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
-import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.messaging.unitofwork.AsyncUnitOfWork;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenCreatureRecruitedThenAddToArmy_Processor")
@@ -23,12 +24,13 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
 
     @EventHandler
     void react(CreatureRecruited event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+        var uow = new AsyncUnitOfWork();
         var command = AddCreatureToArmy.command(
                 event.toArmy(),
                 event.creatureId(),
                 event.quantity()
         );
 
-        commandGateway.sendAndWait(command, GameMetaData.withId(gameId));
+        commandGateway.sendAndWait(command, GameMetaData.withId(gameId), uow);
     }
 }

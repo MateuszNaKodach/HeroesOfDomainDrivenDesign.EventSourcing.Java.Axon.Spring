@@ -6,7 +6,7 @@ import com.dddheroes.heroesofddd.calendar.write.finishday.FinishDay;
 import com.dddheroes.heroesofddd.calendar.write.startday.CannotSkipDays;
 import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
 import com.dddheroes.heroesofddd.calendar.write.startday.StartDay;
-import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.commandhandling.annotation.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
 import org.axonframework.modelling.command.AggregateIdentifier;

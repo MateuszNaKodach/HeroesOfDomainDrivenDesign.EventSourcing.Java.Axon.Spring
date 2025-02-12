@@ -30,12 +30,13 @@ class RecruitCreatureRestApi {
             @PathVariable String dwellingId,
             @RequestBody Body requestBody
     ) {
+        var uow = new AsyncUnitOfWork();
         var command = RecruitCreature.command(
                 dwellingId,
                 requestBody.creatureId(),
                 requestBody.armyId(),
                 requestBody.quantity()
         );
-        return commandGateway.send(command, GameMetaData.withId(gameId));
+        return commandGateway.send(command, GameMetaData.withId(gameId), uow);
     }
 }

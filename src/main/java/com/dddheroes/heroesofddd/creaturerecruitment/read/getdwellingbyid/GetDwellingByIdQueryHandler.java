@@ -2,7 +2,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
-import org.axonframework.queryhandling.QueryHandler;
+import org.axonframework.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

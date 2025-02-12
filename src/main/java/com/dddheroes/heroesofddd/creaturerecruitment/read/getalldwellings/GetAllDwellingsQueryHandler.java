@@ -6,9 +6,9 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.Dwellin
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import com.google.common.collect.Streams;
 import org.axonframework.config.ProcessingGroup;
-import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
-import org.axonframework.queryhandling.QueryHandler;
+import org.axonframework.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedDeque;

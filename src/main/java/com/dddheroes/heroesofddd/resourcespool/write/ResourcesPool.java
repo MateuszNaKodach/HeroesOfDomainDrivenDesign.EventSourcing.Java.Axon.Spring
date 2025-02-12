@@ -8,7 +8,7 @@ import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import com.dddheroes.heroesofddd.shared.Resources;
-import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.commandhandling.annotation.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
 import org.axonframework.modelling.command.AggregateIdentifier;

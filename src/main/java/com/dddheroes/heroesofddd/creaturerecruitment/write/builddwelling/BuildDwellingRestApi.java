@@ -27,11 +27,12 @@ class BuildDwellingRestApi {
             @PathVariable String dwellingId,
             @RequestBody Body requestBody
     ) {
+        var uow = new AsyncUnitOfWork();
         var command = BuildDwelling.command(
                 dwellingId,
                 requestBody.creatureId(),
                 requestBody.costPerTroop()
         );
-        return commandGateway.send(command);
+        return commandGateway.send(command, uow);
     }
 }
