@@ -18,6 +18,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.MessageType;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -144,16 +145,17 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
                 aggregateType,
                 identifier,
                 sequenceNumber,
+                new MessageType("test", "event", "0.0.1"),
                 payload
         ).andMetaData(GameMetaData.withId(GAME_ID));
     }
 
     private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand1) {
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
+                .send(expectedCommand1, GameMetaData.withId(GAME_ID), any()));
     }
 
     private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
-        verify(commandGateway, never()).sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID));
+        verify(commandGateway, never()).send(notExpectedCommand, GameMetaData.withId(GAME_ID), any());
     }
 }

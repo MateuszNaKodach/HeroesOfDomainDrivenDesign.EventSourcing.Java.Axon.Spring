@@ -31,6 +31,6 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
                 event.quantity()
         );
 
-        commandGateway.sendAndWait(command, GameMetaData.withId(gameId), processingContext);
+        commandGateway.send(command, GameMetaData.withId(gameId), processingContext);
     }
 }

@@ -38,6 +38,6 @@ class RecruitCreatureRestApi {
                 requestBody.armyId(),
                 requestBody.quantity()
         );
-        return commandGateway.send(command, GameMetaData.withId(gameId), processingContext);
+        return commandGateway.send(command, GameMetaData.withId(gameId), processingContext).resultAs(Void.class);
     }
 }

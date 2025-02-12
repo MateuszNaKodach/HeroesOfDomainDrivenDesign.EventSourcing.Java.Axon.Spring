@@ -36,16 +36,16 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
         var increaseBy = event.growth();
         repository.findAllByGameId(gameId).stream()
                   .filter(dwelling -> dwelling.getCreatureId().equals(creature))
-                  .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy));
+                  .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy, processingContext));
     }
 
-    private void increaseAvailableCreatures(BuiltDwellingReadModel dwelling, Integer increaseBy) {
+    private void increaseAvailableCreatures(BuiltDwellingReadModel dwelling, Integer increaseBy, ProcessingContext processingContext) {
         var command = IncreaseAvailableCreatures.command(
                 dwelling.getDwellingId(),
                 dwelling.getCreatureId(),
                 increaseBy
         );
-        commandGateway.sendAndWait(command, GameMetaData.withId(dwelling.getGameId()), processingContext);
+        commandGateway.send(command, GameMetaData.withId(dwelling.getGameId()), processingContext);
     }
 
     @EventHandler

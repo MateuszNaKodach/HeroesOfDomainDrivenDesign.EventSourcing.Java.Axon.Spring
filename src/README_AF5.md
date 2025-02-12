@@ -2,3 +2,5 @@
 
 1. `ProcessingContext` how we will achieve that? Are we going to resolve it in handlers? 
     I'm not sure if this should be user responsibility, or the framework (with normal usage, without any customizations).
+2.  `commandGateway.sendAndWait` - there is no version with ProcessingContext
+3. Returning Void from Command send requires something like ` commandGateway.send(command, GameMetaData.withId(gameId), processingContext).resultAs(Void.class)`

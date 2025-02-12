@@ -16,6 +16,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.MessageType;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,7 +62,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), GameMetaData.withId(GAME_ID))
+                .send(AddCreatureToArmy.command(armyId, creatureId, 1), GameMetaData.withId(GAME_ID), any())
         );
     }
 
@@ -76,6 +77,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
                 "Dwelling",
                 dwellingId,
                 sequenceNumber,
+                new MessageType("test", "event", "0.0.1"),
                 payload
         ).andMetaData(GameMetaData.withId(GAME_ID));
     }

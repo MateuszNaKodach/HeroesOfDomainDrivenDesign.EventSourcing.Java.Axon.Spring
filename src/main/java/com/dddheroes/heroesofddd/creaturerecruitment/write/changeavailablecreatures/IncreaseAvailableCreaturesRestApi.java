@@ -37,6 +37,6 @@ class IncreaseAvailableCreaturesRestApi {
                 requestBody.creatureId(),
                 requestBody.increaseBy()
         );
-        return commandGateway.send(command, GameMetaData.withId(gameId), processingContext);
+        return commandGateway.send(command, GameMetaData.withId(gameId), processingContext).resultAs(Void.class);
     }
 }

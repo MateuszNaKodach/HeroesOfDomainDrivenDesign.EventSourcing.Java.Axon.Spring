@@ -43,7 +43,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
                     weekSymbol.weekOf().raw(),
                     weekSymbol.growth()
             );
-            commandGateway.sendAndWait(command, GameMetaData.withId(gameId), processingContext);
+            commandGateway.send(command, GameMetaData.withId(gameId), processingContext);
         }
     }
 }

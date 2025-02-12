@@ -17,6 +17,7 @@ import org.awaitility.Awaitility;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.MessageType;
 import org.axonframework.queryhandling.QueryGateway;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
@@ -157,6 +158,7 @@ class GetDwellingByIdTest {
                 "Dwelling",
                 dwellingId,
                 sequenceNumber,
+                new MessageType("test", "event", "0.0.1"),
                 payload
         ).andMetaData(GameMetaData.withId(GAME_ID));
     }
