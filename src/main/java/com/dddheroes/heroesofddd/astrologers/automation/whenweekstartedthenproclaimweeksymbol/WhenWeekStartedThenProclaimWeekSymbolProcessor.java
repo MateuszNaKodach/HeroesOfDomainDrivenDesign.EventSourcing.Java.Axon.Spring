@@ -10,6 +10,7 @@ import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.messaging.unitofwork.ProcessingContext;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor")
@@ -31,7 +32,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
     }
 
     @EventHandler
-    void react(DayStarted event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void react(DayStarted event, ProcessingContext processingContext, @MetaDataValue(GameMetaData.KEY) String gameId) {
         var isWeekStarted = event.day() == FIRST_DAY_OF_THE_WEEK;
         if (isWeekStarted) {
             var weekSymbol = weekSymbolCalculator.apply(MonthWeek.of(event.month(), event.week()));
@@ -42,7 +43,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
                     weekSymbol.weekOf().raw(),
                     weekSymbol.growth()
             );
-            commandGateway.sendAndWait(command, GameMetaData.withId(gameId));
+            commandGateway.sendAndWait(command, GameMetaData.withId(gameId), processingContext);
         }
     }
 }

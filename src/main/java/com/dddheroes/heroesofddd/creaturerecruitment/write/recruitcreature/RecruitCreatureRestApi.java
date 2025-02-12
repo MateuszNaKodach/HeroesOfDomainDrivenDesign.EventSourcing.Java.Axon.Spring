@@ -2,6 +2,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature;
 
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.unitofwork.annotation.ProcessingContext;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,15 +29,15 @@ class RecruitCreatureRestApi {
     CompletableFuture<Void> putDwellingsCreatureRecruitments(
             @PathVariable String gameId,
             @PathVariable String dwellingId,
-            @RequestBody Body requestBody
+            @RequestBody Body requestBody,
+            @ProcessingContext org.axonframework.messaging.unitofwork.ProcessingContext processingContext
     ) {
-        var uow = new AsyncUnitOfWork();
         var command = RecruitCreature.command(
                 dwellingId,
                 requestBody.creatureId(),
                 requestBody.armyId(),
                 requestBody.quantity()
         );
-        return commandGateway.send(command, GameMetaData.withId(gameId), uow);
+        return commandGateway.send(command, GameMetaData.withId(gameId), processingContext);
     }
 }

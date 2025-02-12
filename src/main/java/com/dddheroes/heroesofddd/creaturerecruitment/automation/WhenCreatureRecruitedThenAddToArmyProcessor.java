@@ -9,6 +9,7 @@ import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
 import org.axonframework.messaging.unitofwork.AsyncUnitOfWork;
+import org.axonframework.messaging.unitofwork.ProcessingContext;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenCreatureRecruitedThenAddToArmy_Processor")
@@ -23,14 +24,13 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
     }
 
     @EventHandler
-    void react(CreatureRecruited event, @MetaDataValue(GameMetaData.KEY) String gameId) {
-        var uow = new AsyncUnitOfWork();
+    void react(CreatureRecruited event, ProcessingContext processingContext, @MetaDataValue(GameMetaData.KEY) String gameId) {
         var command = AddCreatureToArmy.command(
                 event.toArmy(),
                 event.creatureId(),
                 event.quantity()
         );
 
-        commandGateway.sendAndWait(command, GameMetaData.withId(gameId), uow);
+        commandGateway.sendAndWait(command, GameMetaData.withId(gameId), processingContext);
     }
 }

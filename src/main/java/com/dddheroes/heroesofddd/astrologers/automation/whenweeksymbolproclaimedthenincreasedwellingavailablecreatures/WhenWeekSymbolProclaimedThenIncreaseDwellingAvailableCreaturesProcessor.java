@@ -9,6 +9,7 @@ import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;
 import org.axonframework.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.messaging.unitofwork.ProcessingContext;
 import org.springframework.stereotype.Component;
 
 @ProcessingGroup("ReadModel_Dwelling")
@@ -30,7 +31,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     }
 
     @EventHandler
-    void react(WeekSymbolProclaimed event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void react(WeekSymbolProclaimed event, ProcessingContext processingContext, @MetaDataValue(GameMetaData.KEY) String gameId) {
         var creature = event.weekOf();
         var increaseBy = event.growth();
         repository.findAllByGameId(gameId).stream()
@@ -44,7 +45,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
                 dwelling.getCreatureId(),
                 increaseBy
         );
-        commandGateway.sendAndWait(command, GameMetaData.withId(dwelling.getGameId()));
+        commandGateway.sendAndWait(command, GameMetaData.withId(dwelling.getGameId()), processingContext);
     }
 
     @EventHandler
