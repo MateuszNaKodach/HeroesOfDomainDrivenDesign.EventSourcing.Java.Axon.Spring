@@ -52,7 +52,6 @@ class RecruitCreatureCommandHandler {
             RecruitCreature command,
             ProcessingContext processingContext
             //MetaData metaData, // optional
-            //State state // instead of repository? calculate state based on the model?
     ) {
         return stateRepository.load(command.targetId(), processingContext)
                 .thenApply(ManagedEntity::entity)
