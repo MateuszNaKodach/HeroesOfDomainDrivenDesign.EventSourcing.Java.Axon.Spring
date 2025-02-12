@@ -1,16 +1,17 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures;
 
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
+import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
+@RequestMapping("/games/{gameId}")
 class IncreaseAvailableCreaturesRestApi {
 
     record Body(String creatureId, Integer increaseBy) {
@@ -25,6 +26,7 @@ class IncreaseAvailableCreaturesRestApi {
 
     @PutMapping("/dwellings/{dwellingId}/available-creatures-increases")
     CompletableFuture<Void> putDwellingAvailableCreaturesIncreases(
+            @PathVariable String gameId,
             @PathVariable String dwellingId,
             @RequestBody Body requestBody
     ) {
@@ -33,6 +35,6 @@ class IncreaseAvailableCreaturesRestApi {
                 requestBody.creatureId(),
                 requestBody.increaseBy()
         );
-        return commandGateway.send(command);
+        return commandGateway.send(command, GameMetaData.withId(gameId));
     }
 }
