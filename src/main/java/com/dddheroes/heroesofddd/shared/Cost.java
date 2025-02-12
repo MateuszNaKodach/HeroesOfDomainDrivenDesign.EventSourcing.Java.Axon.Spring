@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+// todo: think if rename to Resources (internal raw?)
 public class Cost {
 
     private final Map<ResourceType, Amount> resources;
