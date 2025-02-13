@@ -22,13 +22,17 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
     }
 
     @EventHandler
-    void react(CreatureRecruited event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void react(
+            CreatureRecruited event,
+            @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId,
+            @MetaDataValue(GameMetaData.PLAYER_ID_KEY) String playerId
+    ) {
         var command = AddCreatureToArmy.command(
                 event.toArmy(),
                 event.creatureId(),
                 event.quantity()
         );
 
-        commandGateway.sendAndWait(command, GameMetaData.withId(gameId));
+        commandGateway.sendAndWait(command, GameMetaData.with(gameId, playerId));
     }
 }

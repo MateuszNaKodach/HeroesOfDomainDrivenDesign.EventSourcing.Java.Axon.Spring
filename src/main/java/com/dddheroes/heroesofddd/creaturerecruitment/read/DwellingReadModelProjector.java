@@ -20,7 +20,7 @@ class DwellingReadModelProjector {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         var state = new DwellingReadModel(
                 gameId,
                 event.dwellingId(),

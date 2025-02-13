@@ -9,6 +9,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.Amount;
+import com.dddheroes.heroesofddd.shared.PlayerId;
 import com.dddheroes.heroesofddd.shared.Resources;
 import com.dddheroes.heroesofddd.shared.CreatureId;
 import com.dddheroes.heroesofddd.shared.GameId;
@@ -18,6 +19,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.MetaData;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.*;
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     private static final String GAME_ID = GameId.random().raw();
+    private static final String PLAYER_ID = PlayerId.random().raw();
 
     @Autowired
     private EventGateway eventGateway;
@@ -145,15 +148,19 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
                 identifier,
                 sequenceNumber,
                 payload
-        ).andMetaData(GameMetaData.withId(GAME_ID));
+        ).andMetaData(gameMetaData());
     }
 
     private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand1) {
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(expectedCommand1, GameMetaData.withId(GAME_ID)));
+                .sendAndWait(expectedCommand1, gameMetaData()));
     }
 
     private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
-        verify(commandGateway, never()).sendAndWait(notExpectedCommand, GameMetaData.withId(GAME_ID));
+        verify(commandGateway, never()).sendAndWait(notExpectedCommand, gameMetaData());
+    }
+
+    private static MetaData gameMetaData() {
+        return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }

@@ -11,11 +11,13 @@ import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.GameId;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.PlayerId;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.MetaData;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.*;
 class WhenCreatureRecruitedThenAddToArmyTest {
 
     private static final String GAME_ID = GameId.random().raw();
+    private static final String PLAYER_ID = PlayerId.random().raw();
     private static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
             ResourceType.MERCURY.name(), 1
@@ -61,7 +64,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), GameMetaData.withId(GAME_ID))
+                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData())
         );
     }
 
@@ -77,6 +80,10 @@ class WhenCreatureRecruitedThenAddToArmyTest {
                 dwellingId,
                 sequenceNumber,
                 payload
-        ).andMetaData(GameMetaData.withId(GAME_ID));
+        ).andMetaData(gameMetaData());
+    }
+
+    private static MetaData gameMetaData() {
+        return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }

@@ -38,7 +38,7 @@ class GetAllDwellingsQueryHandler {
     }
 
     @EventHandler
-    void evolve(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void evolve(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         while (cache.size() > 20) {
             cache.pollFirst();
         }
