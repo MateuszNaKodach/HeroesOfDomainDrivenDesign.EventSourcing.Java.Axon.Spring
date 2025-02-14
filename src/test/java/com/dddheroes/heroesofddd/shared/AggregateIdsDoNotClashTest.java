@@ -39,9 +39,7 @@ public class AggregateIdsDoNotClashTest {
 
         // when/then
         assertDoesNotThrow(() -> {
-            differentAggregateTypeIds.forEach((aggregateType, aggregateId) -> {
-                storeAggregateEvent(aggregateType, aggregateId);
-            });
+            differentAggregateTypeIds.forEach(this::storeAggregateEvent);
         });
     }
 

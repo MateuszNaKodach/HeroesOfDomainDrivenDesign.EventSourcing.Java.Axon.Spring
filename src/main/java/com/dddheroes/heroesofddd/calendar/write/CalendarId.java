@@ -20,6 +20,6 @@ public record CalendarId(String raw) {
 
     @Override
     public String toString() {
-        return raw;
+        return "Calendar:" + raw;
     }
 }

@@ -20,6 +20,6 @@ public record DwellingId(String raw) {
 
     @Override
     public String toString() {
-        return raw;
+        return "Dwelling:" + raw;
     }
 }

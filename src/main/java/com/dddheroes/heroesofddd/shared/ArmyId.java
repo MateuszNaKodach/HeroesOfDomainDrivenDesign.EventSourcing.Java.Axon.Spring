@@ -20,6 +20,6 @@ public record ArmyId(String raw) {
 
     @Override
     public String toString() {
-        return raw;
+        return "Army:" + raw;
     }
 }

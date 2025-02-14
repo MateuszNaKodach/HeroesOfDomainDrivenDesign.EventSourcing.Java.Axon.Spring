@@ -20,6 +20,6 @@ public record AstrologersId(String raw) {
 
     @Override
     public String toString() {
-        return raw;
+        return "Astrologers:" + raw;
     }
 }

@@ -20,6 +20,6 @@ public record ResourcesPoolId(String raw) {
 
     @Override
     public String toString() {
-        return raw;
+        return "ResourcesPool:" + raw;
     }
 }
