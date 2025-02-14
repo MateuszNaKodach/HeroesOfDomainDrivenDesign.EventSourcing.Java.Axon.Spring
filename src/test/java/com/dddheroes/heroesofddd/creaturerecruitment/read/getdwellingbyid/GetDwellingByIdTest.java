@@ -11,21 +11,17 @@ import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.GameId;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.PlayerId;
 import com.dddheroes.heroesofddd.shared.ResourceType;
-import com.dddheroes.heroesofddd.utils.AwaitilityUtils;
-import org.awaitility.Awaitility;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.queryhandling.QueryGateway;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
-import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.*;
@@ -36,6 +32,7 @@ import static org.assertj.core.api.Assertions.*;
 class GetDwellingByIdTest {
 
     private static final String GAME_ID = GameId.random().raw();
+    private static final String PLAYER_ID = PlayerId.random().raw();
     private static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
             ResourceType.MERCURY.name(), 1
@@ -158,6 +155,6 @@ class GetDwellingByIdTest {
                 dwellingId,
                 sequenceNumber,
                 payload
-        ).andMetaData(GameMetaData.withId(GAME_ID));
+        ).andMetaData(GameMetaData.with(GAME_ID, PLAYER_ID));
     }
 }

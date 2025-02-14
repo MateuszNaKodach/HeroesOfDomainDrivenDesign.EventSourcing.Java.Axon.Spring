@@ -31,7 +31,11 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
     }
 
     @EventHandler
-    void react(DayStarted event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void react(
+            DayStarted event,
+            @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId,
+            @MetaDataValue(GameMetaData.PLAYER_ID_KEY) String playerId
+    ) {
         var isWeekStarted = event.day() == FIRST_DAY_OF_THE_WEEK;
         if (isWeekStarted) {
             var weekSymbol = weekSymbolCalculator.apply(MonthWeek.of(event.month(), event.week()));
@@ -42,7 +46,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
                     weekSymbol.weekOf().raw(),
                     weekSymbol.growth()
             );
-            commandGateway.sendAndWait(command, GameMetaData.withId(gameId));
+            commandGateway.sendAndWait(command, GameMetaData.with(gameId, playerId));
         }
     }
 }

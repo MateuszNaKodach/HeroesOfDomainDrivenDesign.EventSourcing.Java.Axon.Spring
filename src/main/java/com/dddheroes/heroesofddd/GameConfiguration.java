@@ -11,6 +11,6 @@ public class GameConfiguration {
 
     @Bean
     public SequencingPolicy<EventMessage<?>> gameIdSequencingPolicy() {
-        return e -> e.getMetaData().get(GameMetaData.KEY);
+        return e -> e.getMetaData().get(GameMetaData.GAME_ID_KEY);
     }
 }

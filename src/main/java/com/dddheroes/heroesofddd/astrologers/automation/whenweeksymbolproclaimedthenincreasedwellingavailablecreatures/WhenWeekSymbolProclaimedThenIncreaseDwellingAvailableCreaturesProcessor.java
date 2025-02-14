@@ -30,25 +30,29 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     }
 
     @EventHandler
-    void react(WeekSymbolProclaimed event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void react(
+            WeekSymbolProclaimed event,
+            @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId,
+            @MetaDataValue(GameMetaData.PLAYER_ID_KEY) String playerId
+    ) {
         var creature = event.weekOf();
         var increaseBy = event.growth();
         repository.findAllByGameId(gameId).stream()
                   .filter(dwelling -> dwelling.getCreatureId().equals(creature))
-                  .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy));
+                  .forEach(dwelling -> increaseAvailableCreatures(dwelling, increaseBy, playerId));
     }
 
-    private void increaseAvailableCreatures(BuiltDwellingReadModel dwelling, Integer increaseBy) {
+    private void increaseAvailableCreatures(BuiltDwellingReadModel dwelling, Integer increaseBy, String playerId) {
         var command = IncreaseAvailableCreatures.command(
                 dwelling.getDwellingId(),
                 dwelling.getCreatureId(),
                 increaseBy
         );
-        commandGateway.sendAndWait(command, GameMetaData.withId(dwelling.getGameId()));
+        commandGateway.sendAndWait(command, GameMetaData.with(dwelling.getGameId(), playerId));
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.KEY) String gameId) {
+    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         var state = new BuiltDwellingReadModel(
                 gameId,
                 event.dwellingId(),

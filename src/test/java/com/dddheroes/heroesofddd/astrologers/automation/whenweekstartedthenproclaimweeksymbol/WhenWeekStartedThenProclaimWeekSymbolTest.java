@@ -7,10 +7,12 @@ import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
 import com.dddheroes.heroesofddd.shared.GameId;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.PlayerId;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.MetaData;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,6 +29,7 @@ import static org.mockito.Mockito.*;
 class WhenWeekStartedThenProclaimWeekSymbolTest {
 
     private static final String GAME_ID = GameId.random().raw();
+    private static final String PLAYER_ID = PlayerId.random().raw();
 
     @Autowired
     private EventGateway eventGateway;
@@ -49,7 +52,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(GameMetaData.withId(GAME_ID)))
+                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
         );
     }
 
@@ -66,6 +69,10 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
                 identifier,
                 sequenceNumber,
                 payload
-        ).andMetaData(GameMetaData.withId(GAME_ID));
+        ).andMetaData(gameMetaData());
+    }
+
+    private static MetaData gameMetaData() {
+        return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }
