@@ -65,6 +65,18 @@ class GetAllDwellingsTest extends DwellingReadModelTest {
         awaitUntilAsserted(() -> {
             var result = getDwellingReadModel(query).dwellings();
             assertThat(result).hasSize(2);
+            assertThat(result).anySatisfy(dwelling -> {
+                assertThat(dwelling.getDwellingId()).isEqualTo(dwellingId1);
+                assertThat(dwelling.getCreatureId()).isEqualTo(creatureId);
+                assertThat(dwelling.getCostPerTroop()).isEqualTo(PHOENIX_COST);
+                assertThat(dwelling.getAvailableCreatures()).isEqualTo(0);
+            });
+            assertThat(result).anySatisfy(dwelling -> {
+                assertThat(dwelling.getDwellingId()).isEqualTo(dwellingId2);
+                assertThat(dwelling.getCreatureId()).isEqualTo(creatureId);
+                assertThat(dwelling.getCostPerTroop()).isEqualTo(PHOENIX_COST);
+                assertThat(dwelling.getAvailableCreatures()).isEqualTo(0);
+            });
         });
     }
 
