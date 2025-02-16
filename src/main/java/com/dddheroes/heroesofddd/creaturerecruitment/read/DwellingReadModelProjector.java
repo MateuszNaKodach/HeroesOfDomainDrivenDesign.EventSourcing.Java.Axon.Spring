@@ -6,6 +6,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Creat
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
 import org.springframework.stereotype.Component;
 
@@ -43,5 +44,10 @@ class DwellingReadModelProjector {
         repository.findById(event.dwellingId())
                   .map(state -> state.withAvailableCreaturesDecreasedBy(event.quantity()))
                   .ifPresent(repository::save);
+    }
+
+    @ResetHandler
+    void onReset() {
+        repository.deleteAll();
     }
 }
