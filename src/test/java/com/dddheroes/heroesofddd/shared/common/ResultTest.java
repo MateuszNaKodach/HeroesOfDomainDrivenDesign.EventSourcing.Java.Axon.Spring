@@ -14,6 +14,7 @@ class ResultTest {
     @Nested
     @DisplayName("Success")
     class SuccessTests {
+
         private final Result<String> success = Result.success("test");
 
         @Test
@@ -59,7 +60,9 @@ class ResultTest {
         @DisplayName("should propagate exception in map")
         void mapWithException() {
             RuntimeException exception = new RuntimeException("Test exception");
-            Result<Integer> mapped = success.map(str -> { throw exception; });
+            Result<Integer> mapped = success.map(_ -> {
+                throw exception;
+            });
 
             assertThat(mapped.isFailure()).isTrue();
             assertThat(mapped.exceptionOrNull()).isEqualTo(exception);
@@ -68,9 +71,8 @@ class ResultTest {
         @Test
         @DisplayName("should flat map value successfully")
         void flatMap() {
-            Result<Integer> flatMapped = success.flatMap(str ->
-                                                                 Result.success(str.length())
-            );
+            Result<Integer> flatMapped = success
+                    .flatMap(str -> Result.success(str.length()));
             assertThat(flatMapped.getOrNull()).isEqualTo(4);
         }
 
@@ -78,9 +80,7 @@ class ResultTest {
         @DisplayName("should propagate failure in flat map")
         void flatMapWithFailure() {
             RuntimeException exception = new RuntimeException("Test exception");
-            Result<Integer> flatMapped = success.flatMap(str ->
-                                                                 Result.failure(exception)
-            );
+            Result<Integer> flatMapped = success.flatMap(__ -> Result.failure(exception));
 
             assertThat(flatMapped.isFailure()).isTrue();
             assertThat(flatMapped.exceptionOrNull()).isEqualTo(exception);
@@ -114,6 +114,7 @@ class ResultTest {
     @Nested
     @DisplayName("Failure")
     class FailureTests {
+
         private final RuntimeException exception = new RuntimeException("test exception");
         private final Result<String> failure = Result.failure(exception);
 
@@ -160,9 +161,8 @@ class ResultTest {
         @Test
         @DisplayName("should propagate failure when flat mapping")
         void flatMap() {
-            Result<Integer> flatMapped = failure.flatMap(str ->
-                                                                 Result.success(str.length())
-            );
+            Result<Integer> flatMapped = failure
+                    .flatMap(str -> Result.success(str.length()));
 
             assertThat(flatMapped.isFailure()).isTrue();
             assertThat(flatMapped.exceptionOrNull()).isEqualTo(exception);
@@ -219,9 +219,8 @@ class ResultTest {
         void voidResultFlatMap() {
             Result<Void> result = Result.success();
 
-            Result<String> flatMapped = result.flatMap(v ->
-                                                               Result.success("completed")
-            );
+            Result<String> flatMapped = result
+                    .flatMap(v -> Result.success("completed"));
 
             assertThat(flatMapped.getOrNull()).isEqualTo("completed");
         }
@@ -239,7 +238,7 @@ class ResultTest {
         @DisplayName("of should capture failed operation")
         void ofFailure() {
             RuntimeException exception = new RuntimeException("test exception");
-            Result<Integer> result = Result.of(() -> { throw exception; });
+            Result<Integer> result = Result.of(() -> {throw exception;});
 
             assertThat(result.isFailure()).isTrue();
             assertThat(result.exceptionOrNull()).isEqualTo(exception);
