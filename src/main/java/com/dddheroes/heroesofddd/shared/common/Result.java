@@ -42,7 +42,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
      * @param <T> The type parameter
      * @return A new Failure instance
      */
-    static <T> Result<T> failure(Throwable exception) {
+    static <T> Result<T> failure(RuntimeException exception) {
         return new Failure<>(exception);
     }
 
@@ -57,7 +57,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
         Objects.requireNonNull(supplier);
         try {
             return success(supplier.get());
-        } catch (Throwable e) {
+        } catch (RuntimeException e) {
             return failure(e);
         }
     }
@@ -72,7 +72,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
         Objects.requireNonNull(runnable);
         try {
             return success();
-        } catch (Throwable e) {
+        } catch (RuntimeException e) {
             return failure(e);
         }
     }
@@ -93,9 +93,9 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
      * Returns the value if this is success or throws the exception if this is failure
      *
      * @return The encapsulated value
-     * @throws Throwable The encapsulated exception if this is a failure
+     * @throws RuntimeException The encapsulated exception if this is a failure
      */
-    T getOrThrow() throws Throwable;
+    T getOrThrow() throws RuntimeException;
 
     /**
      * Returns the encapsulated value if this is success or null if this is failure
@@ -105,7 +105,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
     /**
      * Returns the encapsulated exception if this is failure or null if this is success
      */
-    Throwable exceptionOrNull();
+    RuntimeException exceptionOrNull();
 
     /**
      * Maps the success value using the given transformation
@@ -126,7 +126,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
         if (isSuccess()) {
             try {
                 return transform.apply(getOrNull());
-            } catch (Throwable e) {
+            } catch (RuntimeException e) {
                 return failure(e);
             }
         }
@@ -156,7 +156,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
         }
 
         @Override
-        public Throwable exceptionOrNull() {
+        public RuntimeException exceptionOrNull() {
             return null;
         }
 
@@ -165,7 +165,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
             Objects.requireNonNull(transform);
             try {
                 return Result.success(transform.apply(value));
-            } catch (Throwable e) {
+            } catch (RuntimeException e) {
                 return Result.failure(e);
             }
         }
@@ -189,9 +189,9 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
     }
 
     final class Failure<T> implements Result<T> {
-        private final Throwable exception;
+        private final RuntimeException exception;
 
-        private Failure(Throwable exception) {
+        private Failure(RuntimeException exception) {
             this.exception = Objects.requireNonNull(exception);
         }
 
@@ -201,7 +201,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
         }
 
         @Override
-        public T getOrThrow() throws Throwable {
+        public T getOrThrow() throws RuntimeException {
             throw exception;
         }
 
@@ -211,7 +211,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
         }
 
         @Override
-        public Throwable exceptionOrNull() {
+        public RuntimeException exceptionOrNull() {
             return exception;
         }
 
