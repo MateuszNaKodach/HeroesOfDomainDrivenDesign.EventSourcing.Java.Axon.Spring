@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.maintenance.operations;
+package com.dddheroes.heroesofddd.maintenance.write.resetprocessor;
 
 import org.axonframework.config.EventProcessingConfiguration;
 import org.axonframework.eventhandling.ReplayToken;

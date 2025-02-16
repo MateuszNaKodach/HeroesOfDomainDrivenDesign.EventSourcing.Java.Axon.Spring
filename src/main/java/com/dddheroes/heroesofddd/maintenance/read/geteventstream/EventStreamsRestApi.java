@@ -1,7 +1,7 @@
-package com.dddheroes.heroesofddd.maintenance.restapi;
+package com.dddheroes.heroesofddd.maintenance.read.geteventstream;
 
 import org.axonframework.eventhandling.DomainEventMessage;
-import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,17 +12,17 @@ import java.util.List;
 
 @ConditionalOnProperty(name = "application.maintenance.enabled", havingValue = "true")
 @RestController
-class EventsController {
+class EventStreamsRestApi {
 
-    private final EventStorageEngine eventStorageEngine;
+    private final EventStore eventStore;
 
-    EventsController(EventStorageEngine eventStorageEngine) {
-        this.eventStorageEngine = eventStorageEngine;
+    EventStreamsRestApi(EventStore eventStore) {
+        this.eventStore = eventStore;
     }
 
     @CrossOrigin
     @GetMapping("/maintenance/event-store/streams/{streamId}/events")
-    List<? extends DomainEventMessage<?>> readEvents(@PathVariable("streamId") String streamId) {
-        return eventStorageEngine.readEvents(streamId).asStream().toList();
+    List<? extends DomainEventMessage<?>> readEvents(@PathVariable String streamId) {
+        return eventStore.readEvents(streamId).asStream().toList();
     }
 }

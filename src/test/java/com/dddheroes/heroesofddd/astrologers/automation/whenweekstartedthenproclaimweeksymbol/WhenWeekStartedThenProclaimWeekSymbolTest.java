@@ -5,6 +5,7 @@ import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWe
 import com.dddheroes.heroesofddd.calendar.write.CalendarEvent;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
+import com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations;
 import com.dddheroes.heroesofddd.shared.GameId;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import com.dddheroes.heroesofddd.shared.PlayerId;
@@ -34,6 +35,9 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
     @Autowired
     private EventGateway eventGateway;
 
+    @Autowired
+    private StreamProcessorsOperations streamProcessorsOperations;
+
     @MockitoSpyBean
     private CommandGateway commandGateway;
 
@@ -54,6 +58,32 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
                 .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
         );
+    }
+
+    @Test
+    void givenDisallowedReplay_WhenReplayed_ThenShouldNotResendTheCommand() {
+        // given
+        var gameId = UUID.randomUUID().toString();
+        var calendarId = CalendarId.of(gameId);
+        givenCalendarEvents(
+                gameId,
+                new DayStarted(calendarId.raw(), 1, 1, 1)
+        );
+
+        // when
+        // processed by the automation
+
+        // then
+        awaitUntilAsserted(() -> verify(commandGateway, times(1))
+                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
+        );
+
+        // when
+        streamProcessorsOperations.reset("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor");
+
+        // then
+        verify(commandGateway, times(1))
+                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()));
     }
 
     private void givenCalendarEvents(String gameId, CalendarEvent... events) {
