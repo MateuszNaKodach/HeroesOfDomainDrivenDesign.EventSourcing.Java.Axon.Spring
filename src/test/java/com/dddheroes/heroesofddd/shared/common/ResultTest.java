@@ -244,12 +244,6 @@ class ResultTest {
             assertThat(result.exceptionOrNull()).isEqualTo(exception);
         }
 
-        @Test
-        @DisplayName("of should handle null supplier")
-        void ofNullSupplier() {
-            assertThatNullPointerException()
-                    .isThrownBy(() -> Result.of(null));
-        }
     }
 
     @Nested

@@ -19,7 +19,11 @@ public interface DomainRule {
 
     default void verify() {
         if (isViolated()) {
-            throw new ViolatedException(message());
+            throw exception();
         }
+    }
+
+    default ViolatedException exception() {
+        return new ViolatedException(message());
     }
 }

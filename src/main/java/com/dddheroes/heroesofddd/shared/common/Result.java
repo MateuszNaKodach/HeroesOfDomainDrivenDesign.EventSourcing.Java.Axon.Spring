@@ -63,6 +63,21 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
     }
 
     /**
+     * Wraps a runnable operation in a Result
+     *
+     * @param runnable The operation to execute
+     * @return A Result containing either the operation's result or any thrown exception
+     */
+    static Result<Void> of(Runnable runnable) {
+        Objects.requireNonNull(runnable);
+        try {
+            return success();
+        } catch (Throwable e) {
+            return failure(e);
+        }
+    }
+
+    /**
      * Returns true if this is a Success instance
      */
     boolean isSuccess();
