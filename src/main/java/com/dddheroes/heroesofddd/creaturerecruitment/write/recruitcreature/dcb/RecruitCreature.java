@@ -12,6 +12,7 @@ import com.dddheroes.heroesofddd.shared.CreatureId;
 import org.axonframework.commandhandling.annotation.CommandHandler;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.messaging.MessageStream;
 import org.axonframework.messaging.unitofwork.ProcessingContext;
 import org.axonframework.modelling.repository.AsyncRepository;
 import org.axonframework.modelling.repository.ManagedEntity;
@@ -22,14 +23,12 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public record RecruitCreature(
-        @TargetModelIdentifier
+        @TargetModelIdentifier // @TargetTag?
         TargetId targetId, // I don't like it compared to non-dcb, it's more technical
         CreatureId creatureId,
         Amount quantity
-) /*implements DwellingCommand - it`s not dwelling command anymore, because target is wider */ {
-
+)  {
     record TargetId(DwellingId dwellingId, ArmyId armyId) {
-
     }
 }
 
@@ -37,7 +36,7 @@ public record RecruitCreature(
 class RecruitCreatureCommandHandler {
 
     private final AsyncRepository<RecruitCreature.TargetId, State> stateRepository;
-    private final EventGateway eventGateway;
+    private final EventGateway eventGateway; // EventSink!
 
     RecruitCreatureCommandHandler(
             AsyncRepository<RecruitCreature.TargetId, State> stateRepository,
@@ -79,14 +78,16 @@ class RecruitCreatureCommandHandler {
 
     // framework handle the rest from option1 and use repository under the hood
     @CommandHandler
-    List<?> handleOption2(
+    MessageStream handleOption2(
             RecruitCreature command,
             //MetaData metaData, // optional
-            State state
+            @Model State state
     ) {
         return decide(command, state);
     }
 
+    // not sure about the name, other ideas:
+    // @ConsistencyBoundary, @ModelState, @CommandModel, @State
     @Model
     record State(
             DwellingId dwellingId,
@@ -126,7 +127,8 @@ class RecruitCreatureCommandHandler {
 }
 
 @interface Model {
-    // not sure about the name
+    // not sure about the name, other ideas:
+    // @ConsistencyBoundary, @ModelState, @CommandModel
 }
 
 public @interface EventTag {
