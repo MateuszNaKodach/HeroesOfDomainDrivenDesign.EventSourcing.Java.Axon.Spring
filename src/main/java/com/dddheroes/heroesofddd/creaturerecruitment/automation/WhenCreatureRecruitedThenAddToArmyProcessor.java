@@ -28,13 +28,12 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
             @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId,
             @MetaDataValue(GameMetaData.PLAYER_ID_KEY) String playerId
     ) {
-        var command = AddCreatureToArmy.command(
-                event.toArmy(),
-                event.creatureId(),
-                event.quantity()
-        );
-
         try {
+            var command = AddCreatureToArmy.command(
+                    event.toArmy(),
+                    event.creatureId(),
+                    event.quantity()
+            );
             commandGateway.sendAndWait(command, GameMetaData.with(gameId, playerId));
         } catch (Exception e) {
             var compensatingAction = IncreaseAvailableCreatures.command(
