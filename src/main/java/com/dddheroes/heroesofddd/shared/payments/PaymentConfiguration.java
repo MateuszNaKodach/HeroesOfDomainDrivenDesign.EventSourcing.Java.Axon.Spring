@@ -1,29 +1,23 @@
 package com.dddheroes.heroesofddd.shared.payments;
 
-import jakarta.annotation.PostConstruct;
+import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool;
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.modelling.command.Repository;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-class PaymentConfiguration {
-
-//    @Autowired
-//    void configure(CommandBus commandBus, PaymentInterceptor paymentInterceptor) {
-//        commandBus.registerHandlerInterceptor(paymentInterceptor);
-//    }
-
-
+class PaymentConfiguration implements InitializingBean {
     private final CommandBus commandBus;
-    private final org.axonframework.config.Configuration configuration;
+    private final Repository<ResourcesPool> repository;
 
-    public PaymentConfiguration(CommandBus commandBus, org.axonframework.config.Configuration configuration) {
+    public PaymentConfiguration(CommandBus commandBus, Repository<ResourcesPool> repository) {
         this.commandBus = commandBus;
-        this.configuration = configuration;
+        this.repository = repository;
     }
 
-    @PostConstruct
-    void paymentInterceptor() {
-        commandBus
-                .registerHandlerInterceptor(new PaymentInterceptor(configuration));
+    @Override
+    public void afterPropertiesSet() {
+        commandBus.registerHandlerInterceptor(new PaymentInterceptor(repository));
     }
 }
