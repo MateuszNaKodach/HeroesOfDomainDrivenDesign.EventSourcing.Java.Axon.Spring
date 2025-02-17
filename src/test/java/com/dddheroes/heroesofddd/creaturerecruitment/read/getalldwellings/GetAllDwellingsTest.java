@@ -81,7 +81,6 @@ class GetAllDwellingsTest extends DwellingReadModelTest {
     }
 
     private GetAllDwellings getAllDwellings() {
-        System.out.println("GET ALL DWELLINGS: " + GAME_ID);
         return GetAllDwellings.query(GAME_ID);
     }
 
