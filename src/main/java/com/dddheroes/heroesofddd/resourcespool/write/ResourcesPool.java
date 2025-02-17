@@ -18,7 +18,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
 @Aggregate
-class ResourcesPool {
+public class ResourcesPool {
 
     @AggregateIdentifier
     private ResourcesPoolId resourcesPoolId;
@@ -37,7 +37,7 @@ class ResourcesPool {
     }
 
     @CommandHandler
-    void decide(WithdrawResources command) {
+    public void decide(WithdrawResources command) {
         new CannotWithdrawMoreThanDepositedResources(
                 balance,
                 Resources.from(command.type(), command.amount())

@@ -8,7 +8,7 @@ public class Resources {
 
     private final Map<ResourceType, Amount> raw;
 
-    private Resources(Map<ResourceType, Amount> raw) {
+    public Resources(Map<ResourceType, Amount> raw) {
         this.raw = raw;
     }
 
