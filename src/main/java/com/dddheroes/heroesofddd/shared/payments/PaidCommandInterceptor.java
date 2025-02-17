@@ -3,18 +3,19 @@ package com.dddheroes.heroesofddd.shared.payments;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import org.axonframework.commandhandling.CommandMessage;
+import org.axonframework.config.Configuration;
 import org.axonframework.messaging.MessageHandlerInterceptor;
 import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
-@Component
 class PaymentInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
-    private final Repository<ResourcesPool> resourcesPoolRepository;
 
-    PaymentInterceptor(Repository<ResourcesPool> resourcesPoolRepository) {
-        this.resourcesPoolRepository = resourcesPoolRepository;
+    private final Configuration configuration;
+
+    PaymentInterceptor(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
@@ -26,7 +27,7 @@ class PaymentInterceptor implements MessageHandlerInterceptor<CommandMessage<?>>
             var cost = paidCommand.cost();
             var gold = cost.raw().getOrDefault("GOLD", 0);
 
-            resourcesPoolRepository.load(resourcesPoolId)
+            configuration.repository(ResourcesPool.class).load(resourcesPoolId)
                                    .execute(resourcesPool -> resourcesPool.decide(
                                            WithdrawResources.command(resourcesPoolId, "GOLD", gold))
                                    );
