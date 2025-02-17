@@ -2,6 +2,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
+import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelTest;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
@@ -29,21 +30,18 @@ import static org.assertj.core.api.Assertions.*;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
-class GetDwellingByIdTest {
+class GetDwellingByIdTest extends DwellingReadModelTest {
 
-    private static final String GAME_ID = GameId.random().raw();
-    private static final String PLAYER_ID = PlayerId.random().raw();
-    private static final Map<String, Integer> PHOENIX_COST = Map.of(
-            ResourceType.GOLD.name(), 2000,
-            ResourceType.MERCURY.name(), 1
-    );
+    private final QueryGateway queryGateway;
 
     @Autowired
-    private QueryGateway queryGateway;
-
-    // AxonServer event store is EventBus, but what about other implementations like JPA? Should I use EventStore instead?
-    @Autowired
-    private EventGateway eventGateway;
+    GetDwellingByIdTest(
+            EventGateway eventGateway,
+            QueryGateway queryGateway
+    ) {
+        super(eventGateway);
+        this.queryGateway = queryGateway;
+    }
 
     @Test
     void projectingDwellingReadModel_TestCase1() {
@@ -135,7 +133,7 @@ class GetDwellingByIdTest {
         });
     }
 
-    private static GetDwellingById getDwellingById(String dwellingId) {
+    private GetDwellingById getDwellingById(String dwellingId) {
         return GetDwellingById.query(GAME_ID, dwellingId);
     }
 
@@ -143,18 +141,4 @@ class GetDwellingByIdTest {
         return queryGateway.query(query, DwellingReadModel.class).join();
     }
 
-    private void givenDwellingEvents(String dwellingId, DwellingEvent... events) {
-        for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]));
-        }
-    }
-
-    private static DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
-        return new GenericDomainEventMessage<>(
-                "Dwelling",
-                dwellingId,
-                sequenceNumber,
-                payload
-        ).andMetaData(GameMetaData.with(GAME_ID, PLAYER_ID));
-    }
 }
