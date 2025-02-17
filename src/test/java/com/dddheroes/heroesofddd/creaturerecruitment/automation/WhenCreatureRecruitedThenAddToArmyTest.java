@@ -1,11 +1,14 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.automation;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
+import com.dddheroes.heroesofddd.armies.write.ArmyEvent;
 import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
+import com.dddheroes.heroesofddd.armies.write.addcreature.CreatureAddedToArmy;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
@@ -68,6 +71,77 @@ class WhenCreatureRecruitedThenAddToArmyTest {
         );
     }
 
+    @Test
+    void givenArmyIsNotFull_whenCreatureRecruited_ThenAddToTheArmyAndDoNotCompensate() {
+        // given
+        var armyId = ArmyId.random().raw();
+        givenArmyEvents(
+                armyId,
+                new CreatureAddedToArmy(armyId, CreatureIds.angel().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.behemoth().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.bowman().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.redDragon().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.blackDragon().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.archAngel().raw(), 1)
+        );
+        // when
+        var dwellingId = DwellingId.random().raw();
+        var creatureId = CreatureIds.phoenix().raw();
+        givenDwellingEvents(
+                dwellingId,
+                new DwellingBuilt(dwellingId, creatureId, PHOENIX_COST),
+                new AvailableCreaturesChanged(dwellingId, creatureId, 3),
+                new CreatureRecruited(dwellingId, creatureId, armyId, 1, PHOENIX_COST)
+        );
+
+        // and
+        // processed by the automation
+
+        // then
+        awaitUntilAsserted(() -> verify(commandGateway, times(1))
+                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData())
+        );
+        awaitUntilAsserted(() -> verify(commandGateway, never())
+                .sendAndWait(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData())
+        );
+    }
+
+    @Test
+    void givenArmyIsFull_whenCreatureRecruited_ThenDoNotAddToTheArmyAndCompensateRecruitment() {
+        // given
+        var armyId = ArmyId.random().raw();
+        givenArmyEvents(
+                armyId,
+                new CreatureAddedToArmy(armyId, CreatureIds.angel().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.behemoth().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.bowman().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.redDragon().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.blackDragon().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.archAngel().raw(), 1),
+                new CreatureAddedToArmy(armyId, CreatureIds.centaur().raw(), 1)
+        );
+        // when
+        var dwellingId = DwellingId.random().raw();
+        var creatureId = CreatureIds.phoenix().raw();
+        givenDwellingEvents(
+                dwellingId,
+                new DwellingBuilt(dwellingId, creatureId, PHOENIX_COST),
+                new AvailableCreaturesChanged(dwellingId, creatureId, 3),
+                new CreatureRecruited(dwellingId, creatureId, armyId, 2, PHOENIX_COST)
+        );
+
+        // and
+        // processed by the automation
+
+        // then
+        awaitUntilAsserted(() -> verify(commandGateway, never())
+                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData())
+        );
+        awaitUntilAsserted(() -> verify(commandGateway, times(1))
+                .sendAndWait(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData())
+        );
+    }
+
     private void givenDwellingEvents(String dwellingId, DwellingEvent... events) {
         for (int i = 0; i < events.length; i++) {
             eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]));
@@ -78,6 +152,22 @@ class WhenCreatureRecruitedThenAddToArmyTest {
         return new GenericDomainEventMessage<>(
                 "Dwelling",
                 dwellingId,
+                sequenceNumber,
+                payload
+        ).andMetaData(gameMetaData());
+    }
+
+    private void givenArmyEvents(String armyId, ArmyEvent... events) {
+        for (int i = 0; i < events.length; i++) {
+            eventGateway.publish(armyDomainEvent(armyId, i, events[i]));
+        }
+    }
+
+
+    private DomainEventMessage<?> armyDomainEvent(String armyId, int sequenceNumber, ArmyEvent payload) {
+        return new GenericDomainEventMessage<>(
+                "Army",
+                armyId,
                 sequenceNumber,
                 payload
         ).andMetaData(gameMetaData());
