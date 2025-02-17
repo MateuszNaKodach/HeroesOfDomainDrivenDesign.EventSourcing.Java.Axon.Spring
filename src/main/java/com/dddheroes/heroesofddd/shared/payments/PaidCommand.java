@@ -1,5 +1,6 @@
 package com.dddheroes.heroesofddd.shared.payments;
 
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.Resources;
 import org.axonframework.commandhandling.RoutingKey;
@@ -12,7 +13,7 @@ record PaidCommand(
 
     record Payload(Class<?> aggregateType,
                    String aggregateId,
-                   Object command) {
+                   RecruitCreature command) {
 
     }
 }

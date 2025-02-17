@@ -1,5 +1,6 @@
 package com.dddheroes.heroesofddd.shared.payments;
 
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import org.axonframework.commandhandling.CommandHandler;
@@ -9,6 +10,8 @@ import org.axonframework.modelling.command.Aggregate;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
+// mozna to zrobic tak, ze command implementuja interfajs PaidCommand with Cost i wtedy mam interceptor, ktory zabiera kase
+// i robic to transakcyjnie.
 @Component
 class PaidCommandHandler {
 
@@ -32,7 +35,7 @@ class PaidCommandHandler {
 
         var repository = configuration.repository(aggregateType);
         var aggregate = repository.load(aggregateId);
-        aggregate.handle(new GenericCommandMessage<>(payload.command()));
+        aggregate.handle(new GenericCommandMessage<RecruitCreature>((RecruitCreature) payload.command()));
 
         resourcesPoolRepository.load(resourcesPoolId)
                                .execute(resourcesPool -> resourcesPool.decide(
