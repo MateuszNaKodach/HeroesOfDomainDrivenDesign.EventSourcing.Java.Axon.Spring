@@ -5,6 +5,7 @@ import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.GenericCommandMessage;
 import org.axonframework.config.Configuration;
+import org.axonframework.modelling.command.Aggregate;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
@@ -29,13 +30,13 @@ class PaidCommandHandler {
         var cost = command.cost();
         var gold = cost.raw().getOrDefault("GOLD", 0);
 
+        var repository = configuration.repository(aggregateType);
+        var aggregate = repository.load(command.resourcesPoolId().raw());
+        aggregate.handle(new GenericCommandMessage<>(payload.command()));
+
         resourcesPoolRepository.load(resourcesPoolId)
                                .execute(resourcesPool -> resourcesPool.decide(
                                        WithdrawResources.command(resourcesPoolId, "GOLD", gold))
                                );
-
-        var repository = configuration.repository(aggregateType);
-        repository.load(aggregateId)
-                  .handle(new GenericCommandMessage<>(payload));
     }
 }
