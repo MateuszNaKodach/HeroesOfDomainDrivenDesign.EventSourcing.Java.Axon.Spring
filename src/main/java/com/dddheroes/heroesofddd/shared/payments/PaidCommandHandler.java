@@ -37,9 +37,14 @@ class PaidCommandHandler {
         var aggregate = repository.load(aggregateId);
         aggregate.handle(new GenericCommandMessage<RecruitCreature>((RecruitCreature) payload.command()));
 
-        resourcesPoolRepository.load(resourcesPoolId)
-                               .execute(resourcesPool -> resourcesPool.decide(
-                                       WithdrawResources.command(resourcesPoolId, "GOLD", gold))
-                               );
+        for (var entry : cost.raw().entrySet()) {
+            var resourceType = entry.getKey();
+            var amount = entry.getValue();
+
+            resourcesPoolRepository.load(resourcesPoolId)
+                                   .execute(resourcesPool -> resourcesPool.decide(
+                                           WithdrawResources.command(resourcesPoolId, resourceType, amount)
+                                   ));
+        }
     }
 }

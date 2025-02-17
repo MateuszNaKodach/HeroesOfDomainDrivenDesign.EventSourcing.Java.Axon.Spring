@@ -2,6 +2,7 @@ package com.dddheroes.heroesofddd.shared.payments;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResources;
 import com.dddheroes.heroesofddd.shared.Resources;
@@ -14,14 +15,16 @@ import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.GameId;
 import com.dddheroes.heroesofddd.shared.PlayerId;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.MetaData;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 import java.util.Map;
 
+import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Import(TestcontainersConfiguration.class)
@@ -37,6 +40,9 @@ class PaidCommandHandlerTest {
 
     @Autowired
     private CommandGateway commandGateway;
+
+    @Autowired
+    private EventStore eventStore;
 
     @Test
     void whenRecruitingCreature_thenProcessPaymentAndRecruitSuccessfully() {
@@ -85,6 +91,61 @@ class PaidCommandHandlerTest {
         assertDoesNotThrow(() ->
                                    commandGateway.sendAndWait(paidCommand, gameMetaData())
         );
+        // Verify CreatureRecruited event was stored
+        var events = eventStore.readEvents(dwellingId);
+        Assertions.assertTrue(events.asStream().anyMatch(event -> event.getPayload() instanceof CreatureRecruited),
+                               "CreatureRecruited event should be present in event store");
+    }
+
+    @Test
+    void givenInsufficientResources_whenRecruitingCreature_thenNoCreatureRecruitedEventStored() {
+        // Given
+        var resourcesPoolId = ResourcesPoolId.random().raw();
+        var dwellingId = DwellingId.random().raw();
+        var armyId = ArmyId.random().raw();
+        var creatureId = CreatureIds.phoenix().raw();
+
+        // Initialize resources pool with insufficient resources
+        commandGateway.sendAndWait(
+                DepositResources.command(resourcesPoolId, "GOLD", 1000), // Only half of required gold
+                gameMetaData()
+        );
+        commandGateway.sendAndWait(
+                DepositResources.command(resourcesPoolId, "MERCURY", 2),
+                gameMetaData()
+        );
+
+        // Build dwelling and make creatures available
+        commandGateway.sendAndWait(
+                BuildDwelling.command(dwellingId, creatureId, PHOENIX_COST),
+                gameMetaData()
+        );
+        commandGateway.sendAndWait(
+                IncreaseAvailableCreatures.command(dwellingId, creatureId, 5),
+                gameMetaData()
+        );
+
+        // When
+        var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1);
+        var paidCommand = new PaidCommand(
+                new ResourcesPoolId(resourcesPoolId),
+                Resources.fromRaw(PHOENIX_COST),
+                new PaidCommand.Payload(
+                        Dwelling.class,
+                        dwellingId,
+                        recruitCommand
+                )
+        );
+
+        // Then
+        assertThrows(Exception.class, () ->
+                commandGateway.sendAndWait(paidCommand, gameMetaData())
+        );
+
+        // Verify no CreatureRecruited event was stored
+        var events = eventStore.readEvents(dwellingId);
+        Assertions.assertFalse(events.asStream().anyMatch(event -> event.getPayload() instanceof CreatureRecruited),
+                               "CreatureRecruited event should not be present in event store");
     }
 
     private static MetaData gameMetaData() {
