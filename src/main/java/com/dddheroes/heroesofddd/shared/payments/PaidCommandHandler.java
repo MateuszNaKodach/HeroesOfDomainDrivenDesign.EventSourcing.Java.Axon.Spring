@@ -15,12 +15,10 @@ import org.springframework.stereotype.Component;
 @Component
 class PaidCommandHandler {
 
-    private final Repository<ResourcesPool> resourcesPoolRepository;
     private final Configuration configuration;
 
     PaidCommandHandler(Configuration configuration) {
         this.configuration = configuration;
-        this.resourcesPoolRepository = configuration.repository(ResourcesPool.class);
     }
 
     @CommandHandler
@@ -37,14 +35,14 @@ class PaidCommandHandler {
         var aggregate = repository.load(aggregateId);
         aggregate.handle(new GenericCommandMessage<RecruitCreature>((RecruitCreature) payload.command()));
 
-        for (var entry : cost.raw().entrySet()) {
-            var resourceType = entry.getKey();
-            var amount = entry.getValue();
-
-            resourcesPoolRepository.load(resourcesPoolId)
-                                   .execute(resourcesPool -> resourcesPool.decide(
-                                           WithdrawResources.command(resourcesPoolId, resourceType, amount)
-                                   ));
-        }
+//        for (var entry : cost.raw().entrySet()) {
+//            var resourceType = entry.getKey();
+//            var amount = entry.getValue();
+//
+//            resourcesPoolRepository.load(resourcesPoolId)
+//                                   .execute(resourcesPool -> resourcesPool.decide(
+//                                           WithdrawResources.command(resourcesPoolId, resourceType, amount)
+//                                   ));
+//        }
     }
 }
