@@ -31,7 +31,7 @@ class PaidCommandHandler {
         var gold = cost.raw().getOrDefault("GOLD", 0);
 
         var repository = configuration.repository(aggregateType);
-        var aggregate = repository.load(command.resourcesPoolId().raw());
+        var aggregate = repository.load(aggregateId);
         aggregate.handle(new GenericCommandMessage<>(payload.command()));
 
         resourcesPoolRepository.load(resourcesPoolId)
