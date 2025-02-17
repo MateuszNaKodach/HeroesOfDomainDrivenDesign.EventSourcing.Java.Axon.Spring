@@ -13,7 +13,7 @@ import java.util.Map;
 
 public abstract class DwellingReadModelTest {
 
-    protected static final String GAME_ID = GameId.random().raw();
+    protected final String GAME_ID = GameId.random().raw();
     protected static final String PLAYER_ID = PlayerId.random().raw();
     protected static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
@@ -32,7 +32,7 @@ public abstract class DwellingReadModelTest {
         }
     }
 
-    protected static DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber,
+    protected DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber,
                                                              DwellingEvent payload) {
         return new GenericDomainEventMessage<>(
                 "Dwelling",

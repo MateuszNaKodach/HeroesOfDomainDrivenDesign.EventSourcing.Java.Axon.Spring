@@ -133,7 +133,7 @@ class GetDwellingByIdTest extends DwellingReadModelTest {
         });
     }
 
-    private static GetDwellingById getDwellingById(String dwellingId) {
+    private GetDwellingById getDwellingById(String dwellingId) {
         return GetDwellingById.query(GAME_ID, dwellingId);
     }
 
