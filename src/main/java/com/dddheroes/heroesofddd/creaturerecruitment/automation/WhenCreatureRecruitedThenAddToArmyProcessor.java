@@ -1,6 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.automation;
 
 import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -33,6 +34,15 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
                 event.quantity()
         );
 
-        commandGateway.sendAndWait(command, GameMetaData.with(gameId, playerId));
+        try {
+            commandGateway.sendAndWait(command, GameMetaData.with(gameId, playerId));
+        } catch (Exception e) {
+            var compensatingAction = IncreaseAvailableCreatures.command(
+                    event.dwellingId(),
+                    event.creatureId(),
+                    event.quantity()
+            );
+            commandGateway.sendAndWait(compensatingAction, GameMetaData.with(gameId, playerId));
+        }
     }
 }
