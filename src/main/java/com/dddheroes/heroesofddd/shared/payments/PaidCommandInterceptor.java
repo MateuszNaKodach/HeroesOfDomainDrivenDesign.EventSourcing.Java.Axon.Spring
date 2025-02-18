@@ -9,6 +9,7 @@ import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
+@Component
 class PaymentInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
 
     private final Repository<ResourcesPool> repository;
