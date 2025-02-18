@@ -26,6 +26,14 @@ public class Resources {
         return new Resources(newResources);
     }
 
+    public Resources plus(Resources additionalResources) {
+        return plus(additionalResources.raw);
+    }
+
+    public Resources minus(Resources additionalResources) {
+        return minus(additionalResources.raw);
+    }
+
     public Resources minus(ResourceType type, Amount amount) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.raw);
         newResources.merge(type, amount, Amount::minus);
