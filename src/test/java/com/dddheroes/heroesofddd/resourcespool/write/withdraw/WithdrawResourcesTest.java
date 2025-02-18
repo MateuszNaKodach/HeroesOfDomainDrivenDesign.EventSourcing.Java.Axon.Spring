@@ -1,9 +1,6 @@
 package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
-import com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResources;
-import com.dddheroes.heroesofddd.resourcespool.write.deposit.ResourcesDeposited;
-import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.DomainRule;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import org.axonframework.modelling.command.AggregateNotFoundException;

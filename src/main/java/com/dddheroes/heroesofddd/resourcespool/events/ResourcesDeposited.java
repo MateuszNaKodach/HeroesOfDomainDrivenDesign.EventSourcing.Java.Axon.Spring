@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
+package com.dddheroes.heroesofddd.resourcespool.events;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolEvent;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
@@ -6,12 +6,12 @@ import com.dddheroes.heroesofddd.shared.Resources;
 
 import java.util.Map;
 
-public record ResourcesWithdrawn(
+public record ResourcesDeposited(
         String resourcesPoolId,
         Map<String, Integer> resources
 ) implements ResourcesPoolEvent {
 
-    public static ResourcesWithdrawn event(ResourcesPoolId resourcesPoolId, Resources resources) {
-        return new ResourcesWithdrawn(resourcesPoolId.raw(), resources.raw());
+    public static ResourcesDeposited event(ResourcesPoolId resourcesPoolId, Resources resources) {
+        return new ResourcesDeposited(resourcesPoolId.raw(), resources.raw());
     }
 }

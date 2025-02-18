@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol;
+package com.dddheroes.heroesofddd.astrologers.events;
 
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersEvent;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersId;

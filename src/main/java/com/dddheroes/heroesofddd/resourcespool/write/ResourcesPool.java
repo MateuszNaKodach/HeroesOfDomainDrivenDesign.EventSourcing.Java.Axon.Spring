@@ -1,9 +1,9 @@
 package com.dddheroes.heroesofddd.resourcespool.write;
 
 import com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResources;
-import com.dddheroes.heroesofddd.resourcespool.write.deposit.ResourcesDeposited;
+import com.dddheroes.heroesofddd.resourcespool.events.ResourcesDeposited;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.CannotWithdrawMoreThanDepositedResources;
-import com.dddheroes.heroesofddd.resourcespool.write.withdraw.ResourcesWithdrawn;
+import com.dddheroes.heroesofddd.resourcespool.events.ResourcesWithdrawn;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import com.dddheroes.heroesofddd.shared.Resources;
 import org.axonframework.commandhandling.CommandHandler;

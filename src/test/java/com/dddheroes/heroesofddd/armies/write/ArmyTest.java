@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.armies.write;
 
-import com.dddheroes.heroesofddd.armies.write.addcreature.CreatureAddedToArmy;
-import com.dddheroes.heroesofddd.armies.write.removecreature.CreatureRemovedFromArmy;
+import com.dddheroes.heroesofddd.armies.events.CreatureAddedToArmy;
+import com.dddheroes.heroesofddd.armies.events.CreatureRemovedFromArmy;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureId;

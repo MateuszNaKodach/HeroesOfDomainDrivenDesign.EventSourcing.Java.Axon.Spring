@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.Resources;
 import com.dddheroes.heroesofddd.shared.CreatureId;

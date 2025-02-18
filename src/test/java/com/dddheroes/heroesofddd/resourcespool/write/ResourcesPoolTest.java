@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.resourcespool.write;
 
-import com.dddheroes.heroesofddd.resourcespool.write.deposit.ResourcesDeposited;
-import com.dddheroes.heroesofddd.resourcespool.write.withdraw.ResourcesWithdrawn;
+import com.dddheroes.heroesofddd.resourcespool.events.ResourcesDeposited;
+import com.dddheroes.heroesofddd.resourcespool.events.ResourcesWithdrawn;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ResourceType;
 import com.dddheroes.heroesofddd.shared.Resources;

@@ -1,5 +1,6 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures;
 
+import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
 import com.dddheroes.heroesofddd.shared.Amount;
 import org.axonframework.modelling.command.AggregateNotFoundException;

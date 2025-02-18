@@ -1,22 +1,22 @@
-package com.dddheroes.heroesofddd.armies.write.removecreature;
+package com.dddheroes.heroesofddd.armies.events;
 
 import com.dddheroes.heroesofddd.armies.write.ArmyEvent;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureId;
 
-public record CreatureRemovedFromArmy(
+public record CreatureAddedToArmy(
         String armyId,
         String creatureId,
         Integer quantity
 ) implements ArmyEvent {
 
-    public static CreatureRemovedFromArmy event(
+    public static CreatureAddedToArmy event(
             ArmyId armyId,
             CreatureId creatureId,
             Amount quantity
     ) {
-        return new CreatureRemovedFromArmy(
+        return new CreatureAddedToArmy(
                 armyId.raw(),
                 creatureId.raw(),
                 quantity.raw()

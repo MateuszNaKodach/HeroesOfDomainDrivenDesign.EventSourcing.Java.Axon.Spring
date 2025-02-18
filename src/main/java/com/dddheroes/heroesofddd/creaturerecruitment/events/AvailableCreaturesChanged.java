@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures;
+package com.dddheroes.heroesofddd.creaturerecruitment.events;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;

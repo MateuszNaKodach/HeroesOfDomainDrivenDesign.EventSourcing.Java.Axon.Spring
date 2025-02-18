@@ -1,19 +1,17 @@
 package com.dddheroes.heroesofddd.calendar.write.finishday;
 
+import com.dddheroes.heroesofddd.calendar.events.DayFinished;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.write.CalendarTest;
 import com.dddheroes.heroesofddd.calendar.write.Day;
 import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
-import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
-import com.dddheroes.heroesofddd.calendar.write.startday.StartDay;
+import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.shared.DomainRule;
 import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class FinishDayTest extends CalendarTest {
 

@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.calendar.write.startday;
+package com.dddheroes.heroesofddd.calendar.events;
 
 import com.dddheroes.heroesofddd.calendar.write.CalendarEvent;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
