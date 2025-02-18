@@ -2,18 +2,22 @@ package com.dddheroes.heroesofddd.resourcespool.write.deposit;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolCommand;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.shared.Resources;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
+
+import java.util.Map;
 
 public record DepositResources(
         @TargetAggregateIdentifier
         ResourcesPoolId resourcesPoolId,
-        ResourceType type,
-        Amount amount
+        Resources resources
 ) implements ResourcesPoolCommand {
 
     public static DepositResources command(String resourcesPoolId, String type, Integer amount) {
-        return new DepositResources(ResourcesPoolId.of(resourcesPoolId), ResourceType.from(type), Amount.of(amount));
+        return command(resourcesPoolId, Map.of(type, amount));
+    }
+
+    public static DepositResources command(String resourcesPoolId, Map<String, Integer> resources) {
+        return new DepositResources(ResourcesPoolId.of(resourcesPoolId), Resources.fromRaw(resources));
     }
 }

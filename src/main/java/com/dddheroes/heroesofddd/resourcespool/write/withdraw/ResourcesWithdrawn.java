@@ -2,16 +2,16 @@ package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolEvent;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.shared.Resources;
+
+import java.util.Map;
 
 public record ResourcesWithdrawn(
         String resourcesPoolId,
-        String type,
-        Integer amount
+        Map<String, Integer> resources
 ) implements ResourcesPoolEvent {
 
-    public static ResourcesWithdrawn event(ResourcesPoolId resourcesPoolId, ResourceType type, Amount amount) {
-        return new ResourcesWithdrawn(resourcesPoolId.raw(), type.name(), amount.raw());
+    public static ResourcesWithdrawn event(ResourcesPoolId resourcesPoolId, Resources resources) {
+        return new ResourcesWithdrawn(resourcesPoolId.raw(), resources.raw());
     }
 }
