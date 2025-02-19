@@ -94,12 +94,12 @@ Aggregates:
 
 The project follows a Screaming Architecture pattern organized around vertical slices that mirror Event Modeling concepts.
 
-![ScreamingArchitecture](docs/images/ScreamingArchitecture.png)
+![ScreamingArchitecture](docs/images/ScreamingArchitectureEvents.png)
 
 The package structure screams the capabilities of the system by making explicit: commands available to users, events that capture what happened, queries for retrieving information, business rules, and system automations.
 This architecture makes it immediately obvious what the system can do, what rules govern those actions, and how different parts of the system interact through events.
 
-Each module is structured into three distinct types of slices:
+Each module is structured into three distinct types of slices (packages `write`, `read`, `automation`) and there are events (package `events`) between them, which are a system backbone - a contract between all other parts:
 
 ### Write Slices
 Contains commands that represent user intentions, defines business rules through aggregates, produces domain events, and enforces invariants (e.g., RecruitCreature command → CreatureRecruited event, with RecruitCreaturesNotExceedAvailableCreatures rule).
