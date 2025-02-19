@@ -1,7 +1,8 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature;
 
+import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureId;

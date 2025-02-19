@@ -1,10 +1,10 @@
 package com.dddheroes.heroesofddd.calendar.write;
 
 import com.dddheroes.heroesofddd.calendar.write.finishday.CanOnlyFinishCurrentDay;
-import com.dddheroes.heroesofddd.calendar.write.finishday.DayFinished;
+import com.dddheroes.heroesofddd.calendar.events.DayFinished;
 import com.dddheroes.heroesofddd.calendar.write.finishday.FinishDay;
 import com.dddheroes.heroesofddd.calendar.write.startday.CannotSkipDays;
-import com.dddheroes.heroesofddd.calendar.write.startday.DayStarted;
+import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.calendar.write.startday.StartDay;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;

@@ -1,8 +1,8 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read;
 
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.AvailableCreaturesChanged;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.CreatureRecruited;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;

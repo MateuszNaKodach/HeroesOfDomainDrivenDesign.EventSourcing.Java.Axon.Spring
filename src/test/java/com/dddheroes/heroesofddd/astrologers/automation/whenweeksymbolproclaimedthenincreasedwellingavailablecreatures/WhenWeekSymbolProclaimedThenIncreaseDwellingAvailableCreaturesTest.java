@@ -3,10 +3,10 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaime
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersEvent;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersId;
-import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.WeekSymbolProclaimed;
+import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.PlayerId;

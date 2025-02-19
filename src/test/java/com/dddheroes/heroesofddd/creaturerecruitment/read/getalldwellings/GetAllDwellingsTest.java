@@ -3,7 +3,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings;
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelTest;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.queryhandling.QueryGateway;

@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures;
 
-import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.WeekSymbolProclaimed;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.DwellingBuilt;
+import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
