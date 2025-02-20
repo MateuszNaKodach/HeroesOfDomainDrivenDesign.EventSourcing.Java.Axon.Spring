@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.creaturerecruitment.write;
+package com.dddheroes.heroesofddd.creaturerecruitment.events;
 
 public interface DwellingEvent {
 

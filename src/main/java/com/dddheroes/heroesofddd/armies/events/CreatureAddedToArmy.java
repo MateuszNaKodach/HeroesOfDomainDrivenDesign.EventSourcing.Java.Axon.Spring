@@ -1,6 +1,5 @@
 package com.dddheroes.heroesofddd.armies.events;
 
-import com.dddheroes.heroesofddd.armies.write.ArmyEvent;
 import com.dddheroes.heroesofddd.shared.Amount;
 import com.dddheroes.heroesofddd.shared.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureId;

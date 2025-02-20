@@ -1,6 +1,5 @@
 package com.dddheroes.heroesofddd.resourcespool.events;
 
-import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolEvent;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.Resources;
 

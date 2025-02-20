@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.armies.write;
+package com.dddheroes.heroesofddd.armies.events;
 
 public interface ArmyEvent {
 

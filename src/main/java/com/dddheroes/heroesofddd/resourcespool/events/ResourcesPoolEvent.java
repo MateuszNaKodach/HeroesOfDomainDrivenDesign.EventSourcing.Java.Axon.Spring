@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.resourcespool.write;
+package com.dddheroes.heroesofddd.resourcespool.events;
 
 public interface ResourcesPoolEvent {
 

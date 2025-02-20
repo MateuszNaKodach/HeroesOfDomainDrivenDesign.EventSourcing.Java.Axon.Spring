@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.calendar.write;
+package com.dddheroes.heroesofddd.calendar.events;
 
 public interface CalendarEvent {
 

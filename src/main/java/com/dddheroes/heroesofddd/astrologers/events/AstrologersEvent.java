@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.astrologers.write;
+package com.dddheroes.heroesofddd.astrologers.events;
 
 public interface AstrologersEvent {
 

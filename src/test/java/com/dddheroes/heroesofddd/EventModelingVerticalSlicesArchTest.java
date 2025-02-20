@@ -3,6 +3,8 @@ package com.dddheroes.heroesofddd;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.CompositeArchRule;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,13 +12,27 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModules;
 
-import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
-import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackages;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+@AnalyzeClasses(packages = "com.dddheroes.heroesofddd", importOptions = ImportOption.DoNotIncludeTests.class)
+class ArchUnitTest {
+
+//    @ArchTest
+//    public static final ArchRule myRule = classes()
+//            .that().resideInAPackage("..write..")
+//            .should().onlyBeAccessed().byAnyPackage("..controller..", "..service..");
+
+    @ArchTest
+    public static final ArchRule myRule = noClasses()
+            .that().resideInAPackage("..events..")
+            .should().dependOnClassesThat().resideInAnyPackage("..write..", "..read..", "..automation..");
+}
+
 class ModulithTest {
+
     @Test
-    void test(){
+    void test() {
         ApplicationModules.of(HeroesOfDDDApplication.class).verify();
     }
 }
