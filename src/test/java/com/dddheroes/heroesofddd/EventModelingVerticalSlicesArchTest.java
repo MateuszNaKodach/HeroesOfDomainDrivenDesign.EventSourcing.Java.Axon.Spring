@@ -8,10 +8,18 @@ import com.tngtech.archunit.lang.CompositeArchRule;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.modulith.core.ApplicationModules;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackages;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
+class ModulithTest {
+    @Test
+    void test(){
+        ApplicationModules.of(HeroesOfDDDApplication.class).verify();
+    }
+}
 
 @DisplayName("Architecture Package Dependency Rules")
 class PackageDependencyRulesTest {
