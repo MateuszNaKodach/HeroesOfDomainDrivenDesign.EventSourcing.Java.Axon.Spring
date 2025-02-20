@@ -3,7 +3,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
-import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.ResetHandler;

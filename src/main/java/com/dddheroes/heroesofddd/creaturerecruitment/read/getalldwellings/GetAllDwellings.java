@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
-import com.dddheroes.heroesofddd.shared.GameId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 
 import java.util.List;
 

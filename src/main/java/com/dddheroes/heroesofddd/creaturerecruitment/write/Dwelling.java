@@ -9,9 +9,9 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatu
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreaturesNotExceedAvailableCreatures;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.Resources;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;

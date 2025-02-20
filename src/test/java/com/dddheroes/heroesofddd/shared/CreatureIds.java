@@ -1,5 +1,7 @@
 package com.dddheroes.heroesofddd.shared;
 
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+
 public class CreatureIds {
 
     public static CreatureId angel() {

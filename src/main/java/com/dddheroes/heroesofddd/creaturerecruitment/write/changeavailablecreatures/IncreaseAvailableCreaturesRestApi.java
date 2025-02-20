@@ -1,6 +1,6 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures;
 
-import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.restapi.Headers;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.web.bind.annotation.PathVariable;

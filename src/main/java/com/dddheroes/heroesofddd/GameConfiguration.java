@@ -1,6 +1,6 @@
 package com.dddheroes.heroesofddd;
 
-import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.eventhandling.EventMessage;
 import org.axonframework.eventhandling.async.SequencingPolicy;
 import org.springframework.context.annotation.Bean;

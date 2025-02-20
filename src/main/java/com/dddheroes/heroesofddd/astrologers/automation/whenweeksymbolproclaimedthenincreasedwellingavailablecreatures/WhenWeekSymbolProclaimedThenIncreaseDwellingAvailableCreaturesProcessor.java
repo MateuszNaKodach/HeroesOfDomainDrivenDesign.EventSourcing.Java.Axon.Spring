@@ -3,7 +3,7 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaime
 import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
-import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;

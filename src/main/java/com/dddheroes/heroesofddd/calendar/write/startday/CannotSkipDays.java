@@ -3,7 +3,7 @@ package com.dddheroes.heroesofddd.calendar.write.startday;
 import com.dddheroes.heroesofddd.calendar.write.Day;
 import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
-import com.dddheroes.heroesofddd.shared.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 
 public record CannotSkipDays(
         StartDay command,

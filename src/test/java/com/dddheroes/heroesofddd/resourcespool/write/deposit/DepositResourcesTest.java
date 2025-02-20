@@ -1,13 +1,13 @@
 package com.dddheroes.heroesofddd.resourcespool.write.deposit;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
-import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-import static com.dddheroes.heroesofddd.shared.ResourceType.*;
-import static com.dddheroes.heroesofddd.shared.ResourceType.ORE;
+import static com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType.*;
+import static com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType.ORE;
 
 class DepositResourcesTest extends ResourcesPoolTest {
 

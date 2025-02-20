@@ -3,7 +3,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
-import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.google.common.collect.Streams;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;

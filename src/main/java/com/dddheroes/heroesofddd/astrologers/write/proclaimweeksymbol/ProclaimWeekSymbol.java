@@ -4,7 +4,7 @@ import com.dddheroes.heroesofddd.astrologers.write.AstrologersCommand;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersId;
 import com.dddheroes.heroesofddd.astrologers.write.MonthWeek;
 import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 public record ProclaimWeekSymbol(

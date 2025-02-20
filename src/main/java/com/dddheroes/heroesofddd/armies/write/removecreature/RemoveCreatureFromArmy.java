@@ -1,8 +1,8 @@
 package com.dddheroes.heroesofddd.armies.write.removecreature;
 
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 public record RemoveCreatureFromArmy(

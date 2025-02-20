@@ -4,7 +4,7 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproc
 import com.dddheroes.heroesofddd.astrologers.write.MonthWeek;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
 import com.dddheroes.heroesofddd.calendar.events.DayStarted;
-import com.dddheroes.heroesofddd.shared.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.DisallowReplay;

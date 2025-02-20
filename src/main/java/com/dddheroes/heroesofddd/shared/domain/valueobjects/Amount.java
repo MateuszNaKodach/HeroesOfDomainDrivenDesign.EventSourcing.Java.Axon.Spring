@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.shared;
+package com.dddheroes.heroesofddd.shared.domain.valueobjects;
 
 public record Amount(int raw) {
 

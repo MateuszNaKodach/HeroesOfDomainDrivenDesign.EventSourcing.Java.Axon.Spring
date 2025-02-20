@@ -2,7 +2,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreat
 
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
-import com.dddheroes.heroesofddd.shared.Amount;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 

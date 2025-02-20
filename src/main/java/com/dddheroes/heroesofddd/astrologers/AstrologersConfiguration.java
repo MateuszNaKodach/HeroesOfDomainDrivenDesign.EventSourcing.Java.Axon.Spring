@@ -2,7 +2,7 @@ package com.dddheroes.heroesofddd.astrologers;
 
 import com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WeekSymbolCalculator;
 import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
