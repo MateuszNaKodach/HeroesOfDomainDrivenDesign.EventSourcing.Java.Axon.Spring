@@ -22,7 +22,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
 @Aggregate
-class Dwelling {
+public class Dwelling {
 
     @AggregateIdentifier
     private DwellingId dwellingId;

@@ -14,12 +14,12 @@ record SpendResources(
         Command buy
 ) implements Command {
 
-    public static SpendResourcesCommandInterceptor command(
+    public static SpendResources command(
             String resourcesPoolId,
             Map<String, Integer> resources,
             Command buy
     ) {
-        return new SpendResourcesCommandInterceptor(
+        return new SpendResources(
                 ResourcesPoolId.of(resourcesPoolId),
                 Resources.from(resources),
                 buy
