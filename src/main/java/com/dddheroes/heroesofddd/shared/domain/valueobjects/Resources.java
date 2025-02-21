@@ -8,8 +8,17 @@ public class Resources {
 
     private final Map<ResourceType, Amount> raw;
 
-    private Resources(Map<ResourceType, Amount> raw) {
+    public Resources(Map<ResourceType, Amount> raw) {
         this.raw = raw;
+    }
+
+    public static Resources from(Map<String, Integer> raw){
+        Map<ResourceType, Amount> resources = raw.entrySet().stream()
+                                                 .collect(Collectors.toMap(
+                                                         entry -> ResourceType.from(entry.getKey()),
+                                                         entry -> new Amount(entry.getValue())
+                                                 ));
+        return new Resources(resources);
     }
 
     public static Resources from(ResourceType type, Amount amount) {
