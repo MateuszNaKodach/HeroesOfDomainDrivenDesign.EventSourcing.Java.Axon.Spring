@@ -8,6 +8,7 @@ import org.axonframework.commandhandling.RoutingKey;
 import java.util.Map;
 
 // todo: it may be on top of others, or used and extended/ implemented. Like PaidCommand.
+// to jest niefajne, bo niby cross-cutting, a tej command by musialy uzyc slices w MVP
 record SpendResources(
         @RoutingKey ResourcesPoolId resourcesPoolId,
         Resources resources,
