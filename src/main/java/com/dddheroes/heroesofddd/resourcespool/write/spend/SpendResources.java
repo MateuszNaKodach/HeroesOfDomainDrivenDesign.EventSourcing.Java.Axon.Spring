@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.crossed.write.spendresources;
+package com.dddheroes.heroesofddd.resourcespool.write.spend;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;

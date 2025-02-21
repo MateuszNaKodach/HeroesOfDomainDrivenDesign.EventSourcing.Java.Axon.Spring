@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.crossed.write.spendresources;
+package com.dddheroes.heroesofddd.resourcespool.write.spend;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
@@ -10,10 +10,16 @@ import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
-// todo: mozna rozpatrzyc, ze tutaj robimy tylko blokade resources,
-// a potem po correlationId, jesli uda sie wykonac to na co blokowalismy, to zatwierdzamy,
-// a jak sie nie uda do deadline to usuwamy blokade.
-
+/**
+ * It handles {@link WithdrawResources} and another command {@link SpendResources#buy} in the single UnitOfWork.
+ *
+ * It's a cross-cutting component, and by this interceptor couple two Slices in the single UnitOfWork and the event
+ * store transaction. You may use Automations/Saga/Process Manager for "Resources Transaction" to coordinate your "paid
+ * commands" with the {@link SpendResources} and introduce some compensating actions, but with low risk of contention -
+ * a user spent his own resources it's more pragmatic way to go.
+ * <p>
+ * The approach may change with Dynamic Consistency Boundary in place.
+ */
 @Component
 class SpendResourcesCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
 
