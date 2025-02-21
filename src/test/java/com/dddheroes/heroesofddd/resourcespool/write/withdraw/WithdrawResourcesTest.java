@@ -1,14 +1,14 @@
 package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
-import com.dddheroes.heroesofddd.shared.DomainRule;
-import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-import static com.dddheroes.heroesofddd.shared.ResourceType.*;
+import static com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType.*;
 
 class WithdrawResourcesTest extends ResourcesPoolTest {
 

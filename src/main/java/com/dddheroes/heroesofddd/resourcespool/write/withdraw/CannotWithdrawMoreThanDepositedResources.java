@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
-import com.dddheroes.heroesofddd.shared.DomainRule;
-import com.dddheroes.heroesofddd.shared.Resources;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 
 public record CannotWithdrawMoreThanDepositedResources(Resources balance, Resources toWithdraw) implements DomainRule {
 

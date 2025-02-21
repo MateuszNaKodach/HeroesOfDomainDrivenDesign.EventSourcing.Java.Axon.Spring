@@ -2,13 +2,13 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproc
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
-import com.dddheroes.heroesofddd.calendar.write.CalendarEvent;
+import com.dddheroes.heroesofddd.calendar.events.CalendarEvent;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations;
-import com.dddheroes.heroesofddd.shared.GameId;
-import com.dddheroes.heroesofddd.shared.GameMetaData;
-import com.dddheroes.heroesofddd.shared.PlayerId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
+import com.dddheroes.heroesofddd.shared.application.GameMetaData;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;

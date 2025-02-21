@@ -1,6 +1,8 @@
 package com.dddheroes.heroesofddd.resourcespool.write;
 
-public interface ResourcesPoolCommand {
+import com.dddheroes.heroesofddd.shared.slices.write.Command;
+
+public interface ResourcesPoolCommand extends Command {
 
     ResourcesPoolId resourcesPoolId();
 }

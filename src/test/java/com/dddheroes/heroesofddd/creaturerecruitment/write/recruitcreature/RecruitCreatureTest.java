@@ -3,10 +3,10 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.CreatureId;
-import com.dddheroes.heroesofddd.shared.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 

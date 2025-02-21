@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
-import com.dddheroes.heroesofddd.shared.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 
 public record OnlyNotBuiltBuildingCanBeBuild(DwellingId dwellingId) implements DomainRule {
 

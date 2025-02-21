@@ -2,9 +2,9 @@ package com.dddheroes.heroesofddd.armies.write;
 
 import com.dddheroes.heroesofddd.armies.events.CreatureAddedToArmy;
 import com.dddheroes.heroesofddd.armies.events.CreatureRemovedFromArmy;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
 

@@ -1,8 +1,9 @@
 package com.dddheroes.heroesofddd.armies.write.addcreature;
 
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.armies.write.ArmyCommand;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 public record AddCreatureToArmy(
@@ -10,7 +11,7 @@ public record AddCreatureToArmy(
         ArmyId armyId,
         CreatureId creatureId,
         Amount quantity
-) {
+) implements ArmyCommand {
 
     public AddCreatureToArmy {
         if (quantity.raw() <= 0) {

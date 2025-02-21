@@ -1,11 +1,10 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.events;
 
-import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.Resources;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 
 import java.util.Map;
 

@@ -1,10 +1,10 @@
 package com.dddheroes.heroesofddd.armies.write.addcreature;
 
 import com.dddheroes.heroesofddd.armies.write.ArmyTest;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
-import com.dddheroes.heroesofddd.shared.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

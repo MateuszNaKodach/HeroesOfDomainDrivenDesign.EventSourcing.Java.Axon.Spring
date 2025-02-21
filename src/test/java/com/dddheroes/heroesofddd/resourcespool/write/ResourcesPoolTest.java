@@ -2,9 +2,9 @@ package com.dddheroes.heroesofddd.resourcespool.write;
 
 import com.dddheroes.heroesofddd.resourcespool.events.ResourcesDeposited;
 import com.dddheroes.heroesofddd.resourcespool.events.ResourcesWithdrawn;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ResourceType;
-import com.dddheroes.heroesofddd.shared.Resources;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
 

@@ -2,10 +2,10 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.Resources;
-import com.dddheroes.heroesofddd.shared.CreatureId;
-import com.dddheroes.heroesofddd.shared.ResourceType;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
 

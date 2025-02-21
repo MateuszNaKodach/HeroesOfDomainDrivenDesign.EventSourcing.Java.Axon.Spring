@@ -1,9 +1,8 @@
 package com.dddheroes.heroesofddd.armies.events;
 
-import com.dddheroes.heroesofddd.armies.write.ArmyEvent;
-import com.dddheroes.heroesofddd.shared.Amount;
-import com.dddheroes.heroesofddd.shared.ArmyId;
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 
 public record CreatureAddedToArmy(
         String armyId,

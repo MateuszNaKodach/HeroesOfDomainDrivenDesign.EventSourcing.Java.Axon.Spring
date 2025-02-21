@@ -1,6 +1,6 @@
 package com.dddheroes.heroesofddd.astrologers.write;
 
-import com.dddheroes.heroesofddd.shared.CreatureId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 
 // todo: polymorphism, support symbols which are not creatures
 public record WeekSymbol(CreatureId weekOf, Integer growth) {

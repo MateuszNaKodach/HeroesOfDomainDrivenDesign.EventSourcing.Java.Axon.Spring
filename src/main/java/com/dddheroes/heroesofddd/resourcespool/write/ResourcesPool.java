@@ -5,7 +5,7 @@ import com.dddheroes.heroesofddd.resourcespool.events.ResourcesDeposited;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.CannotWithdrawMoreThanDepositedResources;
 import com.dddheroes.heroesofddd.resourcespool.events.ResourcesWithdrawn;
 import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
-import com.dddheroes.heroesofddd.shared.Resources;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;

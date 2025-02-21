@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
-import com.dddheroes.heroesofddd.shared.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package com.dddheroes.heroesofddd.resourcespool.write.deposit;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolCommand;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
-import com.dddheroes.heroesofddd.shared.Resources;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.util.Map;

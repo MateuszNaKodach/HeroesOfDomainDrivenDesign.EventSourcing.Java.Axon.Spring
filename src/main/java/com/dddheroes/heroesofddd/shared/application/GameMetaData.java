@@ -1,5 +1,7 @@
-package com.dddheroes.heroesofddd.shared;
+package com.dddheroes.heroesofddd.shared.application;
 
+import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import org.axonframework.messaging.MetaData;
 
 public class GameMetaData {
