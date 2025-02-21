@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<axon.version>4.11.0</axon.version>
+		<axon.version>4.11.1</axon.version>
 		<java.version>23</java.version>
 		<spring-modulith.version>1.3.2</spring-modulith.version>
 	</properties>
