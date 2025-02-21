@@ -10,6 +10,10 @@ import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
+// todo: mozna rozpatrzyc, ze tutaj robimy tylko blokade resources,
+// a potem po correlationId, jesli uda sie wykonac to na co blokowalismy, to zatwierdzamy,
+// a jak sie nie uda do deadline to usuwamy blokade.
+
 @Component
 class SpendResourcesCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
 
