@@ -29,6 +29,7 @@ class SpendResourcesCommandInterceptor implements MessageHandlerInterceptor<Comm
         this.resourcesPoolRepository = resourcesPoolRepository;
     }
 
+    // todo: zobaczyc, czy to zadziala w jednej transakcji!
     @Override
     public Object handle(
             UnitOfWork<? extends CommandMessage<?>> unitOfWork,

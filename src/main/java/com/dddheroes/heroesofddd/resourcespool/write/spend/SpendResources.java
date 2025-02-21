@@ -27,3 +27,8 @@ record SpendResources(
         );
     }
 }
+
+/**
+ * Moze isc w bardziej - PaidCommand, a to bedzie przetlumaczone w SpendResources while dispatching?
+ * ResourcesPoolId bedzie wziece z metadata playerId?
+ */

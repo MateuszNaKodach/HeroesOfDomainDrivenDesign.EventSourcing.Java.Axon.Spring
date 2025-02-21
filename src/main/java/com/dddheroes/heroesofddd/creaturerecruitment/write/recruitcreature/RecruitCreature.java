@@ -7,6 +7,7 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
+// todo: dodac tutaj ile resources wydajemy? jesli to sie nie matchuje z kosztem to odrzucic.
 public record RecruitCreature(
         @TargetAggregateIdentifier
         DwellingId dwellingId,
