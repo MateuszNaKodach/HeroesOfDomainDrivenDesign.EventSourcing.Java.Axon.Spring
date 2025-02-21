@@ -1,6 +1,5 @@
 package com.dddheroes.heroesofddd.astrologers.events;
 
-import com.dddheroes.heroesofddd.astrologers.write.AstrologersEvent;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersId;
 import com.dddheroes.heroesofddd.astrologers.write.MonthWeek;
 import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;

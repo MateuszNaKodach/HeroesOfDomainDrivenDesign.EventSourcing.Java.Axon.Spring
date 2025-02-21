@@ -2,7 +2,7 @@ package com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproc
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
-import com.dddheroes.heroesofddd.calendar.write.CalendarEvent;
+import com.dddheroes.heroesofddd.calendar.events.CalendarEvent;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations;

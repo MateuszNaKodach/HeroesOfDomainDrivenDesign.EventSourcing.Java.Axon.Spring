@@ -1,10 +1,10 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.automation;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
-import com.dddheroes.heroesofddd.armies.write.ArmyEvent;
+import com.dddheroes.heroesofddd.armies.events.ArmyEvent;
 import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
 import com.dddheroes.heroesofddd.armies.events.CreatureAddedToArmy;
-import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;

@@ -1,6 +1,6 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read;
 
-import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingEvent;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingEvent;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
