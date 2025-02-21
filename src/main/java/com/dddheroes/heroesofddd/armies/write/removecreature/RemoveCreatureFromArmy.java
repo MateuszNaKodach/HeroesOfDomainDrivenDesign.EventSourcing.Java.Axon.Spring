@@ -1,5 +1,6 @@
 package com.dddheroes.heroesofddd.armies.write.removecreature;
 
+import com.dddheroes.heroesofddd.armies.write.ArmyCommand;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
@@ -10,7 +11,7 @@ public record RemoveCreatureFromArmy(
         ArmyId armyId,
         CreatureId creatureId,
         Amount quantity
-) {
+) implements ArmyCommand {
 
     public RemoveCreatureFromArmy {
         if (quantity.raw() <= 0) {

@@ -1,5 +1,5 @@
 package com.dddheroes.heroesofddd.shared.slices.write;
 
-interface Command {
+public interface Command {
 
 }

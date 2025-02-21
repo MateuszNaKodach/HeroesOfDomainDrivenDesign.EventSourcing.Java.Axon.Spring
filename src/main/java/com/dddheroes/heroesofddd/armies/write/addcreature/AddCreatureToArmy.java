@@ -1,5 +1,6 @@
 package com.dddheroes.heroesofddd.armies.write.addcreature;
 
+import com.dddheroes.heroesofddd.armies.write.ArmyCommand;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
@@ -10,7 +11,7 @@ public record AddCreatureToArmy(
         ArmyId armyId,
         CreatureId creatureId,
         Amount quantity
-) {
+) implements ArmyCommand {
 
     public AddCreatureToArmy {
         if (quantity.raw() <= 0) {
