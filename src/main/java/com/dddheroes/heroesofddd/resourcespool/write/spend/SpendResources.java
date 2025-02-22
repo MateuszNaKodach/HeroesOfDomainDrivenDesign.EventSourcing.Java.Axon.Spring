@@ -3,6 +3,8 @@ package com.dddheroes.heroesofddd.resourcespool.write.spend;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
+import org.axonframework.commandhandling.CommandMessage;
+import org.axonframework.commandhandling.GenericCommandMessage;
 import org.axonframework.commandhandling.RoutingKey;
 
 import java.util.Map;
@@ -12,7 +14,7 @@ import java.util.Map;
 record SpendResources(
         @RoutingKey ResourcesPoolId resourcesPoolId,
         Resources resources,
-        Command buy
+        GenericCommandMessage<?> buy
 ) implements Command {
 
     public static SpendResources command(
@@ -23,9 +25,10 @@ record SpendResources(
         return new SpendResources(
                 ResourcesPoolId.of(resourcesPoolId),
                 Resources.from(resources),
-                buy
+                new GenericCommandMessage<>(buy)
         );
     }
+
 }
 
 /**

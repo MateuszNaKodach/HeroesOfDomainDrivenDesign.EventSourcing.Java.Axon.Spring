@@ -10,6 +10,10 @@ import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.modelling.command.Repository;
 import org.springframework.stereotype.Component;
 
+// Create PaidCommandInterceptor -> register command types which we need to pay and define how much in the command?
+// CostResolver from the command, no interface! Like: .paidCommand(RecruitCreatures.class, RecruitCreatures::cost)
+// inside the interceptor just check if command is registered then withdraw resources.
+
 /**
  * It handles {@link WithdrawResources} and another command {@link SpendResources#buy} in the single UnitOfWork.
  *
@@ -39,7 +43,7 @@ class SpendResourcesCommandInterceptor implements MessageHandlerInterceptor<Comm
         if (command.getPayload() instanceof SpendResources spendResources) {
             withdrawResourcesToSpend(spendResources);
             var buy = spendResources.buy();
-            unitOfWork.transformMessage(c -> new GenericCommandMessage<>(buy, command.getMetaData()));
+            unitOfWork.transformMessage(c -> new GenericCommandMessage<>(buy.getPayload(), command.getMetaData()));
         }
 
         return interceptorChain.proceed();
