@@ -6,13 +6,14 @@ import java.util.stream.Collectors;
 
 public class Resources {
 
+    private static final Resources EMPTY = new Resources(Map.of());
     private final Map<ResourceType, Amount> raw;
 
     public Resources(Map<ResourceType, Amount> raw) {
         this.raw = raw;
     }
 
-    public static Resources from(Map<String, Integer> raw){
+    public static Resources from(Map<String, Integer> raw) {
         Map<ResourceType, Amount> resources = raw.entrySet().stream()
                                                  .collect(Collectors.toMap(
                                                          entry -> ResourceType.from(entry.getKey()),
@@ -26,7 +27,7 @@ public class Resources {
     }
 
     public static Resources empty() {
-        return new Resources(Map.of());
+        return EMPTY;
     }
 
     public Resources plus(ResourceType type, Amount amount) {
@@ -68,9 +69,9 @@ public class Resources {
     public Resources multiply(int multiplier) {
         return new Resources(raw.entrySet().stream()
                                 .collect(Collectors.toMap(
-                                         Map.Entry::getKey,
-                                         entry -> new Amount(entry.getValue().raw() * multiplier)
-                                 )));
+                                        Map.Entry::getKey,
+                                        entry -> new Amount(entry.getValue().raw() * multiplier)
+                                )));
     }
 
     public Resources multiply(Amount amount) {
@@ -81,17 +82,18 @@ public class Resources {
         return raw.getOrDefault(type, Amount.zero());
     }
 
-    public boolean contains(Resources resources){
+    public boolean contains(Resources resources) {
         return resources.raw.entrySet().stream()
-                .allMatch(entry -> raw.getOrDefault(entry.getKey(), Amount.zero()).raw() >= entry.getValue().raw());
+                            .allMatch(entry -> raw.getOrDefault(entry.getKey(), Amount.zero()).raw() >= entry.getValue()
+                                                                                                             .raw());
     }
 
     public Map<String, Integer> raw() {
         return raw.entrySet().stream()
                   .collect(Collectors.toMap(
-                                entry -> entry.getKey().name(),
-                                entry -> entry.getValue().raw()
-                        ));
+                          entry -> entry.getKey().name(),
+                          entry -> entry.getValue().raw()
+                  ));
     }
 
     public static Resources fromRaw(Map<String, Integer> raw) {
