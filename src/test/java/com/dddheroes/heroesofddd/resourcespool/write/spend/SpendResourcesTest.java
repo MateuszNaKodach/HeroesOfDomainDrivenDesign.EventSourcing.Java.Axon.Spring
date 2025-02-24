@@ -6,8 +6,10 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
+import com.dddheroes.heroesofddd.resourcespool.events.ResourcesWithdrawn;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResources;
+import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
@@ -80,6 +82,8 @@ class SpendResourcesTest {
         // Verify CreatureRecruited event was stored
         var events = eventStore.readEvents(dwellingId);
         Assertions.assertTrue(events.asStream().anyMatch(event -> event.getPayload() instanceof CreatureRecruited),
+                              "CreatureRecruited event should be present in event store");
+        Assertions.assertTrue(eventStore.readEvents(ResourcesPoolId.of(PLAYER_ID).raw()).asStream().anyMatch(event -> event.getPayload() instanceof ResourcesWithdrawn),
                               "CreatureRecruited event should be present in event store");
     }
 

@@ -31,12 +31,14 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
             @Nonnull UnitOfWork<? extends CommandMessage<Command>> unitOfWork,
             @Nonnull InterceptorChain interceptorChain
     ) throws Exception {
+        System.out.println("INTERCEPTOR EXECUTED");
         var command = unitOfWork.getMessage();
         var payload = command.getPayload();
 
         var cost = commandCostResolver.cost(payload);
         var isPaidCommand = cost.isEmpty();
         if (isPaidCommand) {
+            System.out.println("INTERCEPTOR EXECUTED / PAID COMMAND");
             var metadata = command.getMetaData();
             var playerId = (String) metadata.get(GameMetaData.PLAYER_ID_KEY);
             withdrawResourcesToSpend(playerId, cost);
