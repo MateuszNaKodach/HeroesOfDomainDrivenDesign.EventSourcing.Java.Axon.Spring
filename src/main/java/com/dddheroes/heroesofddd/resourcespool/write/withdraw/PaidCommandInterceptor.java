@@ -15,11 +15,11 @@ import javax.annotation.Nonnull;
 
 public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<Command>> {
 
-    private final CommandCostResolver commandCostResolver;
+    private final CommandCostResolver<Command> commandCostResolver;
     private final Repository<ResourcesPool> resourcesPoolRepository;
 
     public PaidCommandInterceptor(
-            CommandCostResolver commandCostResolver,
+            CommandCostResolver<Command> commandCostResolver,
             Repository<ResourcesPool> resourcesPoolRepository
     ) {
         this.commandCostResolver = commandCostResolver;

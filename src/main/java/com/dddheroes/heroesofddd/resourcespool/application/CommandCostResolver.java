@@ -5,7 +5,7 @@ import com.dddheroes.heroesofddd.shared.slices.write.Command;
 
 public interface CommandCostResolver<C extends Command> {
 
-    default Resources cost(C command) {
+    default <T extends C> Resources cost(T command) {
         if (isSupported(command)) {
             return resolve(command);
         } else {
@@ -15,7 +15,7 @@ public interface CommandCostResolver<C extends Command> {
 
     <T extends C> Resources resolve(T command);
 
-    default boolean isSupported(C command) {
+    default <T extends C> boolean isSupported(T command) {
         return supportedCommandType().isAssignableFrom(command.getClass());
     }
 

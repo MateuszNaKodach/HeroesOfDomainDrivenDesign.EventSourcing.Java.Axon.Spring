@@ -75,15 +75,8 @@ class SpendResourcesTest {
         // Create recruitment command
         var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1, Resources.from(PHOENIX_COST).raw());
 
-        // Create paid command wrapper
-        var paidCommand = SpendResources.command(
-                resourcesPoolId,
-                PHOENIX_COST,
-                recruitCommand
-        );
-
         // Then
-        assertDoesNotThrow(() -> commandGateway.sendAndWait(paidCommand, gameMetaData()));
+        assertDoesNotThrow(() -> commandGateway.sendAndWait(recruitCommand, gameMetaData()));
         // Verify CreatureRecruited event was stored
         var events = eventStore.readEvents(dwellingId);
         Assertions.assertTrue(events.asStream().anyMatch(event -> event.getPayload() instanceof CreatureRecruited),
@@ -120,15 +113,10 @@ class SpendResourcesTest {
 
         // When
         var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1, Resources.from(PHOENIX_COST).raw());
-        var paidCommand = SpendResources.command(
-                resourcesPoolId,
-                PHOENIX_COST,
-                recruitCommand
-        );
 
         // Then
         assertThrows(Exception.class, () ->
-                commandGateway.sendAndWait(paidCommand, gameMetaData())
+                commandGateway.sendAndWait(recruitCommand, gameMetaData())
         );
 
         // Verify no CreatureRecruited event was stored
