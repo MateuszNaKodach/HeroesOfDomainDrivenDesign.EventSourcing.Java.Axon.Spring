@@ -1,4 +1,4 @@
-package com.dddheroes.heroesofddd.resourcespool.write.spend;
+package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
@@ -9,7 +9,6 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Recru
 import com.dddheroes.heroesofddd.resourcespool.events.ResourcesWithdrawn;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResources;
-import com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResources;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
-class SpendResourcesTest {
+class PaidCommandInterceptorTest {
 
     private static final String GAME_ID = GameId.random().raw();
     private static final String PLAYER_ID = PlayerId.random().raw();
@@ -48,7 +47,7 @@ class SpendResourcesTest {
     @Test
     void whenRecruitingCreature_thenProcessPaymentAndRecruitSuccessfully() {
         // Given
-        var resourcesPoolId = ResourcesPoolId.random().raw();
+        var resourcesPoolId = playerResourcesPoolId();
         var dwellingId = DwellingId.random().raw();
         var armyId = ArmyId.random().raw();
         var creatureId = CreatureIds.phoenix().raw();
@@ -83,14 +82,18 @@ class SpendResourcesTest {
         var events = eventStore.readEvents(dwellingId);
         Assertions.assertTrue(events.asStream().anyMatch(event -> event.getPayload() instanceof CreatureRecruited),
                               "CreatureRecruited event should be present in event store");
-        Assertions.assertTrue(eventStore.readEvents(ResourcesPoolId.of(PLAYER_ID).raw()).asStream().anyMatch(event -> event.getPayload() instanceof ResourcesWithdrawn),
+        Assertions.assertTrue(eventStore.readEvents(resourcesPoolId).asStream().anyMatch(event -> event.getPayload() instanceof ResourcesWithdrawn),
                               "CreatureRecruited event should be present in event store");
+    }
+
+    private static String playerResourcesPoolId() {
+        return ResourcesPoolId.of(PLAYER_ID).raw();
     }
 
     @Test
     void givenInsufficientResources_whenRecruitingCreature_thenNoCreatureRecruitedEventStored() {
         // Given
-        var resourcesPoolId = ResourcesPoolId.random().raw();
+        var resourcesPoolId = playerResourcesPoolId();
         var dwellingId = DwellingId.random().raw();
         var armyId = ArmyId.random().raw();
         var creatureId = CreatureIds.phoenix().raw();

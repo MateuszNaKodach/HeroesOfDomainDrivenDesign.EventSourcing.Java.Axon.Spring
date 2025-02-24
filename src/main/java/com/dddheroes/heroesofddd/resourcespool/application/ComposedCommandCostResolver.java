@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class ComposedCommandCostResolver implements CommandCostResolver<Command> {
 
-    private final Map<Class<?>, CommandCostResolver<?>> resolvers;
+    private final Map<Class<? extends Command>, CommandCostResolver<?>> resolvers;
 
     public ComposedCommandCostResolver(Set<CommandCostResolver<?>> commandCostResolvers) {
         this.resolvers = commandCostResolvers
@@ -26,6 +26,9 @@ public class ComposedCommandCostResolver implements CommandCostResolver<Command>
     public <T extends Command> Resources resolve(T command) {
         @SuppressWarnings("unchecked")
         var resolver = (CommandCostResolver<T>) resolvers.get(command.getClass());
+        if (resolver == null) {
+            return Resources.empty();
+        }
         return resolver.resolve(command);
     }
 

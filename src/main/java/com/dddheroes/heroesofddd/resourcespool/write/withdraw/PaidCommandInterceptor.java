@@ -2,6 +2,7 @@ package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 
 import com.dddheroes.heroesofddd.resourcespool.application.CommandCostResolver;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool;
+import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
@@ -10,10 +11,14 @@ import org.axonframework.messaging.InterceptorChain;
 import org.axonframework.messaging.MessageHandlerInterceptor;
 import org.axonframework.messaging.unitofwork.UnitOfWork;
 import org.axonframework.modelling.command.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 
 public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
+
+    private static final Logger log = LoggerFactory.getLogger(PaidCommandInterceptor.class);
 
     private final CommandCostResolver<Command> commandCostResolver;
     private final Repository<ResourcesPool> resourcesPoolRepository;
@@ -31,26 +36,27 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
             @Nonnull UnitOfWork<? extends CommandMessage<?>> unitOfWork,
             @Nonnull InterceptorChain interceptorChain
     ) throws Exception {
-        System.out.println("INTERCEPTOR EXECUTED");
         var command = unitOfWork.getMessage();
 
         if (command.getPayload() instanceof Command payload) {
             var cost = commandCostResolver.cost(payload);
-            var isPaidCommand = cost.isEmpty();
+            var isPaidCommand = !cost.isEmpty();
             if (isPaidCommand) {
-                System.out.println("INTERCEPTOR EXECUTED / PAID COMMAND");
                 var metadata = command.getMetaData();
                 var playerId = (String) metadata.get(GameMetaData.PLAYER_ID_KEY);
-                withdrawResourcesToSpend(playerId, cost);
+                var playerResourcesPool = ResourcesPoolId.of(playerId);
+                withdrawResourcesToSpend(playerResourcesPool, cost);
+                log.info("Player [{}] spent [{}] resources for [{}]", playerId, cost, payload);
             }
         }
 
         return interceptorChain.proceed();
     }
 
-    private void withdrawResourcesToSpend(String resourcesPoolId, Resources cost) {
-        var withdrawResources = WithdrawResources.command(resourcesPoolId, cost.raw());
-        resourcesPoolRepository.load(resourcesPoolId)
+    private void withdrawResourcesToSpend(ResourcesPoolId resourcesPoolId, Resources cost) {
+        var rawResourcesPoolId = resourcesPoolId.raw();
+        var withdrawResources = WithdrawResources.command(rawResourcesPoolId, cost.raw());
+        resourcesPoolRepository.load(rawResourcesPoolId)
                                .execute(resourcesPool -> resourcesPool.decide(withdrawResources));
     }
 }
