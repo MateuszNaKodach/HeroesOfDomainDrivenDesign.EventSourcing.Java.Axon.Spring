@@ -13,7 +13,7 @@ import org.axonframework.modelling.command.Repository;
 
 import javax.annotation.Nonnull;
 
-public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<Command>> {
+public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
 
     private final CommandCostResolver<Command> commandCostResolver;
     private final Repository<ResourcesPool> resourcesPoolRepository;
@@ -28,20 +28,21 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
 
     @Override
     public Object handle(
-            @Nonnull UnitOfWork<? extends CommandMessage<Command>> unitOfWork,
+            @Nonnull UnitOfWork<? extends CommandMessage<?>> unitOfWork,
             @Nonnull InterceptorChain interceptorChain
     ) throws Exception {
         System.out.println("INTERCEPTOR EXECUTED");
         var command = unitOfWork.getMessage();
-        var payload = command.getPayload();
 
-        var cost = commandCostResolver.cost(payload);
-        var isPaidCommand = cost.isEmpty();
-        if (isPaidCommand) {
-            System.out.println("INTERCEPTOR EXECUTED / PAID COMMAND");
-            var metadata = command.getMetaData();
-            var playerId = (String) metadata.get(GameMetaData.PLAYER_ID_KEY);
-            withdrawResourcesToSpend(playerId, cost);
+        if (command.getPayload() instanceof Command payload) {
+            var cost = commandCostResolver.cost(payload);
+            var isPaidCommand = cost.isEmpty();
+            if (isPaidCommand) {
+                System.out.println("INTERCEPTOR EXECUTED / PAID COMMAND");
+                var metadata = command.getMetaData();
+                var playerId = (String) metadata.get(GameMetaData.PLAYER_ID_KEY);
+                withdrawResourcesToSpend(playerId, cost);
+            }
         }
 
         return interceptorChain.proceed();
