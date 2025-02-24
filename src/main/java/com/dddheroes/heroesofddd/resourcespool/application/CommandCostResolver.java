@@ -3,9 +3,9 @@ package com.dddheroes.heroesofddd.resourcespool.application;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
 
-public interface CommandCostResolver {
+public interface CommandCostResolver<C extends Command> {
 
-    default Resources cost(Command command) {
+    default Resources cost(C command) {
         if (isSupported(command)) {
             return resolve(command);
         } else {
@@ -13,11 +13,11 @@ public interface CommandCostResolver {
         }
     }
 
-    Resources resolve(Command command);
+    <T extends C> Resources resolve(T command);
 
-    default boolean isSupported(Command command) {
+    default boolean isSupported(C command) {
         return supportedCommandType().isAssignableFrom(command.getClass());
     }
 
-    Class<Command> supportedCommandType();
+    Class<? extends C> supportedCommandType();
 }

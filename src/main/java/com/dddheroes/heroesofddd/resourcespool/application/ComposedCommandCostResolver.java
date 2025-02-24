@@ -8,11 +8,11 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ComposedCommandCostResolver implements CommandCostResolver {
+public class ComposedCommandCostResolver implements CommandCostResolver<Command> {
 
-    private final Map<Class<Command>, CommandCostResolver> resolvers;
+    private final Map<Class<?>, CommandCostResolver<?>> resolvers;
 
-    public ComposedCommandCostResolver(Set<CommandCostResolver> commandCostResolvers) {
+    public ComposedCommandCostResolver(Set<CommandCostResolver<?>> commandCostResolvers) {
         this.resolvers = commandCostResolvers
                 .stream()
                 .collect(Collectors.toMap(
@@ -23,12 +23,14 @@ public class ComposedCommandCostResolver implements CommandCostResolver {
 
 
     @Override
-    public Resources resolve(Command command) {
-        return resolvers.get(command.getClass()).resolve(command);
+    public <T extends Command> Resources resolve(T command) {
+        @SuppressWarnings("unchecked")
+        var resolver = (CommandCostResolver<T>) resolvers.get(command.getClass());
+        return resolver.resolve(command);
     }
 
     @Override
-    public Class<Command> supportedCommandType() {
+    public Class<? extends Command> supportedCommandType() {
         return Command.class;
     }
 }

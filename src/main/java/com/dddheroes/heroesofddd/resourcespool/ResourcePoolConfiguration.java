@@ -15,7 +15,7 @@ class ResourcePoolConfiguration {
 
     @Bean
     PaidCommandInterceptor paidCommandInterceptor(
-            Set<CommandCostResolver> commandCostResolvers,
+            Set<CommandCostResolver<?>> commandCostResolvers,
             Repository<ResourcesPool> resourcesPoolRepository
     ) {
         return new PaidCommandInterceptor(
