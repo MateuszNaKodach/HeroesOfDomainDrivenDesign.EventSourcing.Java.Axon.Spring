@@ -12,6 +12,7 @@ import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.MetaData;
@@ -72,7 +73,7 @@ class SpendResourcesTest {
 
         // When
         // Create recruitment command
-        var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1);
+        var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1, Resources.from(PHOENIX_COST).raw());
 
         // Create paid command wrapper
         var paidCommand = SpendResources.command(
@@ -118,7 +119,7 @@ class SpendResourcesTest {
         );
 
         // When
-        var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1);
+        var recruitCommand = RecruitCreature.command(dwellingId, creatureId, armyId, 1, Resources.from(PHOENIX_COST).raw());
         var paidCommand = SpendResources.command(
                 resourcesPoolId,
                 PHOENIX_COST,

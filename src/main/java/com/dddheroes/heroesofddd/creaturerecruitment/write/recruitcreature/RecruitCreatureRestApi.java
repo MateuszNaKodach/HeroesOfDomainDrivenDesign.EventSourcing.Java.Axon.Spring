@@ -10,13 +10,14 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/games/{gameId}")
 class RecruitCreatureRestApi {
 
-    record Body(String creatureId, String armyId, Integer quantity) {
+    record Body(String creatureId, String armyId, Integer quantity, Map<String, Integer> expectedCost) {
 
     }
 
@@ -37,7 +38,8 @@ class RecruitCreatureRestApi {
                 dwellingId,
                 requestBody.creatureId(),
                 requestBody.armyId(),
-                requestBody.quantity()
+                requestBody.quantity(),
+                requestBody.expectedCost()
         );
         return commandGateway.send(command, GameMetaData.with(gameId, playerId));
     }

@@ -30,6 +30,10 @@ public class Resources {
         return EMPTY;
     }
 
+    public boolean isEmpty() {
+        return raw.isEmpty() || raw.values().stream().allMatch(a -> a.raw() == 0);
+    }
+
     public Resources plus(ResourceType type, Amount amount) {
         Map<ResourceType, Amount> newResources = new HashMap<>(this.raw);
         newResources.merge(type, amount, Amount::plus);
@@ -82,6 +86,15 @@ public class Resources {
         return raw.getOrDefault(type, Amount.zero());
     }
 
+    public boolean isSame(Resources resources) {
+        if (resources.raw.size() != raw.size()) {
+            return false;
+        }
+        return resources.raw.entrySet().stream()
+                            .allMatch(entry -> raw.getOrDefault(entry.getKey(), Amount.zero())
+                                                  .equals(entry.getValue()));
+    }
+
     public boolean contains(Resources resources) {
         return resources.raw.entrySet().stream()
                             .allMatch(entry -> raw.getOrDefault(entry.getKey(), Amount.zero()).raw() >= entry.getValue()
@@ -97,12 +110,7 @@ public class Resources {
     }
 
     public static Resources fromRaw(Map<String, Integer> raw) {
-        Map<ResourceType, Amount> resources = raw.entrySet().stream()
-                                                 .collect(Collectors.toMap(
-                                                         entry -> ResourceType.from(entry.getKey()),
-                                                         entry -> new Amount(entry.getValue())
-                                                 ));
-        return new Resources(resources);
+        return from(raw);
     }
 
     // required by Jackson

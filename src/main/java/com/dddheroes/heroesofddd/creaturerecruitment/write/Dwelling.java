@@ -7,6 +7,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesCh
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.OnlyBuiltDwellingCanHaveAvailableCreatures;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCostCannotDifferThanExpectedCost;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreaturesNotExceedAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
@@ -84,13 +85,19 @@ public class Dwelling {
                 command.quantity()
         ).verify();
 
+        var recruitCost = costPerTroop.multiply(command.quantity());
+        new RecruitCostCannotDifferThanExpectedCost(
+                recruitCost,
+                command.expectedCost()
+        ).verify();
+
         apply(
                 CreatureRecruited.event(
                         command.dwellingId(),
                         command.creatureId(),
                         command.toArmy(),
                         command.quantity(),
-                        costPerTroop.multiply(command.quantity())
+                        recruitCost
                 )
         );
     }
