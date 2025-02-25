@@ -1,4 +1,0 @@
-application:
-  interceptors:
-    paid-commands:
-      enabled: true

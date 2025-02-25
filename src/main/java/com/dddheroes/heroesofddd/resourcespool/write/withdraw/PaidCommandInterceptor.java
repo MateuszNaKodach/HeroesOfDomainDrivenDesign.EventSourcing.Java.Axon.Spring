@@ -53,10 +53,10 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
         return interceptorChain.proceed();
     }
 
-    private void withdrawResourcesToSpend(ResourcesPoolId resourcesPoolId, Resources cost) {
+    private void withdrawResourcesToSpend(ResourcesPoolId resourcesPoolId, Resources cost) throws Exception {
         var rawResourcesPoolId = resourcesPoolId.raw();
         var withdrawResources = WithdrawResources.command(rawResourcesPoolId, cost.raw());
-        resourcesPoolRepository.load(rawResourcesPoolId)
+        resourcesPoolRepository.loadOrCreate(rawResourcesPoolId, () -> new ResourcesPool(resourcesPoolId))
                                .execute(resourcesPool -> resourcesPool.decide(withdrawResources));
     }
 }

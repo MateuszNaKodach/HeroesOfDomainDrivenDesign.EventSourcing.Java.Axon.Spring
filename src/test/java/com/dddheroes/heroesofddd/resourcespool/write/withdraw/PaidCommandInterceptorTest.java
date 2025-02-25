@@ -32,7 +32,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(properties = {
+        "application.interceptors.paid-commands.enabled=true"
+})
 class PaidCommandInterceptorTest {
 
     private static final String GAME_ID = GameId.random().raw();
@@ -93,7 +95,8 @@ class PaidCommandInterceptorTest {
         var paidCommand = TestPaidCommand.failing(COMMAND_COST);
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
                 .cause()
-                .satisfies(e -> assertThat(e).hasMessageContaining("TestPaidCommand failed! Resources withdrawal should be rolled back"));
+                .satisfies(e -> assertThat(e).hasMessageContaining(
+                        "TestPaidCommand failed! Resources withdrawal should be rolled back"));
 
         // then
         eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
@@ -150,6 +153,19 @@ class PaidCommandInterceptorTest {
         // then
         eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
         eventStoreAssertions.assertEventsStoredCount(nonPaidCommand.identifier, 1);
+    }
+
+    @Test
+    void givenNoResources_whenExecutingPaidCommand_thenResourcesNotWithdrewAndCommandNotExecuted() {
+        // when
+        var paidCommand = new TestPaidCommand(COMMAND_COST);
+
+        // then
+        assertThatThrownBy(() -> executePlayerCommand(paidCommand))
+                .cause()
+                .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
+        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
     }
 
     private void executePlayerCommand(Command command) {
