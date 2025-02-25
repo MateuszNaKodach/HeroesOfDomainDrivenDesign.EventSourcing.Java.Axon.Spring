@@ -1,8 +1,12 @@
 ### BuildDwelling
 @gameId = scenario-1
+@playerId = player-1
 @dwellingId = dwelling-1
+
+### BuildDwelling
 PUT http://localhost:8080/games/{{gameId}}/dwellings/{{dwellingId}}
 Content-Type: application/json
+X-Player-Id: {{playerId}}
 
 {
   "creatureId": "angel",
@@ -15,6 +19,7 @@ Content-Type: application/json
 ### IncreaseAvailableCreatures
 PUT http://localhost:8080/games/{{gameId}}/dwellings/{{dwellingId}}/available-creatures-increases
 Content-Type: application/json
+X-Player-Id: {{playerId}}
 
 {
   "creatureId": "angel",
@@ -24,6 +29,7 @@ Content-Type: application/json
 ### RecruitCreature
 PUT http://localhost:8080/games/{{gameId}}/dwellings/{{dwellingId}}/creature-recruitments
 Content-Type: application/json
+X-Player-Id: {{playerId}}
 
 {
   "creatureId": "angel",
