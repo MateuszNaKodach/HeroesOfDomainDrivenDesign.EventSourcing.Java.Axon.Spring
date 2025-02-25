@@ -11,8 +11,10 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
 import com.dddheroes.heroesofddd.utils.EventStoreAssertions;
 import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.commandhandling.RoutingKey;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.eventsourcing.eventstore.EventStore;
+import org.axonframework.eventhandling.GenericDomainEventMessage;
+import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.messaging.MetaData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,8 +30,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-// todo: test resources not withdrew if test command failed
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
@@ -48,10 +48,6 @@ class PaidCommandInterceptorTest {
 
     @Autowired
     private EventStoreAssertions eventStoreAssertions;
-
-    @Autowired
-    private EventStore eventStore;
-
 
     @BeforeEach
     void setUp() {
@@ -84,82 +80,76 @@ class PaidCommandInterceptorTest {
     }
 
     @Test
+    void givenSufficientResources_whenPaidCommandFailed_thenResourcesNotWithdrawn() {
+        // given
+        executePlayerCommand(
+                DepositResources.command(resourcesPoolId, "GOLD", 1000)
+        );
+        executePlayerCommand(
+                DepositResources.command(resourcesPoolId, "GEMS", 10)
+        );
+
+        // when
+        var paidCommand = TestPaidCommand.failing(COMMAND_COST);
+        assertThatThrownBy(() -> executePlayerCommand(paidCommand))
+                .cause()
+                .satisfies(e -> assertThat(e).hasMessageContaining("TestPaidCommand failed! Resources withdrawal should be rolled back"));
+
+        // then
+        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
+    }
+
+    @Test
     void givenInsufficientResources_whenExecutingPaidCommand_thenResourcesNotWithdrewAndCommandNotExecuted() {
         // given
         executePlayerCommand(
                 DepositResources.command(resourcesPoolId, Map.of("GOLD", 200, "GEMS", 2))
         );
 
-        // record the number of events before attempting the paid command
-        long eventCountBefore = eventStore.readEvents(resourcesPoolId).asStream().count();
-
-        // when/then
+        // when
         var paidCommand = new TestPaidCommand(COMMAND_COST);
 
+        // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
                 .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-
-        // Verify no new ResourcesWithdrawn events were stored
-        long eventCountAfter = eventStore.readEvents(resourcesPoolId).asStream().count();
-
-        // The count of events should be the same as before, indicating no ResourcesWithdrawn event was added
-        assertThat(eventCountAfter).isEqualTo(eventCountBefore);
+        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
     }
 
     @Test
     void givenMissingResource_whenExecutingPaidCommand_thenCommandFails() {
         // given
-        // initialize resources pool with just gold but missing gems entirely
         executePlayerCommand(
-                DepositResources.command(resourcesPoolId, "GOLD", 1000)
+                DepositResources.command(resourcesPoolId, Map.of("GOLD", 200))
         );
-        // no gems deposited at all
 
-        // record the event count before the command
-        long eventCountBefore = eventStore.readEvents(resourcesPoolId).asStream().count();
-
-        // when/then
+        // when
         var paidCommand = new TestPaidCommand(COMMAND_COST);
 
+        // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
                 .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-
-        // Verify no new ResourcesWithdrawn events were stored
-        long eventCountAfter = eventStore.readEvents(resourcesPoolId).asStream().count();
-
-        // The count of events should be the same as before
-        assertThat(eventCountAfter).isEqualTo(eventCountBefore);
+        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
     }
 
     @Test
     void givenResources_whenExecutingNonPaidCommand_thenNoResourcesWithdrawn() {
         // given
-        // initialize resources pool with resources
         executePlayerCommand(
                 DepositResources.command(resourcesPoolId, "GOLD", 1000)
         );
-
-        // Count ResourcesWithdrawn events before executing the command
-        long withdrawnEventsBefore = eventStore.readEvents(resourcesPoolId)
-                                               .asStream()
-                                               .filter(event -> event.getPayload() instanceof ResourcesWithdrawn)
-                                               .count();
 
         // when
         var nonPaidCommand = new TestNonPaidCommand();
         executePlayerCommand(nonPaidCommand);
 
         // then
-        // Count ResourcesWithdrawn events after executing the command
-        long withdrawnEventsAfter = eventStore.readEvents(resourcesPoolId)
-                                              .asStream()
-                                              .filter(event -> event.getPayload() instanceof ResourcesWithdrawn)
-                                              .count();
-
-        // Verify no new ResourcesWithdrawn events were added
-        assertThat(withdrawnEventsAfter).isEqualTo(withdrawnEventsBefore);
+        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertEventsStoredCount(nonPaidCommand.identifier, 1);
     }
 
     private void executePlayerCommand(Command command) {
@@ -176,20 +166,22 @@ class PaidCommandInterceptorTest {
     }
 
     record TestPaidCommand(
+            @RoutingKey
+            String identifier,
             Map<String, Integer> cost,
             boolean failing
     ) implements Command {
 
         TestPaidCommand(Map<String, Integer> cost) {
-            this(cost, false);
+            this(UUID.randomUUID().toString(), cost, false);
         }
 
         static TestPaidCommand failing(Map<String, Integer> cost) {
-            return new TestPaidCommand(cost, true);
+            return new TestPaidCommand(UUID.randomUUID().toString(), cost, true);
         }
     }
 
-    record TestNonPaidCommand(String identifier) implements Command {
+    record TestNonPaidCommand(@RoutingKey String identifier) implements Command {
 
         TestNonPaidCommand() {
             this(UUID.randomUUID().toString());
@@ -222,16 +214,29 @@ class PaidCommandInterceptorTest {
         @Component
         static class TestCommandHandler {
 
+            private final EventGateway eventGateway;
+
+            TestCommandHandler(EventGateway eventGateway) {
+                this.eventGateway = eventGateway;
+            }
+
             @CommandHandler
             public void handle(TestPaidCommand command) {
                 if (command.failing) {
                     throw new RuntimeException("TestPaidCommand failed! Resources withdrawal should be rolled back");
                 }
+                eventGateway.publish(new GenericDomainEventMessage<>("TestAggregate",
+                                                                     command.identifier,
+                                                                     0,
+                                                                     "TestEvent"));
             }
 
             @CommandHandler
             public void handle(TestNonPaidCommand command) {
-                // handle the command
+                eventGateway.publish(new GenericDomainEventMessage<>("TestAggregate",
+                                                                     command.identifier,
+                                                                     0,
+                                                                     "TestEvent"));
             }
         }
     }

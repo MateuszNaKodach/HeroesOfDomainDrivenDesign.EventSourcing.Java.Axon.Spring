@@ -31,7 +31,11 @@ public class EventStoreAssertions {
     }
 
     public void assertNoEventsStored(String streamId) {
+        assertEventsStoredCount(streamId, 0);
+    }
+
+    public void assertEventsStoredCount(String streamId, int count) {
         var events = eventStore.readEvents(streamId).asStream().count();
-        assertEquals(0, events);
+        assertEquals(count, events);
     }
 }
