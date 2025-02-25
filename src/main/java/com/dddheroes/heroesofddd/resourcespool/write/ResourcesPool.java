@@ -52,4 +52,8 @@ public class ResourcesPool {
     ResourcesPool() {
         // required by Axon
     }
+
+    public ResourcesPool(ResourcesPoolId resourcesPoolId) {
+        this.resourcesPoolId = resourcesPoolId;
+    }
 }

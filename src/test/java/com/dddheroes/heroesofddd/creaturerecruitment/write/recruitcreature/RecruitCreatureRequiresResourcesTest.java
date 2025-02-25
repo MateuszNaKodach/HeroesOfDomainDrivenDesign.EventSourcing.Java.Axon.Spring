@@ -28,7 +28,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(properties = {
+        "application.interceptors.paid-commands.enabled=true"
+})
 class RecruitCreatureRequiresResourcesTest {
 
     private static final String GAME_ID = GameId.random().raw();
