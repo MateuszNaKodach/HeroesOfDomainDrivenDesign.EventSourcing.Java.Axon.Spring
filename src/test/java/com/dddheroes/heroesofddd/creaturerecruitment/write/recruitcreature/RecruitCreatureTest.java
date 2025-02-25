@@ -7,6 +7,8 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
+import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 
@@ -183,12 +185,34 @@ class RecruitCreatureTest extends DwellingTest {
                .expectEvents(thenEvent);
     }
 
+    @Test
+    void givenDwellingWhenExpectedCostDoesNotMatchActualCostThenException() {
+        // given
+        var givenEvents = List.of(
+                dwellingBuilt(),
+                availableCreaturesChanged(1)
+        );
+
+        // when
+        var whenCommand = recruitCreature(angelId, 1, Resources.from(ResourceType.GOLD, Amount.of(999999)));
+
+        // then
+        fixture.given(givenEvents)
+               .when(whenCommand)
+               .expectException(DomainRule.ViolatedException.class)
+               .expectExceptionMessage("Recruit cost cannot differ than expected cost");
+    }
+
     private RecruitCreature recruitCreature(int recruit) {
         return recruitCreature(angelId, recruit);
     }
 
     private RecruitCreature recruitCreature(CreatureId creatureId, int quantity) {
-        return RecruitCreature.command(dwellingId.raw(), creatureId.raw(), armyId.raw(), quantity, costPerTroop.multiply(Amount.of(quantity)).raw());
+        return recruitCreature(creatureId, quantity, costPerTroop.multiply(Amount.of(quantity)));
+    }
+
+    private RecruitCreature recruitCreature(CreatureId creatureId, int quantity, Resources expectedCost) {
+        return RecruitCreature.command(dwellingId.raw(), creatureId.raw(), armyId.raw(), quantity, expectedCost.raw());
     }
 
     private CreatureRecruited creatureRecruited(int quantity) {
