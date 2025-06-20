@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.astrologers.write;
 
 import org.axonframework.test.aggregate.AggregateTestFixture;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
 
 public class AstrologersTest {
 

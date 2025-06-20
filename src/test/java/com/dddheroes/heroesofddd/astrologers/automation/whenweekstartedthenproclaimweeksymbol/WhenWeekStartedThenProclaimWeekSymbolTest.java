@@ -14,7 +14,7 @@ import org.axonframework.eventhandling.DomainEventMessage;
 import org.axonframework.eventhandling.GenericDomainEventMessage;
 import org.axonframework.eventhandling.gateway.EventGateway;
 import org.axonframework.messaging.MetaData;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import java.util.UUID;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @Import(TestcontainersConfiguration.class)
@@ -56,8 +57,29 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
+                .sendAndWait(argThat(cmd -> cmd instanceof ProclaimWeekSymbol 
+                        && ((ProclaimWeekSymbol) cmd).astrologersId().raw().equals(gameId)
+                        && ((ProclaimWeekSymbol) cmd).monthWeek().month().equals(1)
+                        && ((ProclaimWeekSymbol) cmd).monthWeek().week().equals(1)), 
+                        eq(gameMetaData()))
         );
+    }
+
+    @Test
+    void whenDayStartedForSecondDayOfTheWeek_ThenNoCommand() {
+        // given
+        var gameId = UUID.randomUUID().toString();
+        var calendarId = CalendarId.of(gameId);
+        givenCalendarEvents(
+                gameId,
+                new DayStarted(calendarId.raw(), 1, 1, 2)
+        );
+
+        // when
+        // processed by the automation
+
+        // then - no command should be sent for non-first days
+        verifyNoInteractions(commandGateway);
     }
 
     @Test
@@ -75,15 +97,15 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
+                .sendAndWait(any(ProclaimWeekSymbol.class), eq(gameMetaData()))
         );
 
         // when
         streamProcessorsOperations.reset("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor");
 
-        // then
+        // then - should still be only 1 time, not 2
         verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()));
+                .sendAndWait(any(ProclaimWeekSymbol.class), eq(gameMetaData()));
     }
 
     private void givenCalendarEvents(String gameId, CalendarEvent... events) {

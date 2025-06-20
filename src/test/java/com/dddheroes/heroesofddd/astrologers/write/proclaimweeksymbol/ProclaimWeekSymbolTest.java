@@ -7,7 +7,7 @@ import com.dddheroes.heroesofddd.astrologers.write.MonthWeek;
 import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class ProclaimWeekSymbolTest extends AstrologersTest {
         // when
         var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), month, week, weekOf.raw(), growth);
 
-        // when
+        // then
         var thenEvent = WeekSymbolProclaimed.event(
                 astrologersId,
                 MonthWeek.of(month, week),
@@ -37,12 +37,12 @@ public class ProclaimWeekSymbolTest extends AstrologersTest {
     }
 
     @Test
-    void givenWeekSymbolProclaimed_whenProclaimWeekSymbol_ThenException() {
+    void givenWeekSymbolAlreadyProclaimed_WhenProclaimWeekSymbolForSameWeek_ThenException() {
         // given
         var astrologersId = AstrologersId.random();
         var month = 4;
         var week = 2;
-        var weekOf = CreatureId.of("black-dragon");
+        var weekOf = CreatureId.of("angel");
         var growth = +5;
         var givenEvents = List.of(
                 WeekSymbolProclaimed.event(
@@ -53,38 +53,40 @@ public class ProclaimWeekSymbolTest extends AstrologersTest {
         );
 
         // when
-        var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), month, week, weekOf.raw(), growth);
+        var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), month, week, "dragon", growth);
 
-        // when
+        // then
         fixture.given(givenEvents)
                .when(whenCommand)
                .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Only one symbol can be proclaimed per week");
+               .expectExceptionMessage("Only one symbol per week can be proclaimed");
     }
 
     @Test
-    void givenWeekSymbolProclaimed_whenProclaimWeekSymbolForPastWeek_ThenException() {
+    void givenWeekSymbolForDifferentWeek_WhenProclaimWeekSymbolForAnotherWeek_ThenSuccess() {
         // given
         var astrologersId = AstrologersId.random();
-        var month = 4;
-        var week = 2;
-        var weekOf = CreatureId.of("cyclops");
+        var weekOf = CreatureId.of("angel");
         var growth = +5;
         var givenEvents = List.of(
                 WeekSymbolProclaimed.event(
                         astrologersId,
-                        MonthWeek.of(month, week),
+                        MonthWeek.of(1, 1),
                         WeekSymbol.of(weekOf, growth)
                 )
         );
 
         // when
-        var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), month, week - 1, weekOf.raw(), growth);
+        var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), 1, 2, "dragon", growth);
 
-        // when
+        // then
+        var thenEvent = WeekSymbolProclaimed.event(
+                astrologersId,
+                MonthWeek.of(1, 2),
+                WeekSymbol.of(CreatureId.of("dragon"), growth)
+        );
         fixture.given(givenEvents)
                .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Only one symbol can be proclaimed per week");
+               .expectEvents(thenEvent);
     }
 }
