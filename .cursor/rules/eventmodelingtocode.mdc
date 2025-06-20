@@ -1,0 +1,163 @@
+---
+description: You're a helpful assistant which know how to translate Event Modeling diagrams into Java code.
+globs: 
+alwaysApply: false
+---
+You're a helpful assistant which know how to translate Event Modeling diagrams into Java code. 
+
+Follow these rules based on the **Vertical-Slice Architecture** pattern implemented in this project.
+
+### 1. Module Structure (Bounded Context)
+
+Each domain-focused module follows this structure:
+```
+src/main/java/com/dddheroes/heroesofddd/{module_name}/
+├── write/           # Command handling & aggregates
+├── read/            # Query models & projectors  
+├── automation/      # Event processors (sagas/policies)
+└── events/          # Domain events (shared contract)
+```
+
+**Examples from existing modules:**
+- `creature_recruitment/` - Handles dwelling building, creature availability, recruitment
+- `astrologers/` - Manages week symbols and their effects
+- `calendar/` - Controls day/time progression
+- `armies/` - Manages creature army composition
+
+### 2. Vertical Slice Types (Event Modeling Colors)
+
+#### 🔵 Write Slices (Commands → Events)
+**Pattern**: `[Command -> Event]`
+
+**Structure for each command:**
+```
+write/{command_name}/
+├── {CommandName}.java              # Command record
+├── {CommandName}Handler.java       # Command handler  
+├── {AggregateRoot}.java           # Domain aggregate
+└── {CommandName}Test.java         # Behavioral tests
+```
+
+**Examples:**
+- [BuildDwelling -> DwellingBuilt](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling) | [test](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java)
+- [RecruitCreature -> CreatureRecruited](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature) | [test](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature)
+- [StartDay -> DayStarted](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/main/java/com/dddheroes/heroesofddd/calendar/write/startday) | [test](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/test/java/com/dddheroes/heroesofddd/calendar/write/startday/StartDayTest.java)
+
+#### 🟢 Read Slices (Events → Read Models)
+**Pattern**: `(Events) -> ReadModel`
+
+**Structure:**
+```
+read/
+├── {ReadModel}.java                # Read model entity/DTO
+├── {ReadModel}Projector.java       # Event projector
+├── {ReadModel}Repository.java      # Query repository
+└── Get{ReadModel}Query.java        # Query objects
+```
+
+**Example:**
+- [DwellingReadModelProjector](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java) - Projects `(DwellingBuilt, AvailableCreaturesChanged, CreatureRecruited) -> DwellingReadModel`
+
+#### 🟡 Automation Slices (Events → Commands)
+**Pattern**: `When{Event}Then{Action}Processor`
+
+**Structure:**
+```
+automation/{when_event_then_action}/
+├── When{Event}Then{Action}Processor.java    # Event handler/saga
+└── When{Event}Then{Action}Test.java         # Integration tests
+```
+
+**Examples:**
+- [WhenCreatureRecruitedThenAddToArmy](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/main/java/com/dddheroes/heroesofddd/creaturerecruitment/automation/WhenCreatureRecruitedThenAddToArmyProcessor.java) | [test](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/test/java/com/dddheroes/heroesofddd/creaturerecruitment/automation/WhenCreatureRecruitedThenAddToArmyTest.java)
+- [WhenWeekStartedThenProclaimWeekSymbol](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/main/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolProcessor.java) | [test](mdc:https:/github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/blob/master/src/test/java/com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolTest.java)
+
+### 3. Testing Strategy
+
+**Write Slice Tests**: `given(events) -> when(command) -> then(events)`
+```java
+@Test
+void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
+    // given
+    var givenEvents = List.of(
+        dwellingBuilt(),
+        availableCreaturesChanged(2)
+    );
+    // when
+    var whenCommand = recruitCreature(2);
+    // then
+    var thenEvent = creatureRecruited(2);
+    
+    fixture.given(givenEvents)
+        .when(whenCommand)
+        .expectEvents(thenEvent);
+}
+```
+
+**Read Slice Tests**: `given(events) -> then(read model)`
+
+**Automation Tests**: `when(event, state?) -> then(command)`
+
+### 4. Package Naming Conventions
+
+- **Modules**: Lowercase with underscores (`creature_recruitment`, `astrologers`)
+- **Write slices**: Verb-focused (`builddwelling`, `recruitcreature`, `startday`)
+- **Read models**: Noun-focused (`DwellingReadModel`, `CurrentDateReadModel`)
+- **Automation**: Descriptive policy names (`whenweekstartedthenproclaimweeksymbol`)
+
+### 5. Event Design
+
+Events are the **backbone contract** between all slices:
+- **Immutable** and in **past tense** (`DwellingBuilt`, `CreatureRecruited`)
+- **Rich with domain data** needed by projectors and automation
+- **Shared across modules** in the `events/` package
+
+### 6. Screaming Architecture Principles
+
+The package structure should **scream the capabilities**:
+- Commands available to users are **explicit**
+- Events that capture what happened are **clear**
+- Business rules through aggregates are **obvious**
+- System automations and workflows are **visible**
+
+### 7. Technology Stack Integration
+
+- **Axon Framework** for CQRS/ES infrastructure
+- **Spring Boot** for dependency injection and configuration
+- **PostgreSQL** for event store (real database in tests)
+- **TestContainers** for integration testing
+
+### 8. Translation Workflow
+
+When translating Event Modeling diagrams:
+
+1. **Identify bounded contexts** → Create module packages
+2. **Extract blue sticky notes** (commands) → Create write slices
+3. **Extract orange sticky notes** (events) → Define event contracts
+4. **Extract green sticky notes** (read models) → Create read slices
+5. **Extract purple sticky notes** (automation) → Create automation slices
+6. **Connect the flows** → Implement handlers and projectors
+7. **Write behavioral tests** → Verify each slice works correctly
+
+### 9. Visual Examples Reference
+
+The project uses Event Modeling diagrams where:
+- **Green slices** = ✅ Completed implementation
+- **Yellow slices** = 🟡 Implementation in progress  
+- **Red slices** = ❌ To do
+- **Grey slices** = ⚪ Design in progress
+
+Each color indicates the current status of translating the event modeling design into working code.
+
+---
+
+## Key Benefits of This Approach
+
+- **Screaming Architecture**: Package structure immediately reveals system capabilities
+- **Vertical Slices**: Each feature is complete end-to-end within its slice
+- **Event-Driven**: Loose coupling between modules through domain events
+- **Testable**: Behavioral tests focus on observable outcomes, not implementation
+- **Maintainable**: Domain model can be refactored without changing tests
+- **Scalable**: Modules can be developed independently by different teams
+
+This approach successfully bridges the gap between Event Modeling workshops and production-ready, maintainable code.
