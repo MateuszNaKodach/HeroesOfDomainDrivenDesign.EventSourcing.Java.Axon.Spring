@@ -1,13 +1,16 @@
 # Heroes of Domain-Driven Design (Java)
 Shows how to use Domain-Driven Design, Event Storming, Event Modeling and Event Sourcing in Heroes of Might & Magic III domain.
 
-👉 See also implementations in: [Ruby](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Ruby) | **Java + Spring + Axon**
+👉 See also implementations in:
+- [Kotlin + Axon Framework 5 (DCB)](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.DCB.Kotlin.Axon5.Spring)
+- [TypeScript + Emmett](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.TypeScript.Emmett.Express)
+- [Ruby + RailsEventStore](https://github.com/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Ruby)
 
 👉 [Let's explore the Heroes of Domain-Driven Design blogpost series](https://dddheroes.com/)
 - There you will get familiar with the whole Software Development process: from knowledge crunching with domain experts, designing solution using Event Modeling, to implementation using DDD Building Blocks.
 
-This project probably won't be fully-functional HOMM3 engine implementation, because it's done for educational purposes.
-If you'd like to talk with me about mentioned development practices fell free to contact on [linkedin.com/in/mateusznakodach/](https://www.linkedin.com/in/mateusznakodach).
+This project probably won't be a fully functional HOMM3 engine implementation because it's done for educational purposes.
+If you'd like to talk with me about mentioned development practices, feel free to contact on [linkedin.com/in/mateusznakodach/](https://www.linkedin.com/in/mateusznakodach).
 
 I'm focused on domain modeling on the backend, but I'm going to implement UI like below in the future.
 
