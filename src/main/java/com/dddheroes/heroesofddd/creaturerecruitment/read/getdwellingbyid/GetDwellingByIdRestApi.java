@@ -24,7 +24,7 @@ class GetDwellingByIdRestApi {
             @PathVariable String gameId,
             @PathVariable String dwellingId
     ) {
-        var query = GetDwellingById.query(dwellingId, gameId);
+        var query = GetDwellingById.query(gameId, dwellingId);
 
         return queryGateway.query(
                 query,
