@@ -4,7 +4,6 @@ import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import com.google.common.collect.Streams;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.messaging.annotation.MetaDataValue;
@@ -12,6 +11,7 @@ import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.Stream;
 
 @ProcessingGroup("Read_GetAllDwellings_QueryCache")
 @Component
@@ -28,12 +28,12 @@ class GetAllDwellingsQueryHandler {
     GetAllDwellings.Result handle(GetAllDwellings query) {
         var gameId = query.gameId().raw();
         var dwellings = dwellingReadModelRepository.findAllByGameId(gameId);
-        var result = Streams.concat(
-                                    dwellings.stream(),
-                                    cache.stream().filter(it -> it.getGameId().equals(gameId))
-                            ) // todo: check ordering
-                            .distinct()
-                            .toList();
+        var result = Stream.concat(
+                        dwellings.stream(),
+                        cache.stream().filter(it -> it.getGameId().equals(gameId))
+                ) // todo: check ordering
+                .distinct()
+                .toList();
         return new GetAllDwellings.Result(result);
     }
 
