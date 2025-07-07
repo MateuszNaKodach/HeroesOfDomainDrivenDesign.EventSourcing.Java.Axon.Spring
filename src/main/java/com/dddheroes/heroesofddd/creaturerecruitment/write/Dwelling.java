@@ -22,7 +22,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
-@Aggregate
+@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")
 public class Dwelling {
 
     @AggregateIdentifier
