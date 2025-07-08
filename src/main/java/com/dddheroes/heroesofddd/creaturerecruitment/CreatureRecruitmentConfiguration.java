@@ -6,6 +6,7 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.Snapshotter;
+import org.axonframework.eventsourcing.snapshotting.SnapshotFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,5 +31,13 @@ class CreatureRecruitmentConfiguration {
     @Bean
     SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
         return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
+    }
+
+    @Bean
+    public SnapshotFilter dwellingSnapshotFilter() {
+        return snapshotData -> {
+            // Allow all snapshots for dwellings, as they are always in the correct format
+            return true;
+        };
     }
 }

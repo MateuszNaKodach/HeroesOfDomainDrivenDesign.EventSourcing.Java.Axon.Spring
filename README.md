@@ -163,3 +163,4 @@ Please reach me out on LinkedIn [linkedin.com/in/mateusznakodach/](https://www.l
 ### Helpful:
 CHECK snapshot content!
 ```TO read snapshot data: SELECT lo_get(18333) AS payload;```
+```Error reading snapshot for aggregate [{}]. Reconstructing from entire event stream.```
