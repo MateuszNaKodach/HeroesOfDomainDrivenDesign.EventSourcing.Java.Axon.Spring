@@ -8,6 +8,10 @@ import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.Snapshotter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingSnapshotter;
+import org.axonframework.eventsourcing.eventstore.EventStore;
+import org.axonframework.modelling.command.RepositoryProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
 class CreatureRecruitmentConfiguration {
@@ -28,7 +32,12 @@ class CreatureRecruitmentConfiguration {
     }
 
     @Bean
-    SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
-        return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
+    DwellingSnapshotter dwellingSnapshotter(EventStore eventStore, RepositoryProvider repositoryProvider) {
+        return new DwellingSnapshotter(eventStore, repositoryProvider);
+    }
+
+    @Bean
+    SnapshotTriggerDefinition dwellingSnapshotTrigger(DwellingSnapshotter dwellingSnapshotter) {
+        return new EventCountSnapshotTriggerDefinition(dwellingSnapshotter, 5);
     }
 }
