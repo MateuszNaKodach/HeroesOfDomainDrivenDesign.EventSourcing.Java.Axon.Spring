@@ -30,7 +30,7 @@ public class Dwelling {
     private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
 
     @AggregateIdentifier
-    public DwellingId dwellingId;
+    public DwellingId dwellingId; // needs to be public for snapshotting
     public CreatureId creatureId;
     public Resources costPerTroop;
     public Amount availableCreatures;
@@ -114,7 +114,9 @@ public class Dwelling {
     }
 
     Dwelling() {
-        logger.info("🏠 Creating empty Dwelling (required by Axon)");
+        logger.info("\uD83D\uDC80 Dwelling non-args constructor");
         // required by Axon
     }
+
+
 }
