@@ -12,7 +12,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.apply;
 
-@Aggregate(snapshotFilter = "astrologersSnapshotFilter", snapshotTriggerDefinition = "astrologersSnapshotTrigger")
+@Aggregate
 class Astrologers {
 
     @AggregateIdentifier

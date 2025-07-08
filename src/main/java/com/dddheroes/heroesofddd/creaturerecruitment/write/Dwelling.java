@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
-@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger", snapshotFilter = "dwellingSnapshotFilter")
+@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")
 public class Dwelling {
 
     private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
@@ -80,11 +80,7 @@ public class Dwelling {
     }
 
     @CommandHandler
-//    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     void decide(RecruitCreature command) {
-//        if(dwellingId == null){
-//            throw new DomainRule.ViolatedException("Only not built building can be build");
-//        }
         new RecruitCreaturesNotExceedAvailableCreatures(
                 creatureId,
                 availableCreatures,
