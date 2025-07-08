@@ -17,10 +17,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 axon:
-  serializer:
-    general: jackson
   axonserver:
     enabled: true
+  serializer:
+    general: jackson
+    events: jackson
+    messages: jackson
   eventhandling:
     processors:
       Automation_WhenCreatureRecruitedThenAddToArmy_Processor:

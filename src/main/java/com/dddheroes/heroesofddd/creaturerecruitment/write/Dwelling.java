@@ -19,17 +19,21 @@ import org.axonframework.modelling.command.AggregateCreationPolicy;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.CreationPolicy;
 import org.axonframework.spring.stereotype.Aggregate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
-@Aggregate
+@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")
 public class Dwelling {
 
+    private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
+
     @AggregateIdentifier
-    private DwellingId dwellingId;
-    private CreatureId creatureId;
-    private Resources costPerTroop;
-    private Amount availableCreatures;
+    public DwellingId dwellingId; // needs to be public for snapshotting
+    public CreatureId creatureId;
+    public Resources costPerTroop;
+    public Amount availableCreatures;
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
@@ -47,6 +51,7 @@ public class Dwelling {
 
     @EventSourcingHandler
     void evolve(DwellingBuilt event) {
+        logger.info("🏗️ Dwelling built with ID: {}, creature type: {}", event.dwellingId(), event.creatureId());
         this.dwellingId = new DwellingId(event.dwellingId());
         this.creatureId = new CreatureId(event.creatureId());
         this.costPerTroop = Resources.fromRaw(event.costPerTroop());
@@ -69,15 +74,13 @@ public class Dwelling {
 
     @EventSourcingHandler
     void evolve(AvailableCreaturesChanged event) {
+        logger.info("📈 Available creatures changed for dwelling {}: {} creatures now available",
+                event.dwellingId(), event.changedTo());
         this.availableCreatures = new Amount(event.changedTo());
     }
 
     @CommandHandler
-//    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
     void decide(RecruitCreature command) {
-//        if(dwellingId == null){
-//            throw new DomainRule.ViolatedException("Only not built building can be build");
-//        }
         new RecruitCreaturesNotExceedAvailableCreatures(
                 creatureId,
                 availableCreatures,
@@ -104,11 +107,16 @@ public class Dwelling {
 
     @EventSourcingHandler
     void evolve(CreatureRecruited event) {
+        logger.info("🧙 Recruited {} creatures of type {} from dwelling {} to army {}",
+                event.quantity(), event.creatureId(), event.dwellingId(), event.toArmy());
         // todo: consider if it's OK or RecruitCreature should cause also AvailableCreaturesChanged event
         this.availableCreatures = this.availableCreatures.minus(new Amount(event.quantity()));
     }
 
     Dwelling() {
+        logger.info("\uD83D\uDC80 Dwelling non-args constructor");
         // required by Axon
     }
+
+
 }
