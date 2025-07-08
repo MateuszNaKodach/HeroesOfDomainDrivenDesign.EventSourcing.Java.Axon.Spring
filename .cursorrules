@@ -1,0 +1,261 @@
+# TypeScript Event Sourcing with Emmett - Cursor Rules
+
+You are an expert TypeScript developer implementing Event Sourcing using the Emmett library. Follow these patterns and principles based on the reference Java/Axon implementation at `/Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring`.
+
+## Architecture Patterns
+
+### Vertical Slice Architecture
+- **Reference**: Java project modules (armies, astrologers, calendar, creaturerecruitment, resourcespool)
+- Organize code by business capabilities, not technical layers
+- Each slice should be self-contained with its own:
+  - Commands and command handlers
+  - Events and event handlers
+  - Aggregates
+  - Read models and projectors
+  - Domain rules
+  - REST APIs
+  - Configuration
+
+**TypeScript Structure:**
+```
+src/
+  slices/
+    creature-recruitment/
+      write/
+        commands/
+        aggregates/
+        domain-rules/
+      read/
+        projectors/
+        queries/
+      events/
+      api/
+    armies/
+      write/ read/ events/ api/
+    calendar/
+      write/ read/ events/ api/
+```
+
+### Event Sourcing with Emmett
+
+#### Aggregates
+- **Reference**: `Dwelling.java` aggregate pattern
+- Use Emmett's `aggregate` function to define aggregates
+- Implement command handlers that validate business rules and emit events
+- Implement event handlers that evolve aggregate state
+- Keep aggregates focused on a single business concept
+
+```typescript
+// Example based on Dwelling.java
+export const dwelling = aggregate<DwellingState, DwellingEvent>(
+  'Dwelling',
+  {
+    // Command handlers (equivalent to @CommandHandler methods)
+    buildDwelling: (command: BuildDwelling, state: DwellingState | null) => {
+      // Domain rule validation (like OnlyNotBuiltBuildingCanBeBuild)
+      if (state !== null) {
+        throw new DomainRuleViolation('Only not built building can be built');
+      }
+      
+      return [DwellingBuilt.create(command)];
+    },
+    
+    recruitCreature: (command: RecruitCreature, state: DwellingState) => {
+      // Multiple domain rules validation
+      validateRecruitmentRules(command, state);
+      
+      return [CreatureRecruited.create(command, state)];
+    }
+  },
+  
+  // Event handlers (equivalent to @EventSourcingHandler methods)
+  {
+    DwellingBuilt: (state: DwellingState | null, event: DwellingBuilt) => ({
+      dwellingId: event.dwellingId,
+      creatureId: event.creatureId,
+      costPerTroop: event.costPerTroop,
+      availableCreatures: 0,
+    }),
+    
+    CreatureRecruited: (state: DwellingState, event: CreatureRecruited) => ({
+      ...state,
+      availableCreatures: state.availableCreatures - event.quantity,
+    }),
+  }
+);
+```
+
+#### Events
+- **Reference**: Event structure from `CreatureRecruited.java` and sealed interface `DwellingEvent.java`
+- Use TypeScript discriminated unions for event types
+- Include static factory methods for event creation
+- Implement proper serialization for persistence
+
+```typescript
+// Based on DwellingEvent.java sealed interface pattern
+export type DwellingEvent = 
+  | DwellingBuilt 
+  | AvailableCreaturesChanged 
+  | CreatureRecruited;
+
+export interface CreatureRecruited {
+  type: 'CreatureRecruited';
+  dwellingId: string;
+  creatureId: string;
+  toArmy: string;
+  quantity: number;
+  totalCost: Resources;
+  
+  // Static factory method like in Java
+  static create(command: RecruitCreature, state: DwellingState): CreatureRecruited;
+}
+```
+
+#### Domain Rules
+- **Reference**: `DomainRule.java` interface and implementations like `OnlyNotBuiltBuildingCanBeBuild.java`
+- Implement business rules as separate, testable classes
+- Use descriptive names that express business intent
+- Include proper error messages
+
+```typescript
+// Based on DomainRule.java pattern
+export interface DomainRule {
+  isViolated(): boolean;
+  message(): string;
+  verify(): void; // throws if violated
+}
+
+export class RecruitCreaturesNotExceedAvailable implements DomainRule {
+  constructor(
+    private readonly available: number,
+    private readonly requested: number
+  ) {}
+
+  isViolated(): boolean {
+    return this.requested > this.available;
+  }
+
+  message(): string {
+    return `Cannot recruit ${this.requested} creatures, only ${this.available} available`;
+  }
+
+  verify(): void {
+    if (this.isViolated()) {
+      throw new DomainRuleViolation(this.message());
+    }
+  }
+}
+```
+
+### CQRS Implementation
+
+#### Commands
+- **Reference**: Command pattern from Java (e.g., `BuildDwelling.java`)
+- Implement commands as immutable data structures
+- Include validation and factory methods
+- Group related commands in the same slice
+
+#### Read Models & Projectors
+- **Reference**: `DwellingReadModelProjector.java` pattern
+- Use Emmett's projection capabilities
+- Create separate optimized read models
+- Handle event ordering and replay scenarios
+
+```typescript
+// Based on DwellingReadModelProjector.java
+export const dwellingReadModelProjector = projector({
+  name: 'DwellingReadModel',
+  
+  eventHandlers: {
+    DwellingBuilt: async (event: DwellingBuilt, { store }) => {
+      await store.upsert('dwellings', {
+        id: event.dwellingId,
+        creatureId: event.creatureId,
+        costPerTroop: event.costPerTroop,
+        availableCreatures: 0,
+      });
+    },
+    
+    CreatureRecruited: async (event: CreatureRecruited, { store }) => {
+      await store.update('dwellings', event.dwellingId, dwelling => ({
+        ...dwelling,
+        availableCreatures: dwelling.availableCreatures - event.quantity,
+      }));
+    },
+  }
+});
+```
+
+### Process Managers (Sagas)
+- **Reference**: `WhenCreatureRecruitedThenAddToArmyProcessor.java`
+- Handle cross-aggregate coordination
+- Implement compensation logic for failed operations
+- Use descriptive naming that expresses the business process
+
+```typescript
+// Based on WhenCreatureRecruitedThenAddToArmyProcessor.java
+export const creatureRecruitmentSaga = saga({
+  name: 'CreatureRecruitmentAutomation',
+  
+  eventHandlers: {
+    CreatureRecruited: async (event: CreatureRecruited, { commandBus }) => {
+      try {
+        await commandBus.send(AddCreatureToArmy.create(
+          event.toArmy,
+          event.creatureId,
+          event.quantity
+        ));
+      } catch (error) {
+        // Compensation action
+        await commandBus.send(IncreaseAvailableCreatures.create(
+          event.dwellingId,
+          event.creatureId,
+          event.quantity
+        ));
+      }
+    }
+  }
+});
+```
+
+## Code Organization Principles
+
+### File Structure
+Follow the Java reference structure but adapted for TypeScript:
+- Group by business capability (vertical slices)
+- Separate write/read sides clearly
+- Keep domain rules in dedicated files
+- Co-locate related components
+
+### Naming Conventions
+- **Reference**: Consistent naming from Java codebase
+- Use descriptive, business-focused names
+- Commands: imperative (BuildDwelling, RecruitCreature)
+- Events: past tense (DwellingBuilt, CreatureRecruited)
+- Domain Rules: express business constraints clearly
+
+### Testing Strategy
+- **Reference**: Test structure from Java codebase
+- Test aggregates in isolation
+- Test domain rules separately
+- Test projectors with event sequences
+- Use descriptive test names that express business scenarios
+
+## Best Practices
+
+1. **Event Store as Source of Truth**: Like in the Java reference, treat events as the authoritative data source
+2. **Aggregate Boundaries**: Keep aggregates small and focused, like Dwelling aggregate
+3. **Cross-Aggregate Communication**: Use events and process managers, never direct calls
+4. **Domain Language**: Use ubiquitous language consistently (creatures, dwellings, armies)
+5. **Immutability**: Ensure events and commands are immutable
+6. **Error Handling**: Implement proper domain exceptions and compensation actions
+
+## Configuration and Setup
+
+Set up Emmett with similar patterns to the Java Spring configuration:
+- Configure event store connection
+- Set up projection processing groups
+- Implement command cost resolution (like `CommandCostResolver`)
+- Configure cross-cutting concerns (metadata, tracing)
+
+Remember: This reference Java/Axon implementation shows mature Event Sourcing patterns. Adapt these concepts to Emmett's API while maintaining the same architectural principles and business logic organization. 

@@ -1,0 +1,11 @@
+axon:
+  axonserver:
+    enabled: false
+#  eventhandling:
+#    processors:
+      # (Optional) You can override processor settings here if needed
+#  eventstore:
+    # No need to specify storage-engine if axon-server is disabled and JPA is on classpath
+    # Axon will auto-configure JpaEventStorageEngine
+
+# Inherit datasource and JPA config from application.yaml 
