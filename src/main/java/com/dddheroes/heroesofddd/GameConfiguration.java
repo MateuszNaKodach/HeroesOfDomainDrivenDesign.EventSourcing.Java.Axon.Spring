@@ -38,12 +38,12 @@ public class GameConfiguration {
         return new DwellingIdSerializationModule();
     }
 
-    @Bean
-    @Primary
-    public Serializer defaultSerializer(ObjectMapper objectMapper) {
-        objectMapper.registerModule(dwellingIdSerializationModule());
-        return JacksonSerializer.builder()
-                .objectMapper(objectMapper)
-                .build();
-    }
+//    @Bean
+//    @Primary
+//    public Serializer defaultSerializer(ObjectMapper objectMapper) {
+//        objectMapper.registerModule(dwellingIdSerializationModule());
+//        return JacksonSerializer.builder()
+//                .objectMapper(objectMapper)
+//                .build();
+//    }
 }
