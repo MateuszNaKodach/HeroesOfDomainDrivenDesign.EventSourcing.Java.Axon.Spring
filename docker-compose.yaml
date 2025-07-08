@@ -1,12 +1,14 @@
 services:
   axonserver-n1:
-    image: 'axoniq/axonserver:2024.2.1'
+    image: 'axoniq/axonserver:2025.1.0'
     ports:
       - '8024:8024'  # HTTP port
       - '8124:8124'  # gRPC port
     restart: always
     environment:
       AXONIQ_AXONSERVER_STANDALONE: true
+    volumes:
+      - ./axoniq.license:/axonserver/axoniq.license
   postgres:
     image: postgres:16
     restart: always
