@@ -19,11 +19,15 @@ import org.axonframework.modelling.command.AggregateCreationPolicy;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.CreationPolicy;
 import org.axonframework.spring.stereotype.Aggregate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
 @Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")
 public class Dwelling {
+
+    private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
 
     @AggregateIdentifier
     public DwellingId dwellingId;
@@ -47,6 +51,7 @@ public class Dwelling {
 
     @EventSourcingHandler
     void evolve(DwellingBuilt event) {
+        logger.info("🏗️ Dwelling built with ID: {}, creature type: {}", event.dwellingId(), event.creatureId());
         this.dwellingId = new DwellingId(event.dwellingId());
         this.creatureId = new CreatureId(event.creatureId());
         this.costPerTroop = Resources.fromRaw(event.costPerTroop());
@@ -69,6 +74,8 @@ public class Dwelling {
 
     @EventSourcingHandler
     void evolve(AvailableCreaturesChanged event) {
+        logger.info("📈 Available creatures changed for dwelling {}: {} creatures now available",
+                event.dwellingId(), event.changedTo());
         this.availableCreatures = new Amount(event.changedTo());
     }
 
@@ -104,11 +111,14 @@ public class Dwelling {
 
     @EventSourcingHandler
     void evolve(CreatureRecruited event) {
+        logger.info("🧙 Recruited {} creatures of type {} from dwelling {} to army {}",
+                event.quantity(), event.creatureId(), event.dwellingId(), event.toArmy());
         // todo: consider if it's OK or RecruitCreature should cause also AvailableCreaturesChanged event
         this.availableCreatures = this.availableCreatures.minus(new Amount(event.quantity()));
     }
 
     Dwelling() {
+        logger.info("🏠 Creating empty Dwelling (required by Axon)");
         // required by Axon
     }
 }

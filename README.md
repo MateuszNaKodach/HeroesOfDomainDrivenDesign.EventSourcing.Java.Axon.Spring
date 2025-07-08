@@ -158,3 +158,8 @@ void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
 If you'd like to hire me for Domain-Driven Design and/or Event Sourcing projects I'm available to work with:
 Kotlin, Java, C# .NET, Ruby and JavaScript/TypeScript (Node.js or React).
 Please reach me out on LinkedIn [linkedin.com/in/mateusznakodach/](https://www.linkedin.com/in/mateusznakodach/).
+
+
+### Helpful:
+CHECK snapshot content!
+```TO read snapshot data: SELECT lo_get(18333) AS payload;```
