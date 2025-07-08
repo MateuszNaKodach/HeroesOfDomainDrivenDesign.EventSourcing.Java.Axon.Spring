@@ -13,6 +13,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Recru
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingSnapshot;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
@@ -115,6 +116,27 @@ public class Dwelling {
                 event.quantity(), event.creatureId(), event.dwellingId(), event.toArmy());
         // todo: consider if it's OK or RecruitCreature should cause also AvailableCreaturesChanged event
         this.availableCreatures = this.availableCreatures.minus(new Amount(event.quantity()));
+    }
+
+    @EventSourcingHandler
+    void on(DwellingSnapshot event) {
+        this.dwellingId = new DwellingId(event.getDwellingId());
+        this.creatureId = new CreatureId(event.getCreatureId());
+        this.costPerTroop = event.getCostPerTroop();
+        this.availableCreatures = new Amount(event.getAvailableCreatures());
+    }
+
+    /**
+     * Emits a snapshot event representing the current state of this aggregate.
+     * This can be called from a snapshotter or manually for testing.
+     */
+    public void emitSnapshot() {
+        apply(new DwellingSnapshot(
+            this.dwellingId != null ? this.dwellingId.toString() : null,
+            this.creatureId != null ? this.creatureId.toString() : null,
+            this.costPerTroop,
+            this.availableCreatures != null ? this.availableCreatures.raw() : 0
+        ));
     }
 
     Dwelling() {
