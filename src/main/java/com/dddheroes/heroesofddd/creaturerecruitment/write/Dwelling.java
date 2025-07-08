@@ -26,10 +26,10 @@ import static org.axonframework.modelling.command.AggregateLifecycle.*;
 public class Dwelling {
 
     @AggregateIdentifier
-    private DwellingId dwellingId;
-    private CreatureId creatureId;
-    private Resources costPerTroop;
-    private Amount availableCreatures;
+    public DwellingId dwellingId;
+    public CreatureId creatureId;
+    public Resources costPerTroop;
+    public Amount availableCreatures;
 
     @CommandHandler
     @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
