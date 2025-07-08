@@ -26,6 +26,7 @@ public class AstrologersConfiguration {
     @Bean
     public SnapshotFilter astrologersSnapshotFilter() {
         return snapshotData -> {
+            var type = snapshotData.getType();
             // Allow all snapshots for dwellings, as they are always in the correct format
             return true;
         };

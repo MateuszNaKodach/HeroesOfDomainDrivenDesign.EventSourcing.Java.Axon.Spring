@@ -36,7 +36,7 @@ class CreatureRecruitmentConfiguration {
     @Bean
     public SnapshotFilter dwellingSnapshotFilter() {
         return snapshotData -> {
-            // Allow all snapshots for dwellings, as they are always in the correct format
+            var type = snapshotData.getType();
             return true;
         };
     }
