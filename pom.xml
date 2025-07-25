@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.3</assertj.version>
-		<axon.version>4.11.1</axon.version>
+		<axon.version>4.11.3</axon.version>
 		<java.version>23</java.version>
 		<spring-doc.version>2.8.5</spring-doc.version>
 		<spring-modulith.version>1.4.1</spring-modulith.version>
