@@ -1,12 +1,17 @@
 services:
   axonserver-n1:
-    image: 'axoniq/axonserver:2024.2.1'
+    image: 'axoniq/axonserver:2025.1.2'
     ports:
       - '8024:8024'  # HTTP port
       - '8124:8124'  # gRPC port
     restart: always
     environment:
-      AXONIQ_AXONSERVER_STANDALONE: true
+      axoniq_axonserver_standalone: true
+      axoniq_axonserver_hostname: axon-server
+      axoniq_axonserver_autocluster_first: axon-server
+      axoniq_axonserver_autocluster_contexts: _admin
+      spring_servlet_multipart_max-file-size: 95MB
+      spring_servlet_multipart_max-request-size: 95MB
   postgres:
     image: postgres:16
     restart: always
