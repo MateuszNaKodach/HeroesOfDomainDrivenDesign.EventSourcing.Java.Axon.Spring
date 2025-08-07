@@ -23,7 +23,7 @@ X-Player-Id: {{playerId}}
 
 {
   "creatureId": "angel",
-  "increaseBy": 1
+  "increaseBy": 5
 }
 
 ### RecruitCreature

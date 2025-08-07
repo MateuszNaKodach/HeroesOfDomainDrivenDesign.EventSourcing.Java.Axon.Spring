@@ -12,6 +12,8 @@ services:
       axoniq_axonserver_autocluster_contexts: _admin
       spring_servlet_multipart_max-file-size: 95MB
       spring_servlet_multipart_max-request-size: 95MB
+    volumes:
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license
   postgres:
     image: postgres:16
     restart: always

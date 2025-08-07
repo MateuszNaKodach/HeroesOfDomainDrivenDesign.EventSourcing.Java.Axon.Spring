@@ -43,6 +43,8 @@ axon:
       ReadModel_Dwelling:
         mode: pooled
         sequencing-policy: gameIdSequencingPolicy
+        initial-segment-count: 2
+        batch-size: 5
       Read_GetAllDwellings_QueryCache:
         mode: subscribing
         sequencing-policy: gameIdSequencingPolicy
@@ -61,3 +63,9 @@ springdoc:
     operationsSorter: method
     tagsSorter: alpha
     docExpansion: none
+
+axoniq:
+  console:
+    application-name: HeroesOfDDD-Axon4
+    credentials: XYZ
+    dlq-mode: FULL
