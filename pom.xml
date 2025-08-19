@@ -31,6 +31,7 @@
 		<axon.version>4.12.1</axon.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<java.version>23</java.version>
+		<spring-ai.version>1.0.1</spring-ai.version>
 		<spring-doc.version>2.8.5</spring-doc.version>
 		<spring-modulith.version>1.4.1</spring-modulith.version>
 	</properties>
@@ -77,6 +78,11 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>${spring-doc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+			<version>${spring-ai.version}</version>
 		</dependency>
 
 		<!-- Runtime dependencies -->

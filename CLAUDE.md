@@ -90,3 +90,38 @@ Tests focus on observable behavior using Axon Test Fixture:
 - Virtual threads enabled for better concurrency
 - Jackson serialization for events and messages
 - Game metadata correlation for event sequencing
+
+## Development Guidelines
+
+### Library Usage
+- Always consult Context7 MCP server for latest library versions and documentation before using any external libraries
+- Keep dependencies up-to-date and verify compatibility with existing codebase
+
+### Unit Testing Standards
+- **Framework**: Always use JUnit 5 for all unit tests
+- **Assertions**: Use AssertJ for fluent assertions
+- **Async Testing**: Use Awaitility for testing asynchronous operations
+- **Structure**: Use `// given` / `// when` / `// then` comments (with spaces) to separate test sections
+- **Organization**: Use JUnit 5 `@Nested` classes to group logically connected test cases:
+  - Group by method under test
+  - Group by shared given conditions
+  - Group by feature/scenario variations
+
+### Test Structure Example
+```java
+@Nested
+class WhenRecruitingCreatures {
+    
+    @Nested
+    class GivenDwellingHasAvailableCreatures {
+        
+        @Test
+        void shouldSuccessfullyRecruitCreatures() {
+            // given
+            
+            // when
+            
+            // then
+        }
+    }
+}

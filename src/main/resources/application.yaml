@@ -4,6 +4,21 @@ spring:
   threads:
     virtual:
       enabled: true
+  ai:
+    mcp:
+      server:
+        enabled: true
+        name: "Heroes of Might & Magic III - DDD/Event Sourcing Server"
+        version: "1.0.0"
+        type: SYNC
+        transport: WEBMVC
+        instructions: "MCP server for Heroes of Might & Magic III domain built with DDD, Event Sourcing, and Axon Framework. Provides domain operations, game management tools, and educational DDD resources."
+        sse-message-endpoint: /mcp/messages
+        capabilities:
+          tool: true
+          resource: true
+          prompt: true
+          completion: false
   datasource:
     url: jdbc:postgresql://localhost:6446/heroes_of_ddd_development
     username: heroes_of_ddd_db_user
