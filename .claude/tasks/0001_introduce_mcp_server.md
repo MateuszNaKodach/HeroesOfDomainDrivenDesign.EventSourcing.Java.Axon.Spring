@@ -40,9 +40,9 @@ The MCP server will expose the rich domain model through standardized MCP resour
 ## Phase 2: Implementation TODOs
 
 ### 🏗️ Core Infrastructure (Foundation)
-- [ ] Add Spring AI MCP Server dependencies
-- [ ] Configure MCP server in Spring Boot application
-- [ ] Create base MCP configuration classes in `shared/mcp/`
+- [x] Add Spring AI MCP Server dependencies
+- [x] Configure MCP server in Spring Boot application
+- [x] Create base MCP configuration classes in `shared/mcp/`
 - [ ] Implement authentication/authorization for MCP
 
 ### 🚀 Phase 1: Proof of Concept (Start Here)
