@@ -23,6 +23,20 @@ I'm focused on domain modeling on the backend, but I'm going to implement UI lik
 2. `docker compose up`
 3. `./mvnw spring-boot:run` or `./mvnw test`
 
+## 🌐 Interacting with the Application
+
+You can interact with the system in two ways:
+
+### REST API
+Access the REST API documentation at: [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html)
+
+### Model Context Protocol (MCP) Server
+The application exposes a Model Context Protocol Server that allows AI assistants to interact directly with the domain. You can add it to Claude Code with:
+
+```bash
+claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
+```
+
 ## 🧱 Modules
 
 Modules (mostly designed using Bounded Context heuristic) are designed and documented on EventModeling below.
