@@ -116,7 +116,6 @@ class RecruitCreatureRequiresResourcesTest {
 
         // then
         assertThatThrownBy(() -> executePlayerCommand(recruitCommand))
-                .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
         eventStoreAssertions.assertEventNotStored(dwellingId, CreatureRecruited.class);
         eventStoreAssertions.assertEventNotStored(dwellingId, ResourcesWithdrawn.class);

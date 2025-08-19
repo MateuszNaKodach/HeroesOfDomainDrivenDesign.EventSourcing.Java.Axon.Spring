@@ -94,7 +94,6 @@ class PaidCommandInterceptorTest {
         // when
         var paidCommand = TestPaidCommand.failing(COMMAND_COST);
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
-                .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining(
                         "TestPaidCommand failed! Resources withdrawal should be rolled back"));
 
@@ -115,7 +114,6 @@ class PaidCommandInterceptorTest {
 
         // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
-                .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
         eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
         eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
@@ -133,7 +131,6 @@ class PaidCommandInterceptorTest {
 
         // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
-                .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
         eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
         eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
@@ -162,7 +159,6 @@ class PaidCommandInterceptorTest {
 
         // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
-                .cause()
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
         eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
         eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
