@@ -1,10 +1,9 @@
 services:
   axonserver-n1:
-    image: 'axoniq/axonserver:2025.1.2'
+    image: 'axoniq/axonserver:2025.1.4'
     ports:
       - '8024:8024'  # HTTP port
       - '8124:8124'  # gRPC port
-    restart: always
     environment:
       axoniq_axonserver_standalone: true
       axoniq_axonserver_hostname: axon-server
@@ -12,11 +11,10 @@ services:
       axoniq_axonserver_autocluster_contexts: _admin
       spring_servlet_multipart_max-file-size: 95MB
       spring_servlet_multipart_max-request-size: 95MB
-    volumes:
-      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license
+#    volumes:
+#      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
   postgres:
     image: postgres:16
-    restart: always
     environment:
       POSTGRES_DB: heroes_of_ddd_development
       POSTGRES_USER: heroes_of_ddd_db_user

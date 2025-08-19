@@ -1,0 +1,4 @@
+axon:
+  axonserver:
+    enabled: true
+    context: default

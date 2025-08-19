@@ -18,7 +18,13 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 axon:
   axonserver:
-    enabled: true
+    enabled: false
+      #  eventhandling:
+      #    processors:
+    # (Optional) You can override processor settings here if needed
+    #  eventstore:
+    # No need to specify storage-engine if axon-server is disabled and JPA is on classpath
+    # Axon will auto-configure JpaEventStorageEngine
   serializer:
     general: jackson
     events: jackson
