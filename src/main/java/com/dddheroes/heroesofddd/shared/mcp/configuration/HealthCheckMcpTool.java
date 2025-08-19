@@ -1,15 +1,15 @@
 package com.dddheroes.heroesofddd.shared.mcp.configuration;
 
-import org.springframework.ai.mcp.server.annotation.McpTool;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @Component
-public class McpHealthCheck {
+public class HealthCheckMcpTool {
 
-    @McpTool(name = "health_check", description = "Verifies that the MCP server is running and operational")
+    @Tool(name = "health_check", description = "Verifies that the MCP server is running and operational")
     public Map<String, Object> healthCheck() {
         return Map.of(
             "status", "healthy",

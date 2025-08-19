@@ -47,9 +47,9 @@ The MCP server will expose the rich domain model through standardized MCP resour
 
 ### 🚀 Phase 1: Proof of Concept (Start Here)
 **Target: `creaturerecruitment/write/builddwelling` slice**
-- [ ] **creaturerecruitment/write/builddwelling**: Build dwelling tools/resources
-- [ ] Test and validate the first slice implementation
-- [ ] Establish patterns and conventions
+- [x] **creaturerecruitment/write/builddwelling**: Build dwelling tools/resources
+- [x] Test and validate the first slice implementation
+- [x] Establish patterns and conventions
 
 ### 📈 Phase 2: Expand Creature Recruitment Context
 - [ ] **creaturerecruitment/write/recruitcreature**: Recruit creature tools/resources  
@@ -182,3 +182,89 @@ Each phase completion should result in:
 - **Performance validation** under realistic load
 
 This incremental approach ensures the MCP server integrates seamlessly with the existing domain architecture while providing rich, domain-aware capabilities for external consumers. Starting with a single slice allows us to establish solid foundations and patterns that can be confidently replicated across the entire application.
+
+## 📚 Implementation Patterns & Documentation
+
+### MCP Tool Implementation Pattern
+
+Based on the successful implementation of `build_dwelling` tool, here's the established pattern for creating MCP tools:
+
+#### 1. **File Location**
+- Each slice gets its own `ModelContextProtocol.java` file
+- Location: `{context}/write/{slice}/ModelContextProtocol.java`
+- Example: `creaturerecruitment/write/builddwelling/ModelContextProtocol.java`
+
+#### 2. **Class Structure**
+```java
+@Component
+public class ModelContextProtocol {
+    
+    private final CommandGateway commandGateway;
+    
+    public ModelContextProtocol(CommandGateway commandGateway) {
+        this.commandGateway = commandGateway;
+    }
+    
+    @Tool(
+        name = "tool_name",
+        description = "Detailed description of what the tool does"
+    )
+    public CompletableFuture<Map<String, Object>> methodName(
+        @ToolParam(description = "Parameter description") String param1,
+        // ... more parameters
+    ) {
+        // Implementation
+    }
+}
+```
+
+#### 3. **Key Design Decisions**
+- **Use Spring AI `@Tool`** annotation (not `@McpTool`)
+- **Return `CompletableFuture<Map<String, Object>>`** for async operation results
+- **Include `@ToolParam` descriptions** for all parameters to help AI understand usage
+- **Reuse existing Command/CommandGateway** infrastructure
+- **Follow GameMetaData pattern** for context (gameId, playerId)
+- **Provide structured success/error responses** with consistent format
+
+#### 4. **Parameter Validation Pattern**
+```java
+@ToolParam(description = "Unique identifier for the game instance") String gameId,
+@ToolParam(description = "Unique identifier for the player") String playerId,
+@ToolParam(description = "Unique identifier for the dwelling to build") String dwellingId,
+@ToolParam(description = "Type of creature this dwelling will recruit (e.g., 'ANGEL', 'DRAGON', 'GRIFFIN')") String creatureId,
+@ToolParam(description = "Resource cost per troop recruitment. Map of resource types to amounts (e.g., {'GOLD': 1000, 'WOOD': 10})") Map<String, Integer> costPerTroop
+```
+
+#### 5. **Response Pattern**
+```java
+// Success Response
+return commandGateway.send(command, GameMetaData.with(gameId, playerId))
+    .thenApply(result -> Map.of(
+        "success", true,
+        "dwellingId", dwellingId,
+        "creatureId", creatureId,
+        "costPerTroop", costPerTroop,
+        "message", "Dwelling built successfully"
+    ))
+    .exceptionally(throwable -> Map.of(
+        "success", false,
+        "error", throwable.getMessage(),
+        "dwellingId", dwellingId,
+        "message", "Failed to build dwelling: " + throwable.getMessage()
+    ));
+```
+
+### Next Implementation Steps
+
+With the proven pattern established, implement remaining tools following the same structure:
+
+1. **creaturerecruitment/write/recruitcreature/ModelContextProtocol.java**
+2. **creaturerecruitment/write/changeavailablecreatures/ModelContextProtocol.java** 
+3. **creaturerecruitment/read/getdwellingbyid/ModelContextProtocol.java** (Resources)
+4. **creaturerecruitment/read/getalldwellings/ModelContextProtocol.java** (Resources)
+
+Each implementation should:
+- Follow the established class structure
+- Use appropriate parameter validation
+- Maintain consistent response formats
+- Leverage existing domain infrastructure
