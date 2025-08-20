@@ -2,6 +2,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.annotation.Tool;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class ModelContextProtocol {
+public class BuildDwellingMcp {
 
     @Component
     static class Tools {
@@ -41,20 +42,30 @@ public class ModelContextProtocol {
             var command = BuildDwelling.command(dwellingId, creatureId, costPerTroop);
 
             return commandGateway.send(command, GameMetaData.with(gameId, playerId))
-                    .thenApply(_ -> Map.of(
-                            "success", true,
-                            "dwellingId", dwellingId,
-                            "creatureId", creatureId,
-                            "costPerTroop", costPerTroop,
-                            "playerId", playerId,
-                            "message", "Dwelling built successfully"
-                    ))
-                    .exceptionally(throwable -> Map.of(
-                            "success", false,
-                            "error", throwable != null ? throwable.getMessage() : "Unknown error",
-                            "dwellingId", dwellingId,
-                            "message", "Failed to build dwelling: " + (throwable != null ? throwable.getMessage() : "Unknown error")
-                    ));
+                    .thenApply(_ -> getSuccess(dwellingId, creatureId, costPerTroop, playerId))
+                    .exceptionally(throwable -> failure(dwellingId, throwable));
+        }
+
+        @NotNull
+        private static Map<String, Object> failure(String dwellingId, Throwable throwable) {
+            return Map.of(
+                    "success", false,
+                    "error", throwable != null ? throwable.getMessage() : "Unknown error",
+                    "dwellingId", dwellingId,
+                    "message", "Failed to build dwelling: " + (throwable != null ? throwable.getMessage() : "Unknown error")
+            );
+        }
+
+        @NotNull
+        private static Map<String, Object> getSuccess(String dwellingId, String creatureId, Map<String, Integer> costPerTroop, String playerId) {
+            return Map.of(
+                    "success", true,
+                    "dwellingId", dwellingId,
+                    "creatureId", creatureId,
+                    "costPerTroop", costPerTroop,
+                    "playerId", playerId,
+                    "message", "Dwelling built successfully"
+            );
         }
 
         private String playerId(ToolContext toolContext) {
@@ -67,7 +78,7 @@ public class ModelContextProtocol {
     static class Config {
 
         @Bean
-        ToolCallbackProvider buildDwellingTool(ModelContextProtocol.Tools sliceTools) {
+        ToolCallbackProvider buildDwellingTool(BuildDwellingMcp.Tools sliceTools) {
             return MethodToolCallbackProvider.builder().toolObjects(sliceTools).build();
         }
 
