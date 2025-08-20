@@ -52,10 +52,10 @@ The MCP server will expose the rich domain model through standardized MCP resour
 - [x] Establish patterns and conventions
 
 ### 📈 Phase 2: Expand Creature Recruitment Context
-- [ ] **creaturerecruitment/write/recruitcreature**: Recruit creature tools/resources  
+- [x] **creaturerecruitment/write/recruitcreature**: Recruit creature tools/resources  
 - [ ] **creaturerecruitment/write/changeavailablecreatures**: Availability tools/resources
 - [ ] **creaturerecruitment/read/getdwellingbyid**: Single dwelling query resources
-- [ ] **creaturerecruitment/read/getalldwellings**: Dwellings list query resources
+- [x] **creaturerecruitment/read/getalldwellings**: Dwellings list query resources
 - [ ] **creaturerecruitment**: Shared recruitment strategy prompts
 
 ### 🔄 Phase 3: Replicate to Other Contexts
@@ -254,17 +254,128 @@ return commandGateway.send(command, GameMetaData.with(gameId, playerId))
     ));
 ```
 
+### MCP Resource Implementation Pattern
+
+Based on the successful implementation of `GetAllDwellingsMcp` resource, here's the established pattern for creating MCP resources:
+
+#### 1. **File Location & Naming**
+- Each read slice gets its own MCP class with suffix `Mcp`
+- Location: `{context}/read/{slice}/{SliceName}Mcp.java`
+- Example: `creaturerecruitment/read/getalldwellings/GetAllDwellingsMcp.java`
+
+#### 2. **Class Structure**
+```java
+@Component
+public class GetAllDwellingsMcp {
+    
+    private final QueryGateway queryGateway;
+    private final ObjectMapper objectMapper;
+    
+    public GetAllDwellingsMcp(QueryGateway queryGateway, ObjectMapper objectMapper) {
+        this.queryGateway = queryGateway;
+        this.objectMapper = objectMapper;
+    }
+    
+    @Bean
+    public List<McpServerFeatures.SyncResourceSpecification> getAllDwellingsResource() {
+        // Resource definition and handler implementation
+    }
+}
+```
+
+#### 3. **Key Design Decisions for Resources**
+- **Use `@Component` and `@Bean`** for resource specification
+- **Return `List<McpServerFeatures.SyncResourceSpecification>`** from bean methods
+- **Follow MCP URI standard** with custom scheme (e.g., `heroesofddd://games/{gameId}/dwellings`)
+- **Include proper MCP annotations** with audience and priority
+- **Reuse existing Query/QueryGateway** infrastructure
+- **Provide structured JSON responses** with metadata
+
+#### 4. **URI Pattern**
+```java
+// Correct MCP URI with custom scheme following REST-like pattern
+"heroesofddd://games/{gameId}/dwellings"
+
+// Path parameter extraction
+private Optional<String> extractGameId(String uri) {
+    final String scheme = "heroesofddd://";
+    final String expectedPath = "games";
+    final String expectedEndpoint = "dwellings";
+    
+    if (!uri.startsWith(scheme)) {
+        return Optional.empty();
+    }
+    
+    String[] pathSegments = uri.substring(scheme.length()).split("/");
+    
+    if (pathSegments.length != 3 ||
+            !expectedPath.equals(pathSegments[0]) ||
+            !expectedEndpoint.equals(pathSegments[2])) {
+        return Optional.empty();
+    }
+    
+    String gameId = pathSegments[1];
+    return gameId.trim().isEmpty() ? Optional.empty() : Optional.of(gameId);
+}
+```
+
+#### 5. **Resource Definition Pattern**
+```java
+var dwellingsResource = new McpSchema.Resource(
+    "heroesofddd://games/{gameId}/dwellings",           // URI following MCP standard
+    "All Dwellings",                                    // Human-readable name
+    "Provides access to all dwellings in a game...",   // Description
+    "application/json",                                 // MIME type
+    new McpSchema.Annotations(
+        List.of(McpSchema.Role.USER, McpSchema.Role.ASSISTANT), // Audience
+        0.8                                             // Priority (0.0-1.0)
+    )
+);
+```
+
+#### 6. **Response Pattern**
+```java
+// Success Response
+String jsonContent = formatDwellings(result);
+return new McpSchema.ReadResourceResult(
+    List.of(new McpSchema.TextResourceContents(
+        request.uri(),
+        "application/json",
+        jsonContent
+    ))
+);
+
+// Error Response
+String errorContent = String.format("""
+    {
+      "error": "Failed to retrieve dwellings: %s",
+      "dwellings": []
+    }
+    """, e.getMessage());
+return new McpSchema.ReadResourceResult(
+    List.of(new McpSchema.TextResourceContents(
+        request.uri(),
+        "application/json",
+        errorContent
+    ))
+);
+```
+
 ### Next Implementation Steps
 
-With the proven pattern established, implement remaining tools following the same structure:
+With proven patterns established for both Tools and Resources, implement remaining components:
 
-1. **creaturerecruitment/write/recruitcreature/ModelContextProtocol.java**
-2. **creaturerecruitment/write/changeavailablecreatures/ModelContextProtocol.java** 
-3. **creaturerecruitment/read/getdwellingbyid/ModelContextProtocol.java** (Resources)
-4. **creaturerecruitment/read/getalldwellings/ModelContextProtocol.java** (Resources)
+**Completed:**
+1. ✅ **creaturerecruitment/write/recruitcreature/RecruitCreatureMcp.java** (Tool)
+2. ✅ **creaturerecruitment/read/getalldwellings/GetAllDwellingsMcp.java** (Resource)
+
+**Remaining:**
+3. **creaturerecruitment/write/changeavailablecreatures** - Follow Tool pattern
+4. **creaturerecruitment/read/getdwellingbyid** - Follow Resource pattern  
 
 Each implementation should:
-- Follow the established class structure
+- Follow the established class structure patterns
 - Use appropriate parameter validation
-- Maintain consistent response formats
+- Maintain consistent response formats  
 - Leverage existing domain infrastructure
+- Follow MCP URI standards with custom scheme
