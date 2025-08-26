@@ -18,3 +18,9 @@ logging:
     name: ./logs/heroes-of-ddd-axon4-mcpstdio.log
   level:
     root: OFF
+
+
+# /Users/mateusznowak/.sdkman/candidates/java/23.0.2-zulu/bin/java -jar /Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/target/heroesofddd-0.0.1-SNAPSHOT.jar -Dspring.profiles.active=mcpstdio
+
+
+# /Users/mateusznowak/.sdkman/candidates/java/23.0.2-zulu/bin/java -Dspring.profiles.active=mcpstdio -jar /Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring/target/heroesofddd-0.0.1-SNAPSHOT.jar
