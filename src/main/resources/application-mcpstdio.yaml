@@ -5,3 +5,16 @@ spring:
         stdio: true
   main:
     web-application-type: none
+    banner-mode: off
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        show_sql: false
+logging:
+  pattern:
+    console:
+  file:
+    name: ./logs/heroes-of-ddd-axon4-mcpstdio.log
+  level:
+    root: OFF
