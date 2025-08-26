@@ -1,0 +1,7 @@
+spring:
+  ai:
+    mcp:
+      server:
+        stdio: true
+  main:
+    web-application-type: none

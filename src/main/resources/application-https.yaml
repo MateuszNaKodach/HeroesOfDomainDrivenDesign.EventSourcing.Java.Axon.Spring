@@ -1,0 +1,8 @@
+server:
+  port: 8443
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: heroesddd
+    key-store-type: PKCS12
+    key-alias: heroesddd
+    enabled: true
