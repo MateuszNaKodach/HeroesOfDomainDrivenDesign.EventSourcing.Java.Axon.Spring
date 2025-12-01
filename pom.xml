@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.3</assertj.version>
-		<axon.version>4.12.1</axon.version>
+		<axon.version>4.12.2</axon.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<java.version>23</java.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
