@@ -1,6 +1,6 @@
 services:
   axonserver-n1:
-    image: 'axoniq/axonserver:2025.1.4'
+    image: 'axoniq/axonserver:2025.2.1'
     ports:
       - '8024:8024'  # HTTP port
       - '8124:8124'  # gRPC port
