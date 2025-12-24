@@ -63,6 +63,8 @@ axon:
       Read_GetAllDwellings_QueryCache:
         mode: subscribing
         sequencing-policy: gameIdSequencingPolicy
+#  update-check:
+#    disabled: true
 application:
   maintenance:
     enabled: true

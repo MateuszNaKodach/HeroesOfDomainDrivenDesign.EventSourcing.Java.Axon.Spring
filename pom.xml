@@ -28,13 +28,28 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.3</assertj.version>
-		<axon.version>4.12.2</axon.version>
+		<axon.version>4.12.3-SNAPSHOT</axon.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<java.version>23</java.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
 		<spring-doc.version>2.8.5</spring-doc.version>
 		<spring-modulith.version>1.4.1</spring-modulith.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>sonatype-snapshots</id>
+			<name>Sonatype Snapshots</name>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -67,6 +82,7 @@
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-spring-boot-starter</artifactId>
+            <version>${axon.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.axoniq.console</groupId>
@@ -143,6 +159,7 @@
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-test</artifactId>
 			<scope>test</scope>
+            <version>${axon.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
@@ -161,13 +178,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.axonframework</groupId>
-				<artifactId>axon-bom</artifactId>
-				<version>${axon.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>org.axonframework</groupId>-->
+<!--				<artifactId>axon-bom</artifactId>-->
+<!--				<version>${axon.version}</version>-->
+<!--				<type>pom</type>-->
+<!--				<scope>import</scope>-->
+<!--			</dependency>-->
 		</dependencies>
 	</dependencyManagement>
 
