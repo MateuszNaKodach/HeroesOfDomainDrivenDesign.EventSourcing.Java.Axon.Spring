@@ -6,7 +6,6 @@ services:
       - AXONIQ_AXONSERVER_NAME=axonserver-1
       - AXONIQ_AXONSERVER_HOSTNAME=axonserver-1
       - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-1
-      - SERVER_PORT=8024
       - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
     ports:
@@ -29,7 +28,6 @@ services:
       - AXONIQ_AXONSERVER_NAME=axonserver-2
       - AXONIQ_AXONSERVER_HOSTNAME=axonserver-2
       - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-2
-      - SERVER_PORT=8025
       - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
     ports:
@@ -52,7 +50,6 @@ services:
       - AXONIQ_AXONSERVER_NAME=axonserver-3
       - AXONIQ_AXONSERVER_HOSTNAME=axonserver-3
       - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-3
-      - SERVER_PORT=8026
       - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
     ports:
