@@ -1,5 +1,8 @@
 server:
   port: 3773
+logging:
+  level:
+    org.axonframework.eventhandling.pooled.Coordinator: DEBUG
 spring:
   application:
     name: heroesofddd
