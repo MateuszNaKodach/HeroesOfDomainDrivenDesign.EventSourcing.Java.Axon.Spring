@@ -1,14 +1,14 @@
 services:
   axonserver-1:
     image: 'axoniq/axonserver:2025.2.2'
-    pull_policy: always
+    hostname: axonserver-1
     environment:
-      - axoniq_axonserver_name=axonserver-1
-      - axoniq_axonserver_hostname=localhost
-      - axoniq_axonserver_internal_hostname=axonserver-1
-      - server_port=8024
-      - axoniq_axonserver_port=8124
-      - axoniq_axonserver_internal_port=8224
+      - AXONIQ_AXONSERVER_NAME=axonserver-1
+      - AXONIQ_AXONSERVER_HOSTNAME=axonserver-1
+      - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-1
+      - SERVER_PORT=8024
+      - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
+      - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
     ports:
       - '8024:8024'
       - '8124:8124'
@@ -18,48 +18,55 @@ services:
       - ./axonserver/axonserver-1/events:/axonserver/events
       - ./axonserver/axonserver-1/plugins:/axonserver/plugins
       - ./axonserver/axonserver-1/log:/axonserver/log
-      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
-
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license
+    networks:
+      - axon-network
 
   axonserver-2:
     image: 'axoniq/axonserver:2025.2.2'
-    pull_policy: always
+    hostname: axonserver-2
     environment:
-      - axoniq_axonserver_hostname=localhost
-      - axoniq_axonserver_internal_hostname=axonserver-2
-      - server_port=8025
-      - axoniq_axonserver_port=8125
-      - axoniq_axonserver_internal_port=8225
+      - AXONIQ_AXONSERVER_NAME=axonserver-2
+      - AXONIQ_AXONSERVER_HOSTNAME=axonserver-2
+      - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-2
+      - SERVER_PORT=8025
+      - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
+      - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
     ports:
-      - '8025:8025'
-      - '8125:8125'
-      - '8225:8225'
+      - '8025:8024'
+      - '8125:8124'
+      - '8225:8224'
     volumes:
       - ./axonserver/axonserver-2/data:/axonserver/data
       - ./axonserver/axonserver-2/events:/axonserver/events
       - ./axonserver/axonserver-2/plugins:/axonserver/plugins
       - ./axonserver/axonserver-2/log:/axonserver/log
-      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license
+    networks:
+      - axon-network
 
   axonserver-3:
     image: 'axoniq/axonserver:2025.2.2'
-    pull_policy: always
+    hostname: axonserver-3
     environment:
-      - axoniq_axonserver_hostname=localhost
-      - axoniq_axonserver_internal_hostname=axonserver-3
-      - server_port=8026
-      - axoniq_axonserver_port=8126
-      - axoniq_axonserver_internal_port=8226
+      - AXONIQ_AXONSERVER_NAME=axonserver-3
+      - AXONIQ_AXONSERVER_HOSTNAME=axonserver-3
+      - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-3
+      - SERVER_PORT=8026
+      - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
+      - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
     ports:
-      - '8026:8026'
-      - '8126:8126'
-      - '8226:8226'
+      - '8026:8024'
+      - '8126:8124'
+      - '8226:8224'
     volumes:
       - ./axonserver/axonserver-3/data:/axonserver/data
       - ./axonserver/axonserver-3/events:/axonserver/events
       - ./axonserver/axonserver-3/plugins:/axonserver/plugins
       - ./axonserver/axonserver-3/log:/axonserver/log
-      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license
+    networks:
+      - axon-network
 
   postgres:
     image: postgres:16
@@ -69,3 +76,9 @@ services:
       POSTGRES_PASSWORD: heroes_of_ddd_db_password
     ports:
       - "6446:5432"
+    networks:
+      - axon-network
+
+networks:
+  axon-network:
+    driver: bridge
