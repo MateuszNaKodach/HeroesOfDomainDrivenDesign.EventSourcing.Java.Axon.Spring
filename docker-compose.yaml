@@ -1,50 +1,64 @@
 services:
-  axonserver-n1:
-    image: 'axoniq/axonserver:2025.2.1'
-    hostname: axonserver-n1
-    ports:
-      - '8024:8024'  # HTTP port
-      - '8124:8124'  # gRPC port
+  axonserver-1:
+    image: 'axoniq/axonserver:2025.2.2'
+    pull_policy: always
     environment:
-      AXONIQ_AXONSERVER_NAME: axonserver-n1
-      AXONIQ_AXONSERVER_HOSTNAME: axonserver-n1
-      AXONIQ_AXONSERVER_INTERNAL_HOSTNAME: axonserver-n1
-      AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST: axonserver-n1
-      AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS: _admin,default
-      spring_servlet_multipart_max-file-size: 95MB
-      spring_servlet_multipart_max-request-size: 95MB
-    networks:
-      - axon-cluster
+      - axoniq_axonserver_name=axonserver-1
+      - axoniq_axonserver_hostname=localhost
+      - axoniq_axonserver_internal_hostname=axonserver-1
+      - server_port=8024
+      - axoniq_axonserver_port=8124
+      - axoniq_axonserver_internal_port=8224
+    ports:
+      - '8024:8024'
+      - '8124:8124'
+      - '8224:8224'
     volumes:
-      - ./axonserver/axonserver-n1/data:/axonserver/data
-      - ./axonserver/axonserver-n1/events:/axonserver/events
-      - ./axonserver/axonserver-n1/plugins:/axonserver/plugins
-      - ./axonserver/axonserver-n1/log:/axonserver/log
+      - ./axonserver/axonserver-1/data:/axonserver/data
+      - ./axonserver/axonserver-1/events:/axonserver/events
+      - ./axonserver/axonserver-1/plugins:/axonserver/plugins
+      - ./axonserver/axonserver-1/log:/axonserver/log
       - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
 
-  axonserver-n2:
-    image: 'axoniq/axonserver:2025.2.1'
-    hostname: axonserver-n2
-    ports:
-      - '8025:8024'  # HTTP port
-      - '8125:8124'  # gRPC port
+
+  axonserver-2:
+    image: 'axoniq/axonserver:2025.2.2'
+    pull_policy: always
     environment:
-      AXONIQ_AXONSERVER_NAME: axonserver-n2
-      AXONIQ_AXONSERVER_HOSTNAME: axonserver-n2
-      AXONIQ_AXONSERVER_INTERNAL_HOSTNAME: axonserver-n2
-      AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST: axonserver-n1
-      AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS: _admin,default
-      spring_servlet_multipart_max-file-size: 95MB
-      spring_servlet_multipart_max-request-size: 95MB
-    networks:
-      - axon-cluster
-    depends_on:
-      - axonserver-n1
+      - axoniq_axonserver_hostname=localhost
+      - axoniq_axonserver_internal_hostname=axonserver-2
+      - server_port=8025
+      - axoniq_axonserver_port=8125
+      - axoniq_axonserver_internal_port=8225
+    ports:
+      - '8025:8025'
+      - '8125:8125'
+      - '8225:8225'
     volumes:
-      - ./axonserver/axonserver-n2/data:/axonserver/data
-      - ./axonserver/axonserver-n2/events:/axonserver/events
-      - ./axonserver/axonserver-n2/plugins:/axonserver/plugins
-      - ./axonserver/axonserver-n2/log:/axonserver/log
+      - ./axonserver/axonserver-2/data:/axonserver/data
+      - ./axonserver/axonserver-2/events:/axonserver/events
+      - ./axonserver/axonserver-2/plugins:/axonserver/plugins
+      - ./axonserver/axonserver-2/log:/axonserver/log
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+
+  axonserver-3:
+    image: 'axoniq/axonserver:2025.2.2'
+    pull_policy: always
+    environment:
+      - axoniq_axonserver_hostname=localhost
+      - axoniq_axonserver_internal_hostname=axonserver-3
+      - server_port=8026
+      - axoniq_axonserver_port=8126
+      - axoniq_axonserver_internal_port=8226
+    ports:
+      - '8026:8026'
+      - '8126:8126'
+      - '8226:8226'
+    volumes:
+      - ./axonserver/axonserver-3/data:/axonserver/data
+      - ./axonserver/axonserver-3/events:/axonserver/events
+      - ./axonserver/axonserver-3/plugins:/axonserver/plugins
+      - ./axonserver/axonserver-3/log:/axonserver/log
       - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
 
   postgres:
@@ -55,9 +69,3 @@ services:
       POSTGRES_PASSWORD: heroes_of_ddd_db_password
     ports:
       - "6446:5432"
-    networks:
-      - axon-cluster
-
-networks:
-  axon-cluster:
-    driver: bridge
