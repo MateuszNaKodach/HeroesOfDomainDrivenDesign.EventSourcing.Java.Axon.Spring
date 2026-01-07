@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @ProcessingGroup("ReadModel_Dwelling")
 @DisallowReplay
-@Component
+//@Component
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
 
     private final CommandGateway commandGateway;

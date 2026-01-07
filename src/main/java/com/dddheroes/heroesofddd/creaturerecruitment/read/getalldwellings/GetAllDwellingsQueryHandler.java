@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Stream;
 
 @ProcessingGroup("Read_GetAllDwellings_QueryCache")
-@Component
+//@Component
 class GetAllDwellingsQueryHandler {
 
     private final DwellingReadModelRepository dwellingReadModelRepository;

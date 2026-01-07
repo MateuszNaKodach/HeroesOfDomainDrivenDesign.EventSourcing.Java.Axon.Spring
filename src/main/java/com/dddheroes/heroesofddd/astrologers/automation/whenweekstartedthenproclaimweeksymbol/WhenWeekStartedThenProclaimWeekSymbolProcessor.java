@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor")
 @DisallowReplay
-@Component
+//@Component
 class WhenWeekStartedThenProclaimWeekSymbolProcessor {
 
     public static final int FIRST_DAY_OF_THE_WEEK = 1;

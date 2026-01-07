@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @ProcessingGroup("Automation_WhenCreatureRecruitedThenAddToArmy_Processor")
 @DisallowReplay
-@Component
+//@Component
 class WhenCreatureRecruitedThenAddToArmyProcessor {
 
     private final CommandGateway commandGateway;
