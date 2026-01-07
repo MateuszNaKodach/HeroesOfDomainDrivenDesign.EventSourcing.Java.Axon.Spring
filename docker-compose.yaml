@@ -4,7 +4,7 @@ services:
     hostname: axonserver-1
     environment:
       - AXONIQ_AXONSERVER_NAME=axonserver-1
-      - AXONIQ_AXONSERVER_HOSTNAME=axonserver-1
+      - AXONIQ_AXONSERVER_HOSTNAME=localhost
       - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
@@ -26,7 +26,7 @@ services:
     hostname: axonserver-2
     environment:
       - AXONIQ_AXONSERVER_NAME=axonserver-2
-      - AXONIQ_AXONSERVER_HOSTNAME=axonserver-2
+      - AXONIQ_AXONSERVER_HOSTNAME=localhost
       - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-2
       - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
@@ -48,7 +48,7 @@ services:
     hostname: axonserver-3
     environment:
       - AXONIQ_AXONSERVER_NAME=axonserver-3
-      - AXONIQ_AXONSERVER_HOSTNAME=axonserver-3
+      - AXONIQ_AXONSERVER_HOSTNAME=localhost
       - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-3
       - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
       - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
