@@ -1,4 +1,4 @@
-@serverPort = 3773
+@serverPort = 3774
 
 ### BuildDwelling
 @gameId = scenario-1

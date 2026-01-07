@@ -1,16 +1,41 @@
 services:
   axonserver-n1:
     image: 'axoniq/axonserver:2025.2.1'
+    hostname: axonserver-n1
     ports:
       - '8024:8024'  # HTTP port
       - '8124:8124'  # gRPC port
     environment:
-      axoniq_axonserver_standalone: true
-      axoniq_axonserver_hostname: axon-server
-      axoniq_axonserver_autocluster_first: axon-server
-      axoniq_axonserver_autocluster_contexts: _admin
+      AXONIQ_AXONSERVER_NAME: axonserver-n1
+      AXONIQ_AXONSERVER_HOSTNAME: axonserver-n1
+      AXONIQ_AXONSERVER_INTERNAL_HOSTNAME: axonserver-n1
+      AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST: axonserver-n1
+      AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS: _admin,default
       spring_servlet_multipart_max-file-size: 95MB
       spring_servlet_multipart_max-request-size: 95MB
+    networks:
+      - axon-cluster
+#    volumes:
+#      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+
+  axonserver-n2:
+    image: 'axoniq/axonserver:2025.2.1'
+    hostname: axonserver-n2
+    ports:
+      - '8025:8024'  # HTTP port
+      - '8125:8124'  # gRPC port
+    environment:
+      AXONIQ_AXONSERVER_NAME: axonserver-n2
+      AXONIQ_AXONSERVER_HOSTNAME: axonserver-n2
+      AXONIQ_AXONSERVER_INTERNAL_HOSTNAME: axonserver-n2
+      AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST: axonserver-n1
+      AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS: _admin,default
+      spring_servlet_multipart_max-file-size: 95MB
+      spring_servlet_multipart_max-request-size: 95MB
+    networks:
+      - axon-cluster
+    depends_on:
+      - axonserver-n1
 #    volumes:
 #      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
   postgres:
@@ -21,3 +46,9 @@ services:
       POSTGRES_PASSWORD: heroes_of_ddd_db_password
     ports:
       - "6446:5432"
+    networks:
+      - axon-cluster
+
+networks:
+  axon-cluster:
+    driver: bridge

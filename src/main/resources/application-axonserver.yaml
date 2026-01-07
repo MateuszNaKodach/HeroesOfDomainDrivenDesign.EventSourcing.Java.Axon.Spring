@@ -2,3 +2,4 @@ axon:
   axonserver:
     enabled: true
     context: default
+    servers: localhost:8124,localhost:8125
