@@ -15,8 +15,12 @@ services:
       spring_servlet_multipart_max-request-size: 95MB
     networks:
       - axon-cluster
-#    volumes:
-#      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+    volumes:
+      - ./axonserver/axonserver-n1/data:/axonserver/data
+      - ./axonserver/axonserver-n1/events:/axonserver/events
+      - ./axonserver/axonserver-n1/plugins:/axonserver/plugins
+      - ./axonserver/axonserver-n1/log:/axonserver/log
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
 
   axonserver-n2:
     image: 'axoniq/axonserver:2025.2.1'
@@ -36,8 +40,13 @@ services:
       - axon-cluster
     depends_on:
       - axonserver-n1
-#    volumes:
-#      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+    volumes:
+      - ./axonserver/axonserver-n2/data:/axonserver/data
+      - ./axonserver/axonserver-n2/events:/axonserver/events
+      - ./axonserver/axonserver-n2/plugins:/axonserver/plugins
+      - ./axonserver/axonserver-n2/log:/axonserver/log
+      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license  # uncomment if you have a license file
+
   postgres:
     image: postgres:16
     environment:
