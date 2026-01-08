@@ -9,6 +9,7 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.ReplayStatus;
 import org.axonframework.eventhandling.ResetHandler;
 import org.axonframework.eventhandling.SequenceNumber;
+import org.axonframework.eventhandling.TrackingToken;
 import org.axonframework.messaging.annotation.MetaDataValue;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +24,8 @@ class DwellingReadModelProjector {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId, @SequenceNumber long sequenceNumber, ReplayStatus replayStatus) {
-        System.out.println("Processed: " + sequenceNumber + " - " + replayStatus);
+    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId, TrackingToken trackingToken, ReplayStatus replayStatus) {
+        System.out.println("DWELLING BUILT Processed: " + trackingToken.position().orElse(-1) + " - " + replayStatus + " - " + event.dwellingId());
         var state = new DwellingReadModel(
                 gameId,
                 event.dwellingId(),

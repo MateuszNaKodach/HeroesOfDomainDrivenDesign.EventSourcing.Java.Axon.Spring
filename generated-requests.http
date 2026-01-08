@@ -3,7 +3,7 @@
 ### BuildDwelling
 @gameId = scenario-1
 @playerId = player-1
-@dwellingId = dwelling-2
+@dwellingId = dwelling-5
 
 ### BuildDwelling
 PUT http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}
