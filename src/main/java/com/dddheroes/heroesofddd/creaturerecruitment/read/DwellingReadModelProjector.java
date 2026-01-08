@@ -6,7 +6,9 @@ import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ReplayStatus;
 import org.axonframework.eventhandling.ResetHandler;
+import org.axonframework.eventhandling.SequenceNumber;
 import org.axonframework.messaging.annotation.MetaDataValue;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +23,8 @@ class DwellingReadModelProjector {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
+    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId, @SequenceNumber long sequenceNumber, ReplayStatus replayStatus) {
+        System.out.println("Processed: " + sequenceNumber + " - " + replayStatus);
         var state = new DwellingReadModel(
                 gameId,
                 event.dwellingId(),

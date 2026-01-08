@@ -1,9 +1,9 @@
-@serverPort = 3774
+@serverPort = 3773
 
 ### BuildDwelling
 @gameId = scenario-1
 @playerId = player-1
-@dwellingId = dwelling-1
+@dwellingId = dwelling-2
 
 ### BuildDwelling
 PUT http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}

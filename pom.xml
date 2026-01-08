@@ -36,20 +36,6 @@
 		<spring-modulith.version>1.4.1</spring-modulith.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>sonatype-snapshots</id>
-			<name>Sonatype Snapshots</name>
-			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -187,6 +173,27 @@
 <!--			</dependency>-->
 		</dependencies>
 	</dependencyManagement>
+
+	<!-- Disable remote snapshot resolution - use only local Maven repo for Axon 4.12.3-SNAPSHOT -->
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<build>
 		<plugins>
