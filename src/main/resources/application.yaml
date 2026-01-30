@@ -62,9 +62,13 @@ axon:
         mode: pooled
         sequencing-policy: gameIdSequencingPolicy
         initial-segment-count: 4
+        dlq:
+          enabled: true
       Read_GetAllDwellings_QueryCache:
         mode: subscribing
         sequencing-policy: gameIdSequencingPolicy
+        dlq:
+          enabled: true
 #  update-check:
 #    disabled: true
 application:
@@ -86,5 +90,5 @@ springdoc:
 axoniq:
   console:
     application-name: HeroesOfDDD-Axon4
-    credentials: XYZ
+    credentials: 956e56bc-0:38d6796720ad41d48aa279454c57dbdb
     dlq-mode: FULL

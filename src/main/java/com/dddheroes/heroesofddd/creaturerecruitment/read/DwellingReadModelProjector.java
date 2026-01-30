@@ -26,14 +26,15 @@ class DwellingReadModelProjector {
     @EventHandler
     void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId, TrackingToken trackingToken, ReplayStatus replayStatus) {
         System.out.println("DWELLING BUILT Processed: " + trackingToken.position().orElse(-1) + " - " + replayStatus + " - " + event.dwellingId());
-        var state = new DwellingReadModel(
-                gameId,
-                event.dwellingId(),
-                event.creatureId(),
-                event.costPerTroop(),
-                0
-        );
-        repository.save(state);
+        throw new IllegalArgumentException("Problem DLQ!");
+//        var state = new DwellingReadModel(
+//                gameId,
+//                event.dwellingId(),
+//                event.creatureId(),
+//                event.costPerTroop(),
+//                0
+//        );
+//        repository.save(state);
     }
 
     @EventHandler
