@@ -65,6 +65,28 @@ services:
     networks:
       - axon-network
 
+#  axonserver-4:
+#    image: 'axoniq/axonserver:2025.2.2'
+#    hostname: axonserver-4
+#    environment:
+#      - AXONIQ_AXONSERVER_NAME=axonserver-4
+#      - AXONIQ_AXONSERVER_HOSTNAME=localhost
+#      - AXONIQ_AXONSERVER_INTERNAL_HOSTNAME=axonserver-4
+#      - AXONIQ_AXONSERVER_AUTOCLUSTER_FIRST=axonserver-1
+#      - AXONIQ_AXONSERVER_AUTOCLUSTER_CONTEXTS=_admin,default
+#    ports:
+#      - '8027:8024'
+#      - '8127:8124'
+#      - '8227:8224'
+#    volumes:
+#      - ./axonserver/axonserver-4/data:/axonserver/data
+#      - ./axonserver/axonserver-4/events:/axonserver/events
+#      - ./axonserver/axonserver-4/plugins:/axonserver/plugins
+#      - ./axonserver/axonserver-4/log:/axonserver/log
+#      - ./axonserver/axoniq.license:/axonserver/config/axoniq.license
+#    networks:
+#      - axon-network
+
   postgres:
     image: postgres:16
     environment:
