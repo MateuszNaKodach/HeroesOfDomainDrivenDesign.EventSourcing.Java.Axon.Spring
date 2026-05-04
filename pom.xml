@@ -28,12 +28,11 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.3</assertj.version>
-		<axon.version>4.12.3-SNAPSHOT</axon.version>
+		<axon.version>4.13.1</axon.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<java.version>23</java.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
 		<spring-doc.version>2.8.5</spring-doc.version>
-		<spring-modulith.version>1.4.1</spring-modulith.version>
 	</properties>
 
 	<repositories>
@@ -72,14 +71,6 @@
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-jpa</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-spring-boot-starter</artifactId>
             <version>${axon.version}</version>
@@ -113,18 +104,8 @@
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-actuator</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-observability</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 
-		<!-- Test dependencies -->
+<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -133,11 +114,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-testcontainers</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.modulith</groupId>
-			<artifactId>spring-modulith-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -169,26 +145,7 @@
 		</dependency>
 	</dependencies>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework.modulith</groupId>
-				<artifactId>spring-modulith-bom</artifactId>
-				<version>${spring-modulith.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-<!--			<dependency>-->
-<!--				<groupId>org.axonframework</groupId>-->
-<!--				<artifactId>axon-bom</artifactId>-->
-<!--				<version>${axon.version}</version>-->
-<!--				<type>pom</type>-->
-<!--				<scope>import</scope>-->
-<!--			</dependency>-->
-		</dependencies>
-	</dependencyManagement>
-
-	<build>
+<build>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

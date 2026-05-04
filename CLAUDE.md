@@ -26,13 +26,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-This is a Domain-Driven Design implementation using Event Sourcing with Axon Framework and Spring Modulith. The application models a Heroes of Might & Magic III domain with four main bounded contexts.
+This is a Domain-Driven Design implementation using Event Sourcing with Axon Framework. The application models a Heroes of Might & Magic III domain with four main bounded contexts.
 
 ### Core Architectural Patterns
 - **Event Sourcing**: All state changes captured as domain events
 - **CQRS**: Separate write (command) and read (query) models
 - **Vertical Slice Architecture**: Features organized by capability, not technical layer
-- **Spring Modulith**: Module boundaries enforced at compile time
 - **Event Modeling**: System design follows Event Modeling nomenclature
 
 ### Module Structure
