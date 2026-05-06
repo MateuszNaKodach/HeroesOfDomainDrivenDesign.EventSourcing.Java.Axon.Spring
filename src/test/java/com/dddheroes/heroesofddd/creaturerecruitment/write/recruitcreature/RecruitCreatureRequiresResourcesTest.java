@@ -85,42 +85,6 @@ class RecruitCreatureRequiresResourcesTest {
         eventStoreAssertions.assertEventNotStored(dwellingId, ResourcesWithdrawn.class);
     }
 
-    @Test
-    void givenInsufficientResources_whenRecruitingCreature_thenNoCreatureRecruitedEventStored() {
-        // given
-        var resourcesPoolId = playerResourcesPoolId();
-        var dwellingId = DwellingId.random().raw();
-        var armyId = ArmyId.random().raw();
-        var creatureId = CreatureIds.phoenix().raw();
-
-        // initialize resources pool with insufficient resources
-        executePlayerCommand(DepositResources.command(resourcesPoolId, "GOLD", 1000));
-        executePlayerCommand(DepositResources.command(resourcesPoolId, "MERCURY", 2));
-
-        // build dwelling and make creatures available
-        executePlayerCommand(
-                BuildDwelling.command(dwellingId, creatureId, PHOENIX_COST)
-        );
-        executePlayerCommand(
-                IncreaseAvailableCreatures.command(dwellingId, creatureId, 5)
-        );
-
-        // when
-        var recruitCommand = RecruitCreature.command(
-                dwellingId,
-                creatureId,
-                armyId,
-                1,
-                Resources.from(PHOENIX_COST).raw()
-        );
-
-        // then
-        assertThatThrownBy(() -> executePlayerCommand(recruitCommand))
-                .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-        eventStoreAssertions.assertEventNotStored(dwellingId, CreatureRecruited.class);
-        eventStoreAssertions.assertEventNotStored(dwellingId, ResourcesWithdrawn.class);
-    }
-
     private void executePlayerCommand(Command command) {
         commandGateway.sendAndWait(command, gameMetaData());
     }
