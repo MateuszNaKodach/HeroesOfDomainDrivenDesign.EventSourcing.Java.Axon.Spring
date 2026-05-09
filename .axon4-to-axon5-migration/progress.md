@@ -28,14 +28,14 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #3 — event-processor (iterative)` — Phase 2 complete (5/5 aggregates).
-- **Phase status:** Phase 2 complete; Phase 3 pending.
-- **Next action (one sentence):** Start Migration Phase #3 — migrate the first event-processor `com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector`.
-- **Exact recipe:** `event-processor` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector`
-- **Exact verification command:** _to be derived from the event-processor recipe (likely `./mvnw -P migration-event-processor-DwellingReadModelProjector test -Dtest='…'`)._
+- **Current Migration Phase:** `Migration Phase #3 — event-processor (iterative)` — 1/5 done.
+- **Phase status:** Phase 3 in-progress.
+- **Next action (one sentence):** Migrate Phase #3 item #2 — `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (note: dual-natured — has BOTH `@EventHandler` and `@QueryHandler`; recipe Variants section says event-processor migrates the `@EventHandler` shape and surfaces the `@QueryHandler` for follow-up by the query-handler recipe).
+- **Exact recipe:** `event-processor` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler`
+- **Exact verification command:** `./mvnw -P migration-event-processor-GetAllDwellingsQueryHandler test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false` (no scoped test class — only E2E `GetAllDwellingsTest`, deferred to stabilization)
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 2 / ResourcesPool. Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
-- **Last commit recorded by orchestrator:** `8647307` — `refactor(af5-migration): migrate aggregate Dwelling to AF5 (Migration Phase #2)` (ResourcesPool SHA filled in by next commit per chicken-and-egg rule)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 3 / DwellingReadModelProjector. Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate event-processor DwellingReadModelProjector to AF5 (Migration Phase #3)` (ResourcesPool was `37985b9`)
 
 ### Phase 2 summary (all 5 aggregates done)
 
@@ -45,7 +45,7 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 | 2 | Astrologers | 3 | `2bcc939` |
 | 3 | Calendar | 8 | `1d96fdf` |
 | 4 | Dwelling | 22 | `8647307` |
-| 5 | ResourcesPool | 5 | _this commit_ |
+| 5 | ResourcesPool | 5 | `37985b9` |
 
 Total: 46 aggregate-level tests passing under per-target Maven profiles. All five aggregates use the same shape: `@EventSourced(tagKey, idType)`, instance command handlers (`CREATE_IF_MISSING` semantics), no-arg `@EntityCreator`, `eventAppender.append(...)` instead of `apply(...)`.
 
@@ -101,8 +101,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | # | Recipe | Mode | Status | Items done / total | Last commit |
 |---|---|---|---|---|---|
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
-| 2 | aggregate | iterative | complete | 5 / 5 | _this commit (ResourcesPool — last)_ |
-| 3 | event-processor | iterative | pending | 0 / 5 | — |
+| 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
+| 3 | event-processor | iterative | in-progress | 1 / 5 | _this commit (DwellingReadModelProjector)_ |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
@@ -161,8 +161,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
-| 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (covers projector indirectly) | pending | — |
-| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` | pending | — |
+| 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (E2E — deferred to stabilization) | done | _this commit_ |
+| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (dual-natured: `@EventHandler` + `@QueryHandler`) | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` | pending | — |
 | 3 | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor` | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyTest` | pending | — |
 | 4 | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolTest` | pending | — |
 | 5 | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest` | pending | — |
