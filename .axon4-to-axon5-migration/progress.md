@@ -28,14 +28,14 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #9 — event-storage-engine (one-shot)` — Phase 7 complete (1/1), Phase 8 already skipped (no candidates).
-- **Phase status:** Phase 7 complete; Phase 8 skipped; Phase 9 pending.
-- **Next action (one sentence):** Start Migration Phase #9 — run the one-shot `event-storage-engine` recipe to swap the project's existing JPA event store config to AF5 (likely Path A — JPA event store via `axoniq-spring-boot-starter` + PostgreSQL Testcontainers, no explicit `EventStorageEngine` bean declared).
-- **Exact recipe:** `event-storage-engine` (one-shot, no `target` — orchestrator picks Path A/B/C from the project's existing storage path)
-- **Exact verification command:** to be derived from the event-storage-engine recipe.
-- **Awaiting user input?** no — but Phase 9 will surface storage-path AskUserQuestion (Path A vs B vs C) per pinned-decisions block.
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 7 / StreamProcessorsOperations.
-- **Last commit recorded by orchestrator:** `7501941` — `refactor(af5-migration): migrate read-configuration StreamProcessorsOperations to AF5 (Migration Phase #7)`
+- **Current Migration Phase:** `Stabilization` — all per-recipe phases (1–9) complete.
+- **Phase status:** 1 ✅, 2 ✅, 3 ✅, 4 ✅, 5 ✅, 6 ✅, 7 ✅, 8 ⏭ skipped (no candidates), 9 ✅.
+- **Next action (one sentence):** Start stabilization — drop all `migration-*` Maven profiles, run `./mvnw clean test-compile` unscoped to enumerate remaining compile errors, then iteratively address them; the principal known carry-over is `EventStreamsRestApi` (uses AF4 `EventStore.readEvents` API removed in AF5), plus the deferred E2E `@SpringBootTest` rewrites listed under each phase summary.
+- **Exact recipe:** none — stabilization is the orchestrator's own loop (no per-construct recipe). User typically applies the SQL under `.axon4-to-axon5-migration/sql/01-rename-domain-to-aggregate-event-entry.sql` to the build's database first (only required when migrating an existing AF4 database; fresh Testcontainers does not need it).
+- **Exact verification command:** `./mvnw clean test-compile` (unscoped — surfaces every remaining compile error). Then `./mvnw clean verify` once compile is green.
+- **Awaiting user input?** no — but the storage-engine SQL is the user's call to apply (out-of-band, on a non-prod copy first).
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 9 / event-storage-engine.
+- **Last commit recorded by orchestrator:** `28b2243` — `chore(af5-migration): record commit SHA for Phase 7 in progress.md` (orchestrator bookkeeping after Phase 7 / StreamProcessorsOperations commit `7501941`).
 
 ### Phase 7 summary (1/1 read-configuration class done)
 
@@ -175,7 +175,7 @@ What Phase 2 still has to do per aggregate:
 
 - **Target project:** `/Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring`
 - **Started:** 2026-05-09
-- **Last updated:** 2026-05-09 (Phase 2 complete — all 5 aggregates done)
+- **Last updated:** 2026-05-09 (Phase 9 complete — all per-recipe phases done; stabilization next)
 - **Active branch:** `af5-migration/test1`
 - **Build tool:** Maven (single module)
 - **Starting Axon version:** 4.13.1 (`axon-spring-boot-starter`)
@@ -192,7 +192,7 @@ Frozen for the run. A fresh session must respect these without re-asking.
 - **Per-feature decision:** n/a
 - **Snapshotting (Dwelling):** `accept-drop` — AF4 had `snapshotTriggerDefinition = "dwellingSnapshotTrigger"`; AF5 `@EventSourced` exposes no equivalent yet. OpenRewrite dropped it; recipe `not-supported.md` B1 confirms `accept-drop` is allowed. Decision frozen 2026-05-09 during Phase 2 / Dwelling. The `TODO #LLM` comment in `Dwelling.java` documents the deferral; existing snapshot rows in storage are NOT touched (data migration is out of scope per the skill's contract).
 - **Commit cadence:** per-item (default; user later confirmed autonomous mode — proceed without per-item AskUserQuestion checkpoints, surface only on real blockers).
-- **Storage-engine path:** _set when Phase 9 reached_
+- **Storage-engine path:** `A — JPA via auto-config` (frozen 2026-05-09 during Phase 9). Project relied on AF4 `axon-spring-boot-starter` auto-config for `JpaEventStorageEngine` (no explicit `@Bean`). Phase 1 swapped the starter coordinate to `io.axoniq.framework:axoniq-spring-boot-starter:5.1.1-SNAPSHOT`; AF5 `JpaEventStoreAutoConfiguration` now registers `AggregateBasedJpaEventStorageEngine` automatically under the same conditions (EntityManagerFactory + PlatformTransactionManager present, `axon.axonserver.enabled=false`, no other `EventStorageEngine` bean). Outcome: zero Java code changes; deliverable is the schema-rename SQL only.
 
 ---
 
@@ -210,7 +210,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 6 | query-handler | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsQueryHandler)_ |
 | 7 | read-configuration | iterative | complete | 1 / 1 | _this commit (StreamProcessorsOperations)_ |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
-| 9 | event-storage-engine | one-shot | pending | — | — |
+| 9 | event-storage-engine | one-shot | complete | n/a (Path A — auto-config; SQL artifact only) | _this commit_ |
 | — | stabilization | — | pending | — | — |
 
 > When a phase enters `in-progress`, refresh its detailed section below
@@ -308,12 +308,29 @@ _No `@Configuration` beans returning `Configurer` / `ConfigurerModule` / `EventP
 
 ### Migration Phase #9 — event-storage-engine
 
-- **Path chosen:** _to be set — likely Path A (JPA event store via `axon-spring-boot-starter` + PostgreSQL)_
-- **Evidence:** `axon-spring-boot-starter` 4.13.1 + JPA + PostgreSQL Testcontainers; no explicit `EventStorageEngine` / `EmbeddedEventStore` / `AxonServerEventStore` bean declared in code (auto-config provides JPA event store).
-- **Configuration class touched:** _to be filled_
-- **SQL migration script:** _to be generated under `sql/` if Path A_
-- **SQL applied to build's database?** no
-- **Commit:** pending
+- **Path chosen:** **A — JPA via auto-config.** AF5 `JpaEventStoreAutoConfiguration` (shipped by `axoniq-spring-boot-starter:5.1.1-SNAPSHOT`) registers `AggregateBasedJpaEventStorageEngine` automatically. No explicit `@Bean` is required, none was declared under AF4 either, and adding one would only break things.
+- **Evidence (Preflight greps run from target root, all empty):**
+  - `MongoEventStorageEngine` / `org\.axonframework\.extensions\.mongo` / `axon-mongo` → 0 hits (B1 not fired)
+  - `JdbcEventStorageEngine` → 0 hits (B2 not fired)
+  - `extends … (JpaEventStorageEngine|JdbcEventStorageEngine|MongoEventStorageEngine|AbstractEventStorageEngine|BatchingEventStorageEngine|AxonServerEventStore)` → 0 hits (B3 not fired)
+  - `JpaEventStorageEngine|JdbcEventStorageEngine|EmbeddedEventStore|AxonServerEventStore` in `src` → 0 hits (no leftover AF4 wiring to delete)
+  - `axoniq-spring-boot-starter` present in `pom.xml`; `axon.axonserver.enabled: false` in `application.yaml`; `spring-boot-starter-data-jpa` + PostgreSQL on classpath ⇒ JPA path takes over even with the connector on the classpath
+  - No `LocalContainerEntityManagerFactoryBean` / `packagesToScan` / `@EntityScan` ⇒ default Spring Boot scan + AF5 `@RegisterDefaultEntities` picks up `AggregateEventEntry` from the framework JAR (Path A.5 satisfied with no code change)
+  - No custom `org.axonframework.serialization.Serializer` subclass / custom `RevisionResolver` / `ContentTypeConverter` (B4 not fired). `SerializationConfiguration` declares Jackson `Module` beans only — these are picked up by Spring's `ObjectMapper` autoconfig and remain valid under AF5's Jackson-backed `Converter`.
+- **Configuration class touched:** none — there is no `@Bean EventStorageEngine` to swap; auto-config wins.
+- **SQL migration script:** [`.axon4-to-axon5-migration/sql/01-rename-domain-to-aggregate-event-entry.sql`](sql/01-rename-domain-to-aggregate-event-entry.sql) (PostgreSQL-flavoured). Renames `domain_event_entry` → `aggregate_event_entry`, renames all 7 columns, tightens nullability on `version` / `aggregate_sequence_number` / `identifier`, drops `NOT NULL` on `aggregate_identifier`, creates the `aggregate-event-global-index-sequence` and seeds it past the current `MAX(global_index)`, and adds the unique `(aggregate_identifier, aggregate_sequence_number)` index. **Wrapped in a single transaction.**
+- **SQL applied to build's database?** **no — orchestrator never runs the SQL.** User applies it on a non-prod copy first, verifying row counts before/after, then on prod during a quiet window. Hibernate `ddl-auto: update` caveat: applying the SQL **before** first AF5 boot is essential when migrating an existing AF4 DB (otherwise Hibernate auto-creates an empty `aggregate_event_entry` next to the AF4 `domain_event_entry`, orphaning AF4 events). For development against a fresh Testcontainers PostgreSQL the SQL is unnecessary — Hibernate creates the AF5 table directly from `AggregateEventEntry`'s `@Entity` mapping.
+- **Decisions emitted (per recipe Output schema):**
+  - `path: A`
+  - `bean-replaced: none — auto-config wins (no AF4 bean existed to delete)`
+  - `sql-emitted: .axon4-to-axon5-migration/sql/01-rename-domain-to-aggregate-event-entry.sql`
+  - `serializer-ports-flagged: none`
+  - `mongo-event-store: none`
+  - `jdbc-event-store: none`
+  - `custom-storage-engine-subclass: none`
+- **Stabilization carry-over (out of scope for this recipe — captured for the next phase):**
+  - `com.dddheroes.heroesofddd.maintenance.read.geteventstream.EventStreamsRestApi` injects `org.axonframework.eventsourcing.eventstore.EventStore` and calls `eventStore.readEvents(streamId).asStream()`. AF5 has no aggregate-stream `EventStore.readEvents(String)` method; class won't compile under AF5. Rewrite during stabilization (likely via `EventStorageEngine.source(SourcingCondition.conditionFor(...))` or equivalent AF5 streaming API).
+- **Commit:** _this commit_
 
 ### Stabilization
 
