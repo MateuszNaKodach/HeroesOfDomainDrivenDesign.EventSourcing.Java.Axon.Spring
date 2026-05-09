@@ -2,7 +2,7 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -18,9 +18,12 @@ class BuildDwellingTest extends DwellingTest {
 
         // then
         var thenEvent = dwellingBuilt();
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -34,9 +37,11 @@ class BuildDwellingTest extends DwellingTest {
         var whenCommand = buildDwelling();
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Only not built building can be build");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Only not built building can be build");
     }
 }

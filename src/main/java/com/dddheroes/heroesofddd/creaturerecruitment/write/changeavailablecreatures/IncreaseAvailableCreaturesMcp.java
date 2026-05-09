@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures;
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallbackProvider;

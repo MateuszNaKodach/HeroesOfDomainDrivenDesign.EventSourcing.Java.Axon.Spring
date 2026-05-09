@@ -3,8 +3,8 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreat
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
-import org.axonframework.modelling.command.AggregateNotFoundException;
-import org.junit.jupiter.api.*;
+import org.axonframework.modelling.entity.AggregateNotFoundException;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -20,9 +20,12 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
 
         // then
         var thenEvent = availableCreaturesChanged(3);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(AggregateNotFoundException.class);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(AggregateNotFoundException.class);
     }
 
     @Test
@@ -37,9 +40,12 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
 
         // then
         var thenEvent = availableCreaturesChanged(3);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -55,9 +61,12 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
 
         // then
         var thenEvent = availableCreaturesChanged(4);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     protected IncreaseAvailableCreatures increaseAvailableCreatures(int increaseBy) {

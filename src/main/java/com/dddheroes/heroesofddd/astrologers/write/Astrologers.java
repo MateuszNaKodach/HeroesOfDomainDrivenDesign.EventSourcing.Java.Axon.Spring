@@ -2,35 +2,28 @@ package com.dddheroes.heroesofddd.astrologers.write;
 
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.OnlyOneSymbolPerWeek;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
+import org.axonframework.eventsourcing.annotation.EventSourcingHandler;
+import org.axonframework.eventsourcing.annotation.reflection.EntityCreator;
+import org.axonframework.extension.spring.stereotype.EventSourced;
 import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.eventsourcing.EventSourcingHandler;
-import org.axonframework.modelling.command.AggregateCreationPolicy;
-import org.axonframework.modelling.command.AggregateIdentifier;
-import org.axonframework.modelling.command.CreationPolicy;
-import org.axonframework.spring.stereotype.Aggregate;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.eventhandling.gateway.EventAppender;
 
-import static org.axonframework.modelling.command.AggregateLifecycle.apply;
-
-@Aggregate
+@EventSourced(tagKey = "Astrologers", idType = AstrologersId.class)
 class Astrologers {
 
-    @AggregateIdentifier
     private AstrologersId astrologersId;
     private MonthWeek week;
 
     @CommandHandler
-    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING)
-    void decide(ProclaimWeekSymbol command) {
+    void decide(ProclaimWeekSymbol command, EventAppender eventAppender) {
         new OnlyOneSymbolPerWeek(command, week).verify();
 
-        apply(
-                WeekSymbolProclaimed.event(
-                        command.astrologersId(),
-                        command.week(),
-                        command.symbol()
-                )
-        );
+        eventAppender.append(WeekSymbolProclaimed.event(
+                command.astrologersId(),
+                command.week(),
+                command.symbol()
+        ));
     }
 
     @EventSourcingHandler
@@ -39,6 +32,7 @@ class Astrologers {
         this.week = new MonthWeek(event.month(), event.week());
     }
 
+    @EntityCreator
     Astrologers() {
         // required by Axon
     }

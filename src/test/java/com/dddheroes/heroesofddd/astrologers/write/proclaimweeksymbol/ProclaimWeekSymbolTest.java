@@ -7,7 +7,7 @@ import com.dddheroes.heroesofddd.astrologers.write.MonthWeek;
 import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -31,9 +31,12 @@ public class ProclaimWeekSymbolTest extends AstrologersTest {
                 MonthWeek.of(month, week),
                 WeekSymbol.of(weekOf, growth)
         );
-        fixture.givenNoPriorActivity()
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .noPriorActivity()
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -56,10 +59,12 @@ public class ProclaimWeekSymbolTest extends AstrologersTest {
         var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), month, week, weekOf.raw(), growth);
 
         // when
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Only one symbol can be proclaimed per week");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Only one symbol can be proclaimed per week");
     }
 
     @Test
@@ -82,9 +87,11 @@ public class ProclaimWeekSymbolTest extends AstrologersTest {
         var whenCommand = ProclaimWeekSymbol.command(astrologersId.raw(), month, week - 1, weekOf.raw(), growth);
 
         // when
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Only one symbol can be proclaimed per week");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Only one symbol can be proclaimed per week");
     }
 }

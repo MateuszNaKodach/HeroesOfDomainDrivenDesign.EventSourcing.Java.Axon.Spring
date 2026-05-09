@@ -4,14 +4,14 @@ import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.config.ProcessingGroup;
-import org.axonframework.eventhandling.DisallowReplay;
-import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.core.annotation.MetadataValue;
+import org.axonframework.messaging.eventhandling.annotation.EventHandler;
+import org.axonframework.messaging.eventhandling.replay.annotation.DisallowReplay;
+import org.axonframework.messaging.core.annotation.Namespace;
 import org.springframework.stereotype.Component;
 
-@ProcessingGroup("ReadModel_Dwelling")
+@Namespace("ReadModel_Dwelling")
 @DisallowReplay
 @Component
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
@@ -32,8 +32,8 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     @EventHandler
     void react(
             WeekSymbolProclaimed event,
-            @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId,
-            @MetaDataValue(GameMetaData.PLAYER_ID_KEY) String playerId
+            @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId,
+            @MetadataValue(GameMetaData.PLAYER_ID_KEY) String playerId
     ) {
         var creature = event.weekOf();
         var increaseBy = event.growth();
@@ -52,7 +52,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
+    void on(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         var state = new BuiltDwellingReadModel(
                 gameId,
                 event.dwellingId(),

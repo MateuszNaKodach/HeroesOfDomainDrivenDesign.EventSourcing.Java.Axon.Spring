@@ -1,9 +1,9 @@
 package com.dddheroes.heroesofddd.maintenance.write.resetprocessor;
 
-import org.axonframework.config.EventProcessingConfiguration;
-import org.axonframework.eventhandling.ReplayToken;
-import org.axonframework.eventhandling.TrackingEventProcessor;
-import org.axonframework.eventhandling.tokenstore.TokenStore;
+import org.axonframework.common.configuration.EventProcessingConfiguration;
+import org.axonframework.messaging.eventhandling.TrackingEventProcessor;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.ReplayToken;
+import org.axonframework.messaging.eventhandling.processing.streaming.token.store.TokenStore;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

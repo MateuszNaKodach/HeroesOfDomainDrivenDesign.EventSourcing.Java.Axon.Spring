@@ -3,12 +3,14 @@ package com.dddheroes.heroesofddd.resourcespool.write.deposit;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolCommand;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
 import java.util.Map;
 
+@Command
 public record DepositResources(
-        @TargetAggregateIdentifier
+        @TargetEntityId
         ResourcesPoolId resourcesPoolId,
         Resources resources
 ) implements ResourcesPoolCommand {

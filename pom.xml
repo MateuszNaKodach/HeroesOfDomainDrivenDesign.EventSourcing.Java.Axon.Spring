@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.4</version>
+		<version>3.5.14</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.dddheroes</groupId>
@@ -28,11 +28,11 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.3</assertj.version>
-		<axon.version>4.13.1</axon.version>
+		<axon.version>5.1.1-SNAPSHOT</axon.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<java.version>23</java.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
-		<spring-doc.version>2.8.5</spring-doc.version>
+		<spring-doc.version>2.8.17</spring-doc.version>
 	</properties>
 
 	<repositories>
@@ -71,14 +71,24 @@
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.axonframework</groupId>
-			<artifactId>axon-spring-boot-starter</artifactId>
-            <version>${axon.version}</version>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-spring-boot-starter</artifactId>
+            <version>5.1.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>io.axoniq.console</groupId>
 			<artifactId>console-framework-client-spring-boot-starter</artifactId>
 			<version>${axoniq-console.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.axonframework</groupId>
+			<artifactId>axon-eventsourcing</artifactId>
+			<version>5.1.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.axonframework</groupId>
+			<artifactId>axon-modelling</artifactId>
+			<version>5.1.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -98,6 +108,12 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-testcontainer</artifactId>
+			<version>5.1.1-SNAPSHOT</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -140,7 +156,6 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>${assertj.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

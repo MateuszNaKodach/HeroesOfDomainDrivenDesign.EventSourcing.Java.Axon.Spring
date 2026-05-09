@@ -2,12 +2,11 @@ package com.dddheroes.heroesofddd.resourcespool.write.deposit;
 
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType.*;
-import static com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType.ORE;
 
 class DepositResourcesTest extends ResourcesPoolTest {
 
@@ -20,9 +19,12 @@ class DepositResourcesTest extends ResourcesPoolTest {
         var whenCommand = depositResources(GOLD, 1000);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(resourcesDeposited(GOLD, 1000));
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(resourcesDeposited(GOLD, 1000));
     }
 
     @Test
@@ -39,9 +41,12 @@ class DepositResourcesTest extends ResourcesPoolTest {
         var whenCommand = depositResources(WOOD, 2);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(resourcesDeposited(WOOD, 2));
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(resourcesDeposited(WOOD, 2));
     }
 
     private DepositResources depositResources(ResourceType type, Integer amount) {

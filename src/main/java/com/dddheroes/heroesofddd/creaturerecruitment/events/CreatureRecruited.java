@@ -4,11 +4,15 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
+import org.axonframework.eventsourcing.annotation.EventTag;
+import org.axonframework.messaging.eventhandling.annotation.Event;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 
 import java.util.Map;
 
+@Event
 public record CreatureRecruited(
+        @EventTag(key = "Dwelling")
         String dwellingId,
         String creatureId,
         String toArmy,

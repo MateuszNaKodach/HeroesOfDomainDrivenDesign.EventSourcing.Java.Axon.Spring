@@ -6,12 +6,14 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
 import java.util.Map;
 
+@Command
 public record RecruitCreature(
-        @TargetAggregateIdentifier
+        @TargetEntityId
         DwellingId dwellingId,
         CreatureId creatureId,
         ArmyId toArmy,

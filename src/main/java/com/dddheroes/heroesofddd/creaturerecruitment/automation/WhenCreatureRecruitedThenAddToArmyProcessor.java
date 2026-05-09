@@ -4,44 +4,39 @@ import com.dddheroes.heroesofddd.armies.write.addcreature.AddCreatureToArmy;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.config.ProcessingGroup;
-import org.axonframework.eventhandling.DisallowReplay;
-import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.messaging.commandhandling.gateway.CommandDispatcher;
+import org.axonframework.messaging.core.annotation.MetadataValue;
+import org.axonframework.messaging.eventhandling.annotation.EventHandler;
+import org.axonframework.messaging.eventhandling.replay.annotation.DisallowReplay;
+import org.axonframework.messaging.core.annotation.Namespace;
 import org.springframework.stereotype.Component;
 
-@ProcessingGroup("Automation_WhenCreatureRecruitedThenAddToArmy_Processor")
+import java.util.concurrent.CompletableFuture;
+
+@Namespace("Automation_WhenCreatureRecruitedThenAddToArmy_Processor")
 @DisallowReplay
 @Component
 class WhenCreatureRecruitedThenAddToArmyProcessor {
 
-    private final CommandGateway commandGateway;
-
-    WhenCreatureRecruitedThenAddToArmyProcessor(CommandGateway commandGateway) {
-        this.commandGateway = commandGateway;
-    }
-
     @EventHandler
-    void react(
-            CreatureRecruited event,
-            @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId,
-            @MetaDataValue(GameMetaData.PLAYER_ID_KEY) String playerId
-    ) {
+    CompletableFuture<?> react(
+            CreatureRecruited event, 
+            @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId, 
+            @MetadataValue(GameMetaData.PLAYER_ID_KEY) String playerId, CommandDispatcher commandDispatcher) {
         try {
             var command = AddCreatureToArmy.command(
                     event.toArmy(),
                     event.creatureId(),
                     event.quantity()
             );
-            commandGateway.sendAndWait(command, GameMetaData.with(gameId, playerId));
+            return commandDispatcher.send(command, GameMetaData.with(gameId, playerId)).getResultMessage();
         } catch (Exception e) {
             var compensatingAction = IncreaseAvailableCreatures.command(
                     event.dwellingId(),
                     event.creatureId(),
                     event.quantity()
             );
-            commandGateway.sendAndWait(compensatingAction, GameMetaData.with(gameId, playerId));
+            return commandDispatcher.send(compensatingAction, GameMetaData.with(gameId, playerId)).getResultMessage();
         }
     }
 }

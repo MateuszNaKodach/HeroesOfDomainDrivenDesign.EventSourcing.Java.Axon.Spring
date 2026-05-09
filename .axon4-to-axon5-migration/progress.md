@@ -28,14 +28,21 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #1 — openrewrite (one-shot)`
-- **Phase status:** pending
-- **Next action (one sentence):** Apply OpenRewrite Path B (Axoniq Commercial) recipe to upgrade Axon 4.13.1 → AF5 dependencies and bulk-port mechanical patterns.
-- **Exact recipe:** `openrewrite` with `license-decision=axoniq-commercial`
-- **Exact verification command:** _none for Phase 1 — bulk recipe; `./mvnw -DskipTests test-compile` may surface what still needs per-construct migration in phases 2–9 (failures expected)._
+- **Current Migration Phase:** `Migration Phase #2 — aggregate (iterative)`
+- **Phase status:** pending (Phase 1 complete)
+- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.armies.write.Army` (the OpenRewrite recipe in Phase 1 already converted it to `@EventSourced` + `EventAppender` — Phase 2's job is per-aggregate verification, restoring `CREATE_IF_MISSING` semantics where needed via AF5's new entity-creation model, and seeding the per-target Maven profile).
+- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.armies.write.Army`
+- **Exact verification command:**
+  ```bash
+  ./mvnw test -P migration-aggregate-Army \
+    -Dtest='com.dddheroes.heroesofddd.armies.write.ArmyTest' \
+    -DfailIfNoTests=false \
+    -Dsurefire.failIfNoSpecifiedTests=false
+  ```
+  (Profile `migration-aggregate-Army` will be seeded by the recipe — see [maven-profile/maven-profile.md](../.claude/skills/axon4-to-axon5-migration/references/maven-profile/maven-profile.md).)
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last commit is the INIT commit. The user's WIP under `.claude/skills/axon4-to-axon5-migration/...` is unrelated to migration commits and must NOT be staged by the orchestrator.
-- **Last commit recorded by orchestrator:** _will be filled by INIT commit_
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 1 (`chore(af5-migration): apply OpenRewrite recipe UpgradeAxon4ToAxoniq5@5.1.1-SNAPSHOT (Migration Phase #1)`). The user's WIP under `.claude/skills/axon4-to-axon5-migration/...` is unrelated and must NOT be staged by the orchestrator.
+- **Last commit recorded by orchestrator:** `2e10065` — `chore(af5-migration): initialize migration` (Phase 1 commit SHA recorded in next item's commit per chicken-and-egg rule)
 
 ---
 
@@ -43,7 +50,7 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 - **Target project:** `/Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring`
 - **Started:** 2026-05-09
-- **Last updated:** 2026-05-09
+- **Last updated:** 2026-05-09 (Phase 1 complete)
 - **Active branch:** `af5-migration/test1`
 - **Build tool:** Maven (single module)
 - **Starting Axon version:** 4.13.1 (`axon-spring-boot-starter`)
@@ -69,7 +76,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 
 | # | Recipe | Mode | Status | Items done / total | Last commit |
 |---|---|---|---|---|---|
-| 1 | openrewrite | one-shot | pending | — | — |
+| 1 | openrewrite | one-shot | complete | n/a | _this commit (see `git log --grep='Migration Phase #1'`)_ |
 | 2 | aggregate | iterative | pending | 0 / 5 | — |
 | 3 | event-processor | iterative | pending | 0 / 5 | — |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
@@ -90,11 +97,22 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 
 ### Migration Phase #1 — openrewrite
 
-- **Recipe(s) run:** _to be filled — Path B (Axoniq Commercial)_
-- **Resolved version:** _to be filled by recipe (latest AF5 commercial line)_
-- **Diff stat summary:** _to be filled_
-- **Behavior changes flagged:** _to be filled_
-- **Commit:** _pending_
+- **Recipe(s) run:** `org.axonframework.migration.UpgradeAxon4ToAxoniq5` (Path B — Axoniq Commercial). Composes the free leg first (`UpgradeAxon4ToAxon5` → `UpgradeSpringBoot_3_5` → `Axon4ToAxon5Messaging` → `Axon4ToAxon5Modelling` → `Axon4ToAxon5Test`) then layers commercial-only rewrites (`Axon4ToAxoniq5Testcontainer`, BOM/starter swaps to `io.axoniq.framework`).
+- **Resolved version:** `axon-migration:5.1.1-SNAPSHOT` (LATEST resolved to AF4 4.13.1 from local cache, incompatible with current `rewrite-maven-plugin:6.39.0` — fell back to explicit SNAPSHOT). OpenRewrite plugin: `6.39.0`.
+- **Diff stat summary:** 75 files modified (1 pom.xml, 1 application.yaml, 73 .java). `git diff --stat` ≈ 624 insertions / 479 deletions.
+- **Behavior changes flagged:**
+  - `pom.xml`: starter switched `org.axonframework:axon-spring-boot-starter:4.13.1` → `io.axoniq.framework:axoniq-spring-boot-starter:5.1.1-SNAPSHOT`. Added explicit `org.axonframework:axon-eventsourcing` and `axon-modelling` 5.1.1-SNAPSHOT. Added `io.axoniq.framework:axoniq-testcontainer:5.1.1-SNAPSHOT` (test). Spring Boot 3.5.4 → 3.5.14, springdoc 2.8.5 → 2.8.17.
+  - `<java.version>` left at 23 (recipe did not bump to 25 in this run; active JDK is 25 so no immediate impact).
+  - **`@CreationPolicy(CREATE_IF_MISSING)` removed** from 4 aggregates (Army, Astrologers, Calendar, Dwelling). AF5's `@EventSourced` reframes creation; Phase 2 will restore equivalent semantics per aggregate (likely via AF5 entity-creator pattern). Stranded comments in source still reference `CREATE_IF_MISSING`.
+  - Aggregates rewritten to `@EventSourced(tagKey="...", idType=...)`, command handlers gain `EventAppender eventAppender` parameter, `apply(...)` calls become `eventAppender.append(...)`. Imports moved: `org.axonframework.eventsourcing.annotation.EventSourcingHandler`, `org.axonframework.messaging.commandhandling.annotation.CommandHandler`, `org.axonframework.extension.spring.stereotype.EventSourced`.
+  - `AggregateTestFixture` → `AxonTestFixture` (`org.axonframework.test.fixture.AxonTestFixture`); fixture API rewritten via `MigrateAxonTestFixtureFluentApi`.
+  - `org.axonframework.test.server.AxonServerContainer` → `io.axoniq.framework.testcontainer.AxonServerContainer`.
+  - Several events (e.g. `CreatureAddedToArmy`, `WeekSymbolProclaimed`, `DayStarted`, `DwellingBuilt`, `CreatureRecruited`, `AvailableCreaturesChanged`, `ResourcesDeposited`, `ResourcesWithdrawn`) modified — likely added/changed annotations for AF5 event metadata.
+  - `application.yaml` modified (7 lines) — likely processor/storage config keys renamed.
+  - assertj-core dependency cleaned (BOM-managed).
+  - `axon.version` property updated 4.13.1 → 5.1.1-SNAPSHOT but the new deps hardcode 5.1.1-SNAPSHOT directly; property reuse can be re-tightened later.
+- **Estimate from OpenRewrite log:** "time saved: 26h 16m".
+- **Commit:** _this commit_ (subject: `chore(af5-migration): apply OpenRewrite recipe UpgradeAxon4ToAxoniq5@5.1.1-SNAPSHOT (Migration Phase #1)`)
 
 ### Migration Phase #2 — aggregate
 

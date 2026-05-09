@@ -3,8 +3,9 @@ package com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
-import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.messaging.queryhandling.gateway.QueryGateway;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
+@Configuration
 public class GetAllDwellingsMcp {
 
     private final QueryGateway queryGateway;
@@ -55,12 +57,12 @@ public class GetAllDwellingsMcp {
                                 ))
                         );
                     } catch (Exception e) {
-                        String errorContent = String.format("""
+                        String errorContent = """
                                 {
                                   "error": "Failed to retrieve dwellings: %s",
                                   "dwellings": []
                                 }
-                                """, e.getMessage());
+                                """.formatted(e.getMessage());
 
                         return new McpSchema.ReadResourceResult(
                                 List.of(new McpSchema.TextResourceContents(
@@ -110,12 +112,12 @@ public class GetAllDwellingsMcp {
 
             return objectMapper.writeValueAsString(response);
         } catch (Exception e) {
-            return String.format("""
+            return """
                     {
                       "error": "Failed to serialize dwellings: %s",
                       "dwellings": []
                     }
-                    """, e.getMessage());
+                    """.formatted(e.getMessage());
         }
     }
 

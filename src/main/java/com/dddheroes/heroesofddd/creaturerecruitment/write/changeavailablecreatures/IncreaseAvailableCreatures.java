@@ -3,11 +3,13 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreat
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingCommand;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.modelling.annotation.TargetEntityId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
+@Command
 public record IncreaseAvailableCreatures(
-        @TargetAggregateIdentifier
+        @TargetEntityId
         DwellingId dwellingId,
         CreatureId creatureId,
         Amount increaseBy

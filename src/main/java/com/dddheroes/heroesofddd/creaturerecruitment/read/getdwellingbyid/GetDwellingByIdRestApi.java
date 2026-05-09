@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
-import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.messaging.queryhandling.gateway.QueryGateway;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -5,10 +5,12 @@ import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.write.Day;
 import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.modelling.annotation.TargetEntityId;
 
+@Command
 public record FinishDay(
-        @TargetAggregateIdentifier
+        @TargetEntityId
         CalendarId calendarId,
         Month month,
         Week week,
