@@ -60,8 +60,6 @@ axon:
           enabled: true
       ReadModel_Dwelling:
         mode: pooled
-        # TODO AF5 migration: move to @SequencingPolicy on the handler class; this property is obsolete.
-        sequencing-policy: gameIdSequencingPolicy
         initial-segment-count: 2
         batch-size: 5
       Read_GetAllDwellings_QueryCache:
