@@ -28,22 +28,29 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #5 — query-gateway (iterative)` — 1/2 done.
-- **Phase status:** Phase 5 in-progress (item 1 done, item 2 pending).
-- **Next action (one sentence):** Migrate the second query-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp` (MCP adapter, top-of-chain `QueryGateway` caller).
-- **Exact recipe:** `query-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp`
-- **Exact verification command:** `./mvnw -P migration-query-gateway-GetAllDwellingsMcp clean test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Current Migration Phase:** `Migration Phase #6 — query-handler (iterative)` — Phase 5 complete (2/2).
+- **Phase status:** Phase 5 complete; Phase 6 pending.
+- **Next action (one sentence):** Start Migration Phase #6 — migrate the first `@QueryHandler` class `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler`.
+- **Exact recipe:** `query-handler` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler`
+- **Exact verification command:** to be derived from the query-handler recipe.
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 5 / item 1 (GetDwellingByIdRestApi).
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-gateway GetDwellingByIdRestApi to AF5 (Migration Phase #5)` (RecruitCreatureMcp was `627c9bb`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 5 / GetAllDwellingsMcp.
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-gateway GetAllDwellingsMcp to AF5 (Migration Phase #5)` (GetDwellingByIdRestApi was `b73a4f8`)
 
-### Phase 5 progress
+### Phase 5 summary (all 2 query-gateway callers done)
 
-| # | Caller | Shape | Result |
+| # | Caller | Shape | Commit |
 |---|---|---|---|
-| 1 | GetDwellingByIdRestApi | MVC controller, single typed `query(payload, R.class)` returning `CompletableFuture<R>` | recipe-pre-migrated by Phase 1 OpenRewrite — no code change. Added scoped Maven profile, clean compile passes. |
+| 1 | GetDwellingByIdRestApi | MVC controller — recipe-pre-migrated by OpenRewrite (no code change, profile only) | `b73a4f8` |
+| 2 | GetAllDwellingsMcp | MCP synchronous resource handler — replaced bare `.get()` with `.orTimeout(30, SECONDS).join()` per recipe step 7 | _this commit_ |
 
-**Pattern recap (item 1).** Preflight all-clear: AF5 `QueryGateway` import already in place, no `ResponseTypes` wrapper, not a named-query 3-arg call (handler is plain `@QueryHandler`, not `@QueryHandler(queryName=...)`), MVC controller already returns `CompletableFuture<DwellingReadModel>` — Spring's async return type is the right shape for AF5's `query(...)`. The only artifact this item produces is the per-target Maven profile that locks scoped verification.
+**Pattern recap.** OpenRewrite already migrated the bulk: AF5 `QueryGateway` import, typed `query(payload, R.class)` overload, no `ResponseTypes` wrapper, no named queries (handlers use plain `@QueryHandler`). Substantive AF5 work was confined to item 2 only: a synchronous MCP resource callback was using bare `.get()` (preflight item 6 violation), now `.orTimeout(30, TimeUnit.SECONDS).join()` — `CompletionException` is unchecked and the existing `catch (Exception)` keeps matching it.
+
+**Combined scoped compile across both Phase 5 profiles passes:**
+```bash
+./mvnw -P migration-query-gateway-GetDwellingByIdRestApi,migration-query-gateway-GetAllDwellingsMcp \
+  clean test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false
+```
 
 ### Phase 4 summary (all 6 command-gateway callers done)
 
@@ -163,7 +170,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
 | 4 | command-gateway | iterative | complete | 6 / 6 | _this commit (RecruitCreatureMcp)_ |
-| 5 | query-gateway | iterative | in-progress | 1 / 2 | _this commit (GetDwellingByIdRestApi)_ |
+| 5 | query-gateway | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsMcp)_ |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
@@ -244,7 +251,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
 | 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (E2E — deferred to stabilization) | done (recipe-pre-migrated by OpenRewrite — only added scoped profile) | _this commit_ |
-| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp` | _none direct_ | pending | — |
+| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp` | _none direct_ | done (replaced bare `.get()` with `.orTimeout(30, SECONDS).join()` — recipe step 7 sync framework callback) | _this commit_ |
 
 ### Migration Phase #6 — query-handler
 
