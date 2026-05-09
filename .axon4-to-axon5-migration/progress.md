@@ -35,7 +35,7 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 - **Exact verification command:** `./mvnw clean test-compile` (unscoped — surfaces every remaining compile error). Then `./mvnw clean verify` once compile is green.
 - **Awaiting user input?** no — but the storage-engine SQL is the user's call to apply (out-of-band, on a non-prod copy first).
 - **Working-tree expectation at resume time:** clean — last migration commit is Phase 9 / event-storage-engine.
-- **Last commit recorded by orchestrator:** `28b2243` — `chore(af5-migration): record commit SHA for Phase 7 in progress.md` (orchestrator bookkeeping after Phase 7 / StreamProcessorsOperations commit `7501941`).
+- **Last commit recorded by orchestrator:** `ec5b2a8` — `chore(af5-migration): emit AF5 schema-rename SQL for event-storage-engine (Migration Phase #9)`.
 
 ### Phase 7 summary (1/1 read-configuration class done)
 
@@ -210,7 +210,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 6 | query-handler | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsQueryHandler)_ |
 | 7 | read-configuration | iterative | complete | 1 / 1 | _this commit (StreamProcessorsOperations)_ |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
-| 9 | event-storage-engine | one-shot | complete | n/a (Path A — auto-config; SQL artifact only) | _this commit_ |
+| 9 | event-storage-engine | one-shot | complete | n/a (Path A — auto-config; SQL artifact only) | `ec5b2a8` |
 | — | stabilization | — | pending | — | — |
 
 > When a phase enters `in-progress`, refresh its detailed section below
@@ -330,7 +330,7 @@ _No `@Configuration` beans returning `Configurer` / `ConfigurerModule` / `EventP
   - `custom-storage-engine-subclass: none`
 - **Stabilization carry-over (out of scope for this recipe — captured for the next phase):**
   - `com.dddheroes.heroesofddd.maintenance.read.geteventstream.EventStreamsRestApi` injects `org.axonframework.eventsourcing.eventstore.EventStore` and calls `eventStore.readEvents(streamId).asStream()`. AF5 has no aggregate-stream `EventStore.readEvents(String)` method; class won't compile under AF5. Rewrite during stabilization (likely via `EventStorageEngine.source(SourcingCondition.conditionFor(...))` or equivalent AF5 streaming API).
-- **Commit:** _this commit_
+- **Commit:** `ec5b2a8`
 
 ### Stabilization
 
