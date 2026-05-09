@@ -401,6 +401,32 @@
 			</build>
 		</profile>
 		<profile>
+			<id>migration-event-processor-WhenWeekStartedThenProclaimWeekSymbol</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolProcessor.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WeekSymbolCalculator.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/write/MonthWeek.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbol.java</include>
+								<include>com/dddheroes/heroesofddd/calendar/events/CalendarEvent.java</include>
+								<include>com/dddheroes/heroesofddd/calendar/events/DayStarted.java</include>
+								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
+							</includes>
+							<!-- E2E `@SpringBootTest` test deferred to stabilization (uses AF4 EventGateway/CommandGateway shapes). -->
+							<testIncludes>
+								<testInclude>__no_scoped_test__/None.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-event-processor-WhenCreatureRecruitedThenAddToArmy</id>
 			<build>
 				<plugins>
