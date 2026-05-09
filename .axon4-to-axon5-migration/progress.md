@@ -28,14 +28,44 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — 5/6 done.
-- **Phase status:** Phase 4 in-progress.
-- **Next action (one sentence):** Migrate the last command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp` (MCP adapter).
-- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp`
-- **Exact verification command:** `./mvnw -P migration-command-gateway-RecruitCreatureMcp test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Current Migration Phase:** `Migration Phase #5 — query-gateway (iterative)` — Phase 4 complete (6/6 command-gateway callers).
+- **Phase status:** Phase 4 complete; Phase 5 pending.
+- **Next action (one sentence):** Start Migration Phase #5 — migrate the first query-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdRestApi` (REST controller, top-of-chain `QueryGateway` caller).
+- **Exact recipe:** `query-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdRestApi`
+- **Exact verification command:** to be derived from the query-gateway recipe (likely `./mvnw -P migration-query-gateway-GetDwellingByIdRestApi test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`).
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / RecruitCreatureRestApi.
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway RecruitCreatureRestApi to AF5 (Migration Phase #4)` (IncreaseAvailableCreaturesMcp was `0c34152`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / RecruitCreatureMcp (Phase 4 last item).
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway RecruitCreatureMcp to AF5 (Migration Phase #4)` (RecruitCreatureRestApi was `d1c4590`)
+
+### Phase 4 summary (all 6 command-gateway callers done)
+
+| # | Caller | Shape | Commit |
+|---|---|---|---|
+| 1 | BuildDwellingRestApi | MVC controller, single `.send(cmd, metadata)` return | `69a686a` (also bundled the user's `.claude/skills/...` WIP — see note below) |
+| 2 | BuildDwellingMcp | MCP `Tools` adapter, `.thenApply(...).exceptionally(...)` chain | `18c618f` |
+| 3 | IncreaseAvailableCreaturesRestApi | MVC controller, single `.send(cmd, metadata)` return | `f4f31b4` |
+| 4 | IncreaseAvailableCreaturesMcp | MCP `Tools` adapter, `.thenApply(...).exceptionally(...)` chain | `0c34152` |
+| 5 | RecruitCreatureRestApi | MVC controller, single `.send(cmd, metadata)` return | `d1c4590` |
+| 6 | RecruitCreatureMcp | MCP `Tools` adapter, `.thenApply(...).exceptionally(...)` chain | _this commit_ |
+
+**Pattern recap.** OpenRewrite (Phase 1) had already done all the bulk:
+- `CommandGateway` import switched to AF5 location (`org.axonframework.messaging.commandhandling.gateway.CommandGateway`).
+- `GameMetaData` already returns AF5 `org.axonframework.messaging.core.Metadata`.
+
+The single substantive AF5 change per caller was the dispatch return shape: AF4 `commandGateway.send(cmd, metadata)` returned `CompletableFuture<Void>`, but AF5 returns `CommandResult` — not assignable to `CompletableFuture`. Recipe Step 3/4 fix is `.resultAs(Void.class)`:
+
+- **MVC controllers (3):** appended `.resultAs(Void.class)` directly to the `return commandGateway.send(...)` line.
+- **MCP adapters (3):** inserted `.resultAs(Void.class)` between `.send(...)` and `.thenApply(...)`.
+
+`CommandGateway` field, constructor, and parameter kept in all 6 — top-of-chain callers (REST / MCP request → first cause, no active `ProcessingContext`) are exactly the case AF5 javadoc earmarks for `CommandGateway` (NOT `CommandDispatcher`).
+
+**Combined scoped compile across all 6 profiles passes:**
+```bash
+./mvnw -P migration-command-gateway-BuildDwellingRestApi,migration-command-gateway-BuildDwellingMcp,migration-command-gateway-IncreaseAvailableCreaturesRestApi,migration-command-gateway-IncreaseAvailableCreaturesMcp,migration-command-gateway-RecruitCreatureRestApi,migration-command-gateway-RecruitCreatureMcp \
+  test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+**Note on commit `69a686a`** (BuildDwellingRestApi): the orchestrator used `git add <paths>` followed by `git commit` (no paths) which committed everything in the index — sweeping the user's pre-existing `.claude/skills/axon4-to-axon5-migration/...` WIP (the migration skill itself) into the migration commit (49 files changed). Subsequent items 2–6 used `git commit <explicit paths>` to stay scoped to 3 files each. Net effect: the skill files are now committed, but bundled with item 1 instead of as a standalone commit. User can `git reset --soft 69a686a^` and re-split if desired.
 
 ### Phase 3 summary (all 5 event-processors done)
 
@@ -124,7 +154,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
-| 4 | command-gateway | iterative | in-progress | 5 / 6 | _this commit (RecruitCreatureRestApi)_ |
+| 4 | command-gateway | iterative | complete | 6 / 6 | _this commit (RecruitCreatureMcp)_ |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
@@ -199,7 +229,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 | 3 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest` (E2E — deferred to stabilization) | done | _this commit_ |
 | 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp` | _none direct_ | done | _this commit_ |
 | 5 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureTest` (E2E — deferred to stabilization) | done | _this commit_ |
-| 6 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp` | _none direct_ | pending | — |
+| 6 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp` | _none direct_ | done | _this commit_ |
 
 ### Migration Phase #5 — query-gateway
 

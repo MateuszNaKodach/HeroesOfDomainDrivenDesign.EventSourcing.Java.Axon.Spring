@@ -44,6 +44,7 @@ public class RecruitCreatureMcp {
             var command = RecruitCreature.command(dwellingId, creatureId, armyId, quantity, expectedCost);
 
             return commandGateway.send(command, GameMetaData.with(gameId, playerId))
+                    .resultAs(Void.class)
                     .thenApply(_ -> success(dwellingId, creatureId, armyId, quantity, playerId))
                     .exceptionally(throwable -> failure(dwellingId, throwable));
         }
