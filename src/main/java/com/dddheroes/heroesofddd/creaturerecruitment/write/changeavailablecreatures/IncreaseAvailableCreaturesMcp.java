@@ -42,6 +42,7 @@ public class IncreaseAvailableCreaturesMcp {
             var command = IncreaseAvailableCreatures.command(dwellingId, creatureId, increaseBy);
 
             return commandGateway.send(command, GameMetaData.with(gameId, playerId))
+                    .resultAs(Void.class)
                     .thenApply(_ -> success(dwellingId, creatureId, increaseBy, playerId))
                     .exceptionally(throwable -> failure(dwellingId, throwable));
         }
