@@ -28,14 +28,14 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — 4/6 done.
+- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — 5/6 done.
 - **Phase status:** Phase 4 in-progress.
-- **Next action (one sentence):** Migrate the next command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi` (REST controller).
-- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi`
-- **Exact verification command:** `./mvnw -P migration-command-gateway-RecruitCreatureRestApi test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Next action (one sentence):** Migrate the last command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp` (MCP adapter).
+- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp`
+- **Exact verification command:** `./mvnw -P migration-command-gateway-RecruitCreatureMcp test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / IncreaseAvailableCreaturesMcp.
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway IncreaseAvailableCreaturesMcp to AF5 (Migration Phase #4)` (IncreaseAvailableCreaturesRestApi was `f4f31b4`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / RecruitCreatureRestApi.
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway RecruitCreatureRestApi to AF5 (Migration Phase #4)` (IncreaseAvailableCreaturesMcp was `0c34152`)
 
 ### Phase 3 summary (all 5 event-processors done)
 
@@ -124,7 +124,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
-| 4 | command-gateway | iterative | in-progress | 4 / 6 | _this commit (IncreaseAvailableCreaturesMcp)_ |
+| 4 | command-gateway | iterative | in-progress | 5 / 6 | _this commit (RecruitCreatureRestApi)_ |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
@@ -198,7 +198,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 | 2 | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp` | _none direct_ | done | _this commit_ |
 | 3 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest` (E2E — deferred to stabilization) | done | _this commit_ |
 | 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp` | _none direct_ | done | _this commit_ |
-| 5 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureTest` | pending | — |
+| 5 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureTest` (E2E — deferred to stabilization) | done | _this commit_ |
 | 6 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp` | _none direct_ | pending | — |
 
 ### Migration Phase #5 — query-gateway
