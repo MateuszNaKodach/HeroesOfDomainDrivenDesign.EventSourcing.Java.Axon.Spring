@@ -1,62 +1,47 @@
 package com.dddheroes.heroesofddd.maintenance.write.resetprocessor;
 
-import org.axonframework.common.configuration.EventProcessingConfiguration;
-import org.axonframework.messaging.eventhandling.TrackingEventProcessor;
-import org.axonframework.messaging.eventhandling.processing.streaming.token.ReplayToken;
-import org.axonframework.messaging.eventhandling.processing.streaming.token.store.TokenStore;
+import org.axonframework.common.configuration.AxonConfiguration;
+import org.axonframework.messaging.eventhandling.processing.streaming.StreamingEventProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
-import java.util.OptionalLong;
-import java.util.stream.IntStream;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class StreamProcessorsOperations {
 
-    private final EventProcessingConfiguration eventProcessingConfiguration;
-    private final TokenStore tokenStore;
+    private final AxonConfiguration axonConfiguration;
 
-    StreamProcessorsOperations(EventProcessingConfiguration eventProcessingConfiguration, TokenStore tokenStore) {
-        this.eventProcessingConfiguration = eventProcessingConfiguration;
-        this.tokenStore = tokenStore;
+    StreamProcessorsOperations(AxonConfiguration axonConfiguration) {
+        this.axonConfiguration = axonConfiguration;
     }
 
     public void reset(String processor) {
-        eventProcessingConfiguration
-                .eventProcessorByProcessingGroup(processor, TrackingEventProcessor.class)
+        axonConfiguration
+                .getModuleConfiguration("EventProcessor[" + processor + "]")
+                .flatMap(m -> m.getOptionalComponent(StreamingEventProcessor.class))
                 .ifPresent(eventProcessor -> {
                     if (eventProcessor.supportsReset()) {
-                        eventProcessor.shutDown();
-                        eventProcessor.resetTokens();
-                        eventProcessor.start();
+                        eventProcessor.shutdown().orTimeout(30, TimeUnit.SECONDS).join();
+                        eventProcessor.resetTokens().orTimeout(30, TimeUnit.SECONDS).join();
+                        eventProcessor.start().orTimeout(30, TimeUnit.SECONDS).join();
                     }
                 });
     }
 
     @Transactional
     public Optional<Progress> progressOf(String processor) {
-        var segments = tokenStore.fetchSegments(processor);
-
-        if (segments.length == 0) {
-            return Optional.empty();
-        } else {
-            var accumulatedProgress = IntStream.of(segments).mapToObj(segment -> {
-                var token = tokenStore.fetchToken(processor, segment);
-
-                var maybeCurrent = token.position();
-                var maybePositionAtReset = token instanceof ReplayToken replayToken
-                        ? replayToken.getTokenAtReset().position()
-                        : OptionalLong.empty();
-
-                return new Progress(maybeCurrent.orElse(0L), maybePositionAtReset.orElse(0L));
-            }).reduce(new Progress(0, 0), (acc, progress) ->
-                    new Progress(acc.current + progress.current, acc.tail + progress.tail));
-
-            return (accumulatedProgress.tail == 0L) ? Optional.empty() : Optional.of(accumulatedProgress);
-        }
+        // TODO #LLM: AF5 migration deferred — AF5 TokenStore.fetchSegments / fetchToken
+        // are async (CompletableFuture) and require a ProcessingContext, which is not
+        // available outside an active unit-of-work. Reimplement via
+        // StreamingEventProcessor.processingStatus() (per-segment EventTrackerStatus)
+        // looked up via axonConfiguration.getModuleConfiguration("EventProcessor[" +
+        // processor + "]").flatMap(m -> m.getOptionalComponent(StreamingEventProcessor.class)).
+        throw new UnsupportedOperationException(
+                "progressOf is deferred during AF4→AF5 migration; reimplement using StreamingEventProcessor.processingStatus()");
     }
 
     public record Progress(long current, long tail) {

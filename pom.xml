@@ -624,6 +624,25 @@
 			</build>
 		</profile>
 		<profile>
+			<id>migration-read-config-StreamProcessorsOperations</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/maintenance/write/resetprocessor/StreamProcessorsOperations.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>__no_scoped_test__/None.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-query-handler-GetAllDwellingsQueryHandler</id>
 			<build>
 				<plugins>
