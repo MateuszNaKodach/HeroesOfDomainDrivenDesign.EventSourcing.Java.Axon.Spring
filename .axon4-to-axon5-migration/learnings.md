@@ -64,3 +64,11 @@ Format per entry:
 - Caveat: namespace `ReadModel_Dwelling` is shared with `WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor` (Phase 3 item #5). Both classes will need the same `@SequencingPolicy` annotation; migrating one without the other leaves a partial wiring — fine until item #5 also lands.
 - Verification: `./mvnw -P migration-event-processor-DwellingReadModelProjector test-compile` is clean. No scoped projector test exists (only `GetDwellingByIdTest` which is `@SpringBootTest` E2E) — `<testIncludes>` deliberately matches nothing; functional verification deferred to stabilization.
 - See: phase-3-DwellingReadModelProjector commit (this commit).
+
+## 2026-05-09 — Phase 3 / WhenWeekSymbolProclaimed: AF5 `Message` is NOT generic
+
+- Context: Phase 3 / event-processor item 5 — loop-dispatch handler. Per recipe Step 6 "Loop / multiple dispatches → `CompletableFuture.allOf(...)`". Helper method type signature initially set to `CompletableFuture<? extends Message<?>>` per recipe wording.
+- Surprise: compile error "The type Message is not generic; it cannot be parameterized with arguments <?>". Verified by `javap` against `axon-messaging-5.1.1-SNAPSHOT.jar`: `org.axonframework.messaging.core.Message` is declared as `public interface Message` (no type parameter). The recipe's pseudocode (`commandResult.getResultMessage()` returns `CompletableFuture<? extends Message>`) is correct; only the documentation hint "`CompletableFuture<? extends Message<?>>`" was misleading.
+- Resolution: changed helper return type to `CompletableFuture<? extends Message>` (no `<?>`). Rest of the loop-pattern compiles cleanly: `repository.findAllByGameId(...).stream().filter(...).map(d -> helper(dispatcher, d, ...)).toArray(CompletableFuture[]::new)` → `CompletableFuture.allOf(futures)`.
+- Future-proofing for this skill: recipe `event-processor.md` should be tightened to use `CompletableFuture<? extends Message>` (without `<?>`) in any documented pseudocode.
+- See: phase-3-WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures commit (this commit).

@@ -401,6 +401,34 @@
 			</build>
 		</profile>
 		<profile>
+			<id>migration-event-processor-WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/BuiltDwellingReadModel.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/BuiltDwellingReadModelRepository.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/events/AstrologersEvent.java</include>
+								<include>com/dddheroes/heroesofddd/astrologers/events/WeekSymbolProclaimed.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
+							</includes>
+							<!-- E2E `@SpringBootTest` test deferred to stabilization. -->
+							<testIncludes>
+								<testInclude>__no_scoped_test__/None.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-event-processor-WhenWeekStartedThenProclaimWeekSymbol</id>
 			<build>
 				<plugins>
