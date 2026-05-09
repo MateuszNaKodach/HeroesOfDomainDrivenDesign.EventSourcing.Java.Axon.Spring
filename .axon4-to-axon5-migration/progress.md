@@ -35,7 +35,7 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 - **Exact verification command:** to be derived from the event-storage-engine recipe.
 - **Awaiting user input?** no — but Phase 9 will surface storage-path AskUserQuestion (Path A vs B vs C) per pinned-decisions block.
 - **Working-tree expectation at resume time:** clean — last migration commit is Phase 7 / StreamProcessorsOperations.
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate read-configuration StreamProcessorsOperations to AF5 (Migration Phase #7)`
+- **Last commit recorded by orchestrator:** `7501941` — `refactor(af5-migration): migrate read-configuration StreamProcessorsOperations to AF5 (Migration Phase #7)`
 
 ### Phase 7 summary (1/1 read-configuration class done)
 
