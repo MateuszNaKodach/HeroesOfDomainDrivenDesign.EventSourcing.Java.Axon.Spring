@@ -172,6 +172,51 @@
 
 	<profiles>
 		<profile>
+			<id>migration-aggregate-Dwelling</id>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-annotations</artifactId>
+						<version>2.21</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/Dwelling.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingId.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingCommand.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwelling.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/OnlyNotBuiltBuildingCanBeBuild.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/OnlyBuiltDwellingCanHaveAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreature.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreaturesNotExceedAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCostCannotDifferThanExpectedCost.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/AvailableCreaturesChanged.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/CreatureRecruited.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingIdTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreatureTest.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-aggregate-Calendar</id>
 			<dependencyManagement>
 				<dependencies>

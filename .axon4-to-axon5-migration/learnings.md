@@ -34,4 +34,24 @@ Format per entry:
   - The `RemoveCreatureFromArmyTest.givenEmptyArmy_...` expectation needed updating: AF4 would throw `AggregateNotFoundException` for a missing aggregate, but AF5 with no-arg `@EntityCreator` materialises an empty entity and runs the instance handler — so the domain rule (`Can remove only present creatures`) fires instead. This is the documented gotcha in the decision-matrix doc.
 - Stranded comment: the source still says `// performance downside in comparison to constructor` — was a note about `CREATE_IF_MISSING`'s performance cost on EVERY command. Still loosely accurate (instance handler still re-loads the aggregate) but the original referent is gone. Left in place; can be cleaned up during stabilization.
 - Implication: each per-aggregate Phase 2 step is mostly **verification**, not heavy rewriting — confirm the entity-creator pattern matches what AF4's `CreationPolicy` value implied, fix any test expectations that asserted on AF4-only exceptions, and verify scoped tests pass. See Army (commit pending) as the canonical example.
-- See: phase-1 commit `1911b46`, phase-2-Army commit (pending).
+- See: phase-1 commit `1911b46`, phase-2-Army commit `8bf3deb`.
+
+## 2026-05-09 — Phase 2 / Dwelling: NPE-on-null-state fix via explicit domain guard
+
+- Context: Phase 2 / Dwelling. `RecruitCreatureTest.givenNotBuiltDwellingWhenRecruitCreatureThenException` fed an empty event stream, then sent `RecruitCreature`.
+- Surprise: AF4 threw `AggregateNotFoundException` (the test author commented "exception is not from domain, AggregateNotFoundException is meaningless"). AF5 with no-arg `@EntityCreator` materialises an empty Dwelling instead — `dwellingId`, `creatureId`, `availableCreatures` are all `null`. The first rule constructed in `decide(RecruitCreature, EventAppender)` is `RecruitCreaturesNotExceedAvailableCreatures(creatureId, availableCreatures, ...)`, whose `isViolated()` calls `dwellingCreatureId.equals(...)` — NPE on null `dwellingCreatureId` (the `creatureId` field of the empty Dwelling), not a domain exception.
+- Resolution: per [creation-policy-decision.md](../.claude/skills/axon4-to-axon5-migration/references/aggregate/creation-policy-decision.md) "NPE on null state", added an explicit domain-level guard at the top of the recruit handler:
+  ```java
+  new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
+  ```
+  This reuses the existing rule already used by `IncreaseAvailableCreatures`. Message ("Only built dwelling can have available creatures") is slightly broader than "Only built dwelling can recruit creatures" but matches the actual condition (`dwellingId == null`). Test expectation updated to match. Net effect: AF4's meaningless `AggregateNotFoundException` becomes a clear domain rule violation — improvement, not just preservation.
+- Same `IncreaseAvailableCreaturesTest.givenNotBuildDwellingWhenIncreaseAvailableCreaturesThenException` was already covered by the existing `OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify()` call at the top of the increase handler — only the test expectation needed updating.
+- See: phase-2-Dwelling commit (this commit).
+
+## 2026-05-09 — Phase 2 / Dwelling: snapshotting accepted as dropped
+
+- Context: Phase 2 / Dwelling. Dwelling was the only aggregate with snapshotting in AF4 (`@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")`).
+- Surprise: OpenRewrite (Phase 1) silently dropped the attribute and left a `// TODO #LLM: reconfigure snapshot trigger` comment. AF5's `@EventSourced` does not yet expose a snapshotting API — per recipe `not-supported.md` B1 this is a blocker requiring an `accept-drop / pause-migration / remove-feature-first` decision.
+- Resolution: pinned `snapshotting: accept-drop` (project is small enough that snapshot rebuild on full replay is acceptable). The TODO comment stays; existing snapshot rows in storage are NOT touched (data migration is out of scope of this skill — user owns that decision). Re-introduce snapshotting once AF5 ships the API.
+- The `public` field declarations in `Dwelling.java` (`public DwellingId dwellingId; // needs to be public for snapshotting`) are no longer strictly required — could be re-tightened to `private` during stabilization. Left as-is for now to keep this commit minimal.
+- See: progress.md "Snapshotting (Dwelling)" pinned decision; phase-2-Dwelling commit (this commit).

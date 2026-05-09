@@ -9,7 +9,6 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -27,15 +26,15 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(1);
 
         // then
+        // AF5: empty Dwelling materialised by no-arg @EntityCreator → dwellingId is null →
+        // explicit OnlyBuiltDwellingCanHaveAvailableCreatures guard at the top of the recruit
+        // handler fires. Replaces AF4's AggregateNotFoundException (meaningless to the domain).
         fixture.given()
                .events(givenEvents)
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
-        // todo: I don't like it exception is not from domain, AggregateNotFoundException is meaningless
-//               .expectException(DomainRule.ViolatedException.class)
-//               .expectExceptionMessage("Only not built building can be build");
+               .exception(DomainRule.ViolatedException.class, "Only built dwelling can have available creatures");
     }
 
     @Test

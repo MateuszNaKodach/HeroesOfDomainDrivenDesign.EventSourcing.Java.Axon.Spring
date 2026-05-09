@@ -2,8 +2,8 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreat
 
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,13 +19,14 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
         var whenCommand = increaseAvailableCreatures(3);
 
         // then
-        var thenEvent = availableCreaturesChanged(3);
+        // AF5: empty Dwelling materialised by no-arg @EntityCreator → dwellingId is null →
+        // OnlyBuiltDwellingCanHaveAvailableCreatures rule fires.
         fixture.given()
                .events(givenEvents)
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
+               .exception(DomainRule.ViolatedException.class, "Only built dwelling can have available creatures");
     }
 
     @Test
