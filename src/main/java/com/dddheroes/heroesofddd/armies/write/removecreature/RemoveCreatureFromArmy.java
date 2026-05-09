@@ -2,12 +2,14 @@ package com.dddheroes.heroesofddd.armies.write.removecreature;
 
 import com.dddheroes.heroesofddd.armies.write.ArmyCommand;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.modelling.annotation.TargetEntityId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
+@Command
 public record RemoveCreatureFromArmy(
-        @TargetAggregateIdentifier
+        @TargetEntityId
         ArmyId armyId,
         CreatureId creatureId,
         Amount quantity

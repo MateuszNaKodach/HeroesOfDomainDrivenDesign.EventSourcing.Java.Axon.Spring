@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
-import org.axonframework.eventsourcing.Snapshotter;
+import org.axonframework.eventsourcing.snapshot.api.Snapshotter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

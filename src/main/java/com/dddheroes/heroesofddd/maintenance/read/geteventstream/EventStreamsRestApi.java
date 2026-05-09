@@ -1,6 +1,6 @@
 package com.dddheroes.heroesofddd.maintenance.read.geteventstream;
 
-import org.axonframework.eventhandling.DomainEventMessage;
+import org.axonframework.messaging.eventhandling.DomainEventMessage;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.CrossOrigin;

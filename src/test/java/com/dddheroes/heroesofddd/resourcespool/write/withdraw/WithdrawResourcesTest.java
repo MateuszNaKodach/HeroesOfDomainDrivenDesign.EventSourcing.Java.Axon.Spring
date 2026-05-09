@@ -3,8 +3,8 @@ package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
-import org.axonframework.modelling.command.AggregateNotFoundException;
-import org.junit.jupiter.api.*;
+import org.axonframework.modelling.entity.AggregateNotFoundException;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -21,9 +21,12 @@ class WithdrawResourcesTest extends ResourcesPoolTest {
         var whenCommand = withdrawResources(GOLD, 1000);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(AggregateNotFoundException.class);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(AggregateNotFoundException.class);
     }
 
     @Test
@@ -40,9 +43,12 @@ class WithdrawResourcesTest extends ResourcesPoolTest {
         var whenCommand = withdrawResources(WOOD, 10);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(resourcesWithdrawn(WOOD, 10));
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(resourcesWithdrawn(WOOD, 10));
     }
 
     @Test
@@ -59,10 +65,12 @@ class WithdrawResourcesTest extends ResourcesPoolTest {
         var whenCommand = withdrawResources(WOOD, 12);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Cannot withdraw more than deposited resources");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Cannot withdraw more than deposited resources");
     }
 
     private WithdrawResources withdrawResources(ResourceType type, Integer amount) {

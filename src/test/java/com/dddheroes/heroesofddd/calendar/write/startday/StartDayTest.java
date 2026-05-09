@@ -8,7 +8,7 @@ import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
 import com.dddheroes.heroesofddd.calendar.events.DayFinished;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,9 +26,12 @@ public class StartDayTest extends CalendarTest {
 
         // then
         var thenEvent = DayStarted.event(calendarId, Month.of(1), Week.of(1), Day.of(1));
-        fixture.givenNoPriorActivity()
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .noPriorActivity()
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -45,9 +48,12 @@ public class StartDayTest extends CalendarTest {
 
         // then
         var thenEvent = DayStarted.event(calendarId, Month.of(1), Week.of(1), Day.of(2));
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -63,10 +69,12 @@ public class StartDayTest extends CalendarTest {
         var whenCommand = StartDay.command(calendarId.raw(), 1, 1, 3);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Cannot skip days");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Cannot skip days");
     }
 
     @Test
@@ -86,9 +94,12 @@ public class StartDayTest extends CalendarTest {
 
         // then
         var thenEvent = DayStarted.event(calendarId, Month.of(1), Week.of(2), Day.of(1));
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -118,8 +129,11 @@ public class StartDayTest extends CalendarTest {
 
         // then
         var thenEvent = DayStarted.event(calendarId, Month.of(2), Week.of(1), Day.of(1));
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 }

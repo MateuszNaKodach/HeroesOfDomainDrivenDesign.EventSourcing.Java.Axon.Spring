@@ -3,13 +3,15 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingCommand;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.modelling.annotation.TargetEntityId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.util.Map;
 
+@Command
 public record BuildDwelling(
-        @TargetAggregateIdentifier
+        @TargetEntityId
         DwellingId dwellingId,
         CreatureId creatureId,
         Resources costPerTroop

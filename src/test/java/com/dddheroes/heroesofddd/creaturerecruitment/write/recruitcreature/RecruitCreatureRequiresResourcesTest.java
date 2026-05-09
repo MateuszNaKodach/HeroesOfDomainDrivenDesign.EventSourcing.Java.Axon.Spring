@@ -15,17 +15,16 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
 import com.dddheroes.heroesofddd.utils.EventStoreAssertions;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.messaging.MetaData;
-import org.junit.jupiter.api.*;
+import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.core.Metadata;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(properties = {
@@ -89,8 +88,8 @@ class RecruitCreatureRequiresResourcesTest {
         commandGateway.sendAndWait(command, gameMetaData());
     }
 
-    private static MetaData gameMetaData() {
-        return MetaData.with("gameId", GAME_ID)
+    private static Metadata gameMetaData() {
+        return Metadata.with("gameId", GAME_ID)
                        .and("playerId", PLAYER_ID);
     }
 

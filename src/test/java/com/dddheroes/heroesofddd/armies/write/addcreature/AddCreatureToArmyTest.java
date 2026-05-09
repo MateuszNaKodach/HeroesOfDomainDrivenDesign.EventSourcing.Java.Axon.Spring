@@ -5,7 +5,7 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -21,9 +21,12 @@ class AddCreatureToArmyTest extends ArmyTest {
 
         // then
         var thenEvent = creatureAddedToArmy(CreatureIds.angel(), 1);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -39,9 +42,12 @@ class AddCreatureToArmyTest extends ArmyTest {
 
         // then
         var thenEvent = creatureAddedToArmy(CreatureIds.angel(), 1);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -61,10 +67,12 @@ class AddCreatureToArmyTest extends ArmyTest {
         var whenCommand = addCreatureToArmy(CreatureIds.phoenix(), 3);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Can have max 7 different creature stacks in the army");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Can have max 7 different creature stacks in the army");
     }
 
     @Test
@@ -85,9 +93,12 @@ class AddCreatureToArmyTest extends ArmyTest {
 
         // then
         var thenEvent = creatureAddedToArmy(CreatureIds.archAngel(), 5);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     private AddCreatureToArmy addCreatureToArmy(CreatureId creatureId, int quantity) {

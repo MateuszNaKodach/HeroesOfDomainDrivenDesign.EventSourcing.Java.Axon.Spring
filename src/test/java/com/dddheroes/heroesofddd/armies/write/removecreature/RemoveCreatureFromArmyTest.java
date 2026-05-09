@@ -5,8 +5,8 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.axonframework.modelling.command.AggregateNotFoundException;
-import org.junit.jupiter.api.*;
+import org.axonframework.modelling.entity.AggregateNotFoundException;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -21,9 +21,12 @@ class RemoveCreatureFromArmyTest extends ArmyTest {
         var whenCommand = removeCreatureFromArmy(CreatureIds.angel(), 1);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(AggregateNotFoundException.class);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(AggregateNotFoundException.class);
     }
 
     @Test
@@ -39,9 +42,12 @@ class RemoveCreatureFromArmyTest extends ArmyTest {
 
         // then
         var thenEvent = creatureRemovedFromArmy(CreatureIds.centaur(), 5);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .events(thenEvent);
     }
 
     @Test
@@ -56,10 +62,12 @@ class RemoveCreatureFromArmyTest extends ArmyTest {
         var whenCommand = removeCreatureFromArmy(CreatureIds.angel(), 5);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Can remove only present creatures");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Can remove only present creatures");
     }
 
     @Test
@@ -74,10 +82,12 @@ class RemoveCreatureFromArmyTest extends ArmyTest {
         var whenCommand = removeCreatureFromArmy(CreatureIds.centaur(), 6);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Can remove only present creatures");
+        fixture.given()
+               .events(givenEvents)
+               .when()
+               .command(whenCommand)
+               .then()
+               .exception(DomainRule.ViolatedException.class, "Can remove only present creatures");
     }
 
     protected RemoveCreatureFromArmy removeCreatureFromArmy(CreatureId creatureId, int quantity) {

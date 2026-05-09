@@ -4,16 +4,16 @@ import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import org.axonframework.config.ProcessingGroup;
-import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.messaging.annotation.MetaDataValue;
-import org.axonframework.queryhandling.QueryHandler;
+import org.axonframework.messaging.core.annotation.MetadataValue;
+import org.axonframework.messaging.core.annotation.Namespace;
+import org.axonframework.messaging.eventhandling.annotation.EventHandler;
+import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Stream;
 
-@ProcessingGroup("Read_GetAllDwellings_QueryCache")
+@Namespace("Read_GetAllDwellings_QueryCache")
 @Component
 class GetAllDwellingsQueryHandler {
 
@@ -38,7 +38,7 @@ class GetAllDwellingsQueryHandler {
     }
 
     @EventHandler
-    void evolve(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
+    void evolve(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         while (cache.size() > 20) {
             cache.pollFirst();
         }

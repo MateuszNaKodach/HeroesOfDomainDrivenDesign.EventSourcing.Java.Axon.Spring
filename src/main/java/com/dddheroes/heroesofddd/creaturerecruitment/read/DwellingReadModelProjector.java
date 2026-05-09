@@ -4,13 +4,13 @@ import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import org.axonframework.config.ProcessingGroup;
-import org.axonframework.eventhandling.EventHandler;
-import org.axonframework.eventhandling.ResetHandler;
-import org.axonframework.messaging.annotation.MetaDataValue;
+import org.axonframework.messaging.core.annotation.MetadataValue;
+import org.axonframework.messaging.eventhandling.annotation.EventHandler;
+import org.axonframework.messaging.eventhandling.replay.annotation.ResetHandler;
+import org.axonframework.messaging.core.annotation.Namespace;
 import org.springframework.stereotype.Component;
 
-@ProcessingGroup("ReadModel_Dwelling")
+@Namespace("ReadModel_Dwelling")
 @Component
 class DwellingReadModelProjector {
 
@@ -21,7 +21,7 @@ class DwellingReadModelProjector {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetaDataValue(GameMetaData.GAME_ID_KEY) String gameId) {
+    void on(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         var state = new DwellingReadModel(
                 gameId,
                 event.dwellingId(),
