@@ -28,14 +28,14 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — Phase 3 complete (5/5 event-processors).
-- **Phase status:** Phase 3 complete; Phase 4 pending.
-- **Next action (one sentence):** Start Migration Phase #4 — migrate the first command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi` (REST controller, top-of-chain `CommandGateway` caller — see recipe example `01-heroes-builddwelling-restcontroller.md`).
-- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi`
-- **Exact verification command:** to be derived from the command-gateway recipe (likely `./mvnw -P migration-command-gateway-BuildDwellingRestApi test-compile -DskipTests`).
+- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — 1/6 done.
+- **Phase status:** Phase 4 in-progress.
+- **Next action (one sentence):** Migrate the next command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp` (MCP adapter calling `commandGateway.send(...)` / `sendAndWait(...)`).
+- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp`
+- **Exact verification command:** `./mvnw -P migration-command-gateway-BuildDwellingMcp test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 3 / WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures (Phase 3 last item). Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate event-processor WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor to AF5 (Migration Phase #3)` (Phase 3 last item; WhenWeekStartedThenProclaimWeekSymbol was `b08748b`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / BuildDwellingRestApi. Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway BuildDwellingRestApi to AF5 (Migration Phase #4)` (Phase 3 last item was `cfa7f67`)
 
 ### Phase 3 summary (all 5 event-processors done)
 
@@ -124,7 +124,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
-| 4 | command-gateway | iterative | pending | 0 / 6 | — |
+| 4 | command-gateway | iterative | in-progress | 1 / 6 | _this commit (BuildDwellingRestApi)_ |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
@@ -194,7 +194,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
-| 1 | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingTest` (E2E) | pending | — |
+| 1 | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingTest` (E2E — deferred to stabilization) | done | _this commit_ |
 | 2 | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp` | _none direct_ | pending | — |
 | 3 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest` | pending | — |
 | 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp` | _none direct_ | pending | — |
