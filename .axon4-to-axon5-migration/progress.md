@@ -29,19 +29,19 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 ## ▶︎ RESUME HERE — read this first
 
 - **Current Migration Phase:** `Migration Phase #2 — aggregate (iterative)`
-- **Phase status:** in-progress (3 / 5 done — Army, Astrologers, Calendar)
-- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling` (same pattern; Dwelling is the largest aggregate and may have an `IncreaseAvailableCreaturesTest` that still expects `AggregateNotFoundException` — needs the now-familiar fix).
-- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling`
+- **Phase status:** in-progress (4 / 5 done — Army, Astrologers, Calendar, Dwelling)
+- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool` (last aggregate; same pattern; check for any `AggregateNotFoundException`-style assertions in `DepositResourcesTest` / `WithdrawResourcesTest`).
+- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool`
 - **Exact verification command:**
   ```bash
-  ./mvnw test -P migration-aggregate-Dwelling \
-    -Dtest='com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingTest,com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest,com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureTest,com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRequiresResourcesTest,com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest,com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingIdTest' \
+  ./mvnw test -P migration-aggregate-ResourcesPool \
+    -Dtest='com.dddheroes.heroesofddd.resourcespool.write.deposit.DepositResourcesTest,com.dddheroes.heroesofddd.resourcespool.write.withdraw.WithdrawResourcesTest' \
     -DfailIfNoTests=false \
     -Dsurefire.failIfNoSpecifiedTests=false
   ```
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 2 / Calendar.
-- **Last commit recorded by orchestrator:** `2bcc939` — `refactor(af5-migration): migrate aggregate Astrologers to AF5 (Migration Phase #2)` (Calendar commit SHA filled in by next commit per chicken-and-egg rule)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 2 / Dwelling.
+- **Last commit recorded by orchestrator:** `1d96fdf` — `refactor(af5-migration): migrate aggregate Calendar to AF5 (Migration Phase #2)` (Dwelling SHA filled in by next commit per chicken-and-egg rule)
 
 ### Pattern observed on Army (re-use for other aggregates)
 
@@ -60,7 +60,7 @@ What Phase 2 still has to do per aggregate:
 
 - **Target project:** `/Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring`
 - **Started:** 2026-05-09
-- **Last updated:** 2026-05-09 (Phase 2 / Calendar done)
+- **Last updated:** 2026-05-09 (Phase 2 / Dwelling done)
 - **Active branch:** `af5-migration/test1`
 - **Build tool:** Maven (single module)
 - **Starting Axon version:** 4.13.1 (`axon-spring-boot-starter`)
@@ -75,7 +75,8 @@ Frozen for the run. A fresh session must respect these without re-asking.
 - **Recipe scope (openrewrite):** top-level (single-module project)
 - **Unsupported features detected at INIT:** none (no sagas, no deadline-manager)
 - **Per-feature decision:** n/a
-- **Commit cadence:** per-item (default)
+- **Snapshotting (Dwelling):** `accept-drop` — AF4 had `snapshotTriggerDefinition = "dwellingSnapshotTrigger"`; AF5 `@EventSourced` exposes no equivalent yet. OpenRewrite dropped it; recipe `not-supported.md` B1 confirms `accept-drop` is allowed. Decision frozen 2026-05-09 during Phase 2 / Dwelling. The `TODO #LLM` comment in `Dwelling.java` documents the deferral; existing snapshot rows in storage are NOT touched (data migration is out of scope per the skill's contract).
+- **Commit cadence:** per-item (default; user later confirmed autonomous mode — proceed without per-item AskUserQuestion checkpoints, surface only on real blockers).
 - **Storage-engine path:** _set when Phase 9 reached_
 
 ---
@@ -87,7 +88,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | # | Recipe | Mode | Status | Items done / total | Last commit |
 |---|---|---|---|---|---|
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
-| 2 | aggregate | iterative | in-progress | 3 / 5 | _this commit (Calendar)_ |
+| 2 | aggregate | iterative | in-progress | 4 / 5 | _this commit (Dwelling)_ |
 | 3 | event-processor | iterative | pending | 0 / 5 | — |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
@@ -130,8 +131,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 |---|---|---|---|---|
 | 1 | `com.dddheroes.heroesofddd.armies.write.Army` | `com.dddheroes.heroesofddd.armies.write.ArmyTest` (base) + `AddCreatureToArmyTest`, `RemoveCreatureFromArmyTest` (8 tests) | done | `8bf3deb` |
 | 2 | `com.dddheroes.heroesofddd.astrologers.write.Astrologers` | `com.dddheroes.heroesofddd.astrologers.write.AstrologersTest` (base) + `proclaimweeksymbol.ProclaimWeekSymbolTest` (3 tests) | done | `2bcc939` |
-| 3 | `com.dddheroes.heroesofddd.calendar.write.Calendar` | `com.dddheroes.heroesofddd.calendar.write.CalendarTest` (base) + `startday.StartDayTest`, `finishday.FinishDayTest` (8 tests) | done | _this commit_ |
-| 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling` | `com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest` | pending | — |
+| 3 | `com.dddheroes.heroesofddd.calendar.write.Calendar` | `com.dddheroes.heroesofddd.calendar.write.CalendarTest` (base) + `startday.StartDayTest`, `finishday.FinishDayTest` (8 tests) | done | `1d96fdf` |
+| 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling` | `DwellingTest` (base) + `DwellingIdTest`, `builddwelling.BuildDwellingTest`, `changeavailablecreatures.IncreaseAvailableCreaturesTest`, `recruitcreature.RecruitCreatureTest` (22 tests) — `RecruitCreatureRequiresResourcesTest` deferred to Phase 4/9 (E2E) | done | _this commit_ |
 | 5 | `com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool` | `com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest` | pending | — |
 
 **Status legend:** `pending` · `in-progress` · `done` · `deferred: <reason>` · `blocked: <reason>`

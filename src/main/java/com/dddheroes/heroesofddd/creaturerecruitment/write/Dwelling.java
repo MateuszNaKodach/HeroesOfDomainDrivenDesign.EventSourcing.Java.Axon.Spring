@@ -73,6 +73,11 @@ public class Dwelling {
 
     @CommandHandler
     void decide(RecruitCreature command, EventAppender eventAppender) {
+        // AF5: with @EntityCreator no-arg, the framework materialises an empty Dwelling
+        // before this handler runs. Guard against the not-yet-built case explicitly so we
+        // surface the domain rule instead of NPE-ing on null state.
+        new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
+
         new RecruitCreaturesNotExceedAvailableCreatures(
                 creatureId,
                 availableCreatures,

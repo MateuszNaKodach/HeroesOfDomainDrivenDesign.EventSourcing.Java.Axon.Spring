@@ -9,6 +9,7 @@ import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import org.axonframework.test.fixture.AxonTestFixture;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 public class DwellingTest {
@@ -24,6 +25,11 @@ public class DwellingTest {
     @BeforeEach
     void setUp() {
         fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class, Dwelling.class)));
+    }
+
+    @AfterEach
+    void tearDown() {
+        fixture.stop();
     }
 
     protected DwellingBuilt dwellingBuilt() {
