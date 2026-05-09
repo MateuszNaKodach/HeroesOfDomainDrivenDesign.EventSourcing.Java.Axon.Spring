@@ -35,7 +35,7 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 - **Exact verification command:** `./mvnw clean test-compile` (unscoped — surfaces every remaining compile error). Then `./mvnw clean verify` once compile is green.
 - **Awaiting user input?** no — but the storage-engine SQL is the user's call to apply (out-of-band, on a non-prod copy first).
 - **Working-tree expectation at resume time:** clean — last migration commit is Phase 9 / event-storage-engine.
-- **Last commit recorded by orchestrator:** `ec5b2a8` — `chore(af5-migration): emit AF5 schema-rename SQL for event-storage-engine (Migration Phase #9)`.
+- **Last commit recorded by orchestrator:** `77d5ea3` — `refactor(af5-migration): declare explicit @Bean EventStorageEngine for aggregate-based JPA (Migration Phase #9 fix-up)` (preceded by `ec5b2a8` — initial SQL + bookkeeping).
 
 ### Phase 7 summary (1/1 read-configuration class done)
 
@@ -210,7 +210,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 6 | query-handler | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsQueryHandler)_ |
 | 7 | read-configuration | iterative | complete | 1 / 1 | _this commit (StreamProcessorsOperations)_ |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
-| 9 | event-storage-engine | one-shot | complete | n/a (Path A — explicit `@Bean EventStorageEngine` + SQL artifact) | `ec5b2a8` (initial; SQL + bookkeeping) → fix-up `_this commit_` (added explicit `@Bean`) |
+| 9 | event-storage-engine | one-shot | complete | n/a (Path A — explicit `@Bean EventStorageEngine` + SQL artifact) | `ec5b2a8` (initial; SQL + bookkeeping) → fix-up `77d5ea3` (added explicit `@Bean`) |
 | — | stabilization | — | pending | — | — |
 
 > When a phase enters `in-progress`, refresh its detailed section below
