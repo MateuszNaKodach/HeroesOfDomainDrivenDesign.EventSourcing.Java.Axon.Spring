@@ -28,14 +28,14 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #3 — event-processor (iterative)` — 2/5 done.
+- **Current Migration Phase:** `Migration Phase #3 — event-processor (iterative)` — 3/5 done.
 - **Phase status:** Phase 3 in-progress.
-- **Next action (one sentence):** Migrate Phase #3 item #3 — `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor` (this one DOES dispatch commands — needs CommandDispatcher param + sendAndWait→send rewrite per recipe steps 5–6; matches example `01-heroes-when-creature-recruited.md`).
-- **Exact recipe:** `event-processor` with `target=com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor`
-- **Exact verification command:** `./mvnw -P migration-event-processor-WhenCreatureRecruitedThenAddToArmy test -Dtest='com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyTest' -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Next action (one sentence):** Migrate Phase #3 item #4 — `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor` (matches example `02-heroes-when-week-started.md` exactly — multi-DI constructor preserving `WeekSymbolCalculator`, conditional dispatch with empty false branch, `@SequencingPolicy` annotation).
+- **Exact recipe:** `event-processor` with `target=com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor`
+- **Exact verification command:** `./mvnw -P migration-event-processor-WhenWeekStartedThenProclaimWeekSymbol test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 3 / GetAllDwellingsQueryHandler. Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate event-processor GetAllDwellingsQueryHandler @EventHandler shape to AF5 (Migration Phase #3)` (DwellingReadModelProjector was `cba9cc2`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 3 / WhenCreatureRecruitedThenAddToArmy. Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate event-processor WhenCreatureRecruitedThenAddToArmyProcessor to AF5 (Migration Phase #3)` (GetAllDwellingsQueryHandler was `df2a674`)
 
 ### Phase 2 summary (all 5 aggregates done)
 
@@ -102,7 +102,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 |---|---|---|---|---|---|
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
-| 3 | event-processor | iterative | in-progress | 2 / 5 | _this commit (GetAllDwellingsQueryHandler)_ |
+| 3 | event-processor | iterative | in-progress | 3 / 5 | _this commit (WhenCreatureRecruitedThenAddToArmy)_ |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
@@ -162,8 +162,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
 | 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (E2E — deferred to stabilization) | done | `cba9cc2` |
-| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (dual-natured: `@EventHandler` + `@QueryHandler`) | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` (E2E — deferred to stabilization) | done (`@EventHandler` only — `@QueryHandler` deferred to Phase 6) | _this commit_ |
-| 3 | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor` | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyTest` | pending | — |
+| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (dual-natured: `@EventHandler` + `@QueryHandler`) | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` (E2E — deferred to stabilization) | done (`@EventHandler` only — `@QueryHandler` deferred to Phase 6) | `df2a674` |
+| 3 | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor` | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyTest` (E2E `@SpringBootTest`, broken; deferred to stabilization) | done | _this commit_ |
 | 4 | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolTest` | pending | — |
 | 5 | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest` | pending | — |
 
