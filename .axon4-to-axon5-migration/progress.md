@@ -28,14 +28,35 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #3 — event-processor (iterative)` — 4/5 done.
-- **Phase status:** Phase 3 in-progress (last item).
-- **Next action (one sentence):** Migrate Phase #3 item #5 (last) — `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor` (multi-DI constructor `CommandGateway + BuiltDwellingReadModelRepository`; loop dispatch over filtered repository results — recipe Step 6 "Loop / multiple dispatches → CompletableFuture.allOf(...)").
-- **Exact recipe:** `event-processor` with `target=com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor`
-- **Exact verification command:** `./mvnw -P migration-event-processor-WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — Phase 3 complete (5/5 event-processors).
+- **Phase status:** Phase 3 complete; Phase 4 pending.
+- **Next action (one sentence):** Start Migration Phase #4 — migrate the first command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi` (REST controller, top-of-chain `CommandGateway` caller — see recipe example `01-heroes-builddwelling-restcontroller.md`).
+- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi`
+- **Exact verification command:** to be derived from the command-gateway recipe (likely `./mvnw -P migration-command-gateway-BuildDwellingRestApi test-compile -DskipTests`).
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 3 / WhenWeekStartedThenProclaimWeekSymbol. Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate event-processor WhenWeekStartedThenProclaimWeekSymbolProcessor to AF5 (Migration Phase #3)` (WhenCreatureRecruitedThenAddToArmy was `d5ca747`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 3 / WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures (Phase 3 last item). Working tree should also still hold the user's pre-existing `.claude/skills/...` WIP staged in the index (untouched by orchestrator).
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate event-processor WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor to AF5 (Migration Phase #3)` (Phase 3 last item; WhenWeekStartedThenProclaimWeekSymbol was `b08748b`)
+
+### Phase 3 summary (all 5 event-processors done)
+
+| # | Processor | Commit |
+|---|---|---|
+| 1 | DwellingReadModelProjector (pure projector) | `cba9cc2` |
+| 2 | GetAllDwellingsQueryHandler (`@EventHandler` shape only — `@QueryHandler` deferred to Phase 6) | `df2a674` |
+| 3 | WhenCreatureRecruitedThenAddToArmyProcessor (try/catch compensation) | `d5ca747` |
+| 4 | WhenWeekStartedThenProclaimWeekSymbolProcessor (multi-DI, conditional dispatch inverted) | `b08748b` |
+| 5 | WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor (loop dispatch + projector) | _this commit_ |
+
+**Pattern recap.** OpenRewrite (Phase 1) had already done the bulk: `@ProcessingGroup` → `@Namespace`, `@EventHandler` / `@DisallowReplay` / `@MetadataValue` import moves, `CommandGateway` field → `CommandDispatcher` parameter, `sendAndWait(...)` → `send(...).getResultMessage()` (where applicable), constructor + field cleanup, return type `void` → `CompletableFuture<?>`. The only manual work per processor was recipe Step 7 — moving `axon.eventhandling.processors.<group>.sequencing-policy: gameIdSequencingPolicy` from YAML onto each class as `@SequencingPolicy(type = MetadataSequencingPolicy.class, parameters = GameMetaData.GAME_ID_KEY)`. Items 4 and 5 also needed branch-shape adjustments (early-return inversion / `CompletableFuture.allOf(...)` loop pattern).
+
+**Pinned for stabilization:**
+- `gameIdSequencingPolicy` `@Bean` in `GameConfiguration.java` is now obsolete — all 5 processors are annotated. Bean can be deleted in Phase 8 (`write-configuration`) or stabilization.
+- All E2E `@SpringBootTest` tests for these processors are deferred — they use AF4 shapes (`eventGateway.publish(DomainEventMessage)`, `GenericDomainEventMessage`, `verify(commandGateway).sendAndWait(...)`) that don't exist in AF5. Test rewrite is broader than the per-processor recipe scope.
+- Combined scoped compile across all 5 profiles passes:
+  ```bash
+  ./mvnw -P migration-event-processor-DwellingReadModelProjector,migration-event-processor-GetAllDwellingsQueryHandler,migration-event-processor-WhenCreatureRecruitedThenAddToArmy,migration-event-processor-WhenWeekStartedThenProclaimWeekSymbol,migration-event-processor-WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures \
+    test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false
+  ```
 
 ### Phase 2 summary (all 5 aggregates done)
 
@@ -102,7 +123,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 |---|---|---|---|---|---|
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
-| 3 | event-processor | iterative | in-progress | 4 / 5 | _this commit (WhenWeekStartedThenProclaimWeekSymbol)_ |
+| 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
@@ -164,8 +185,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (E2E — deferred to stabilization) | done | `cba9cc2` |
 | 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (dual-natured: `@EventHandler` + `@QueryHandler`) | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` (E2E — deferred to stabilization) | done (`@EventHandler` only — `@QueryHandler` deferred to Phase 6) | `df2a674` |
 | 3 | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor` | `com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyTest` (E2E `@SpringBootTest`, broken; deferred to stabilization) | done | `d5ca747` |
-| 4 | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolTest` (E2E `@SpringBootTest`; deferred to stabilization) | done | _this commit_ |
-| 5 | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest` | pending | — |
+| 4 | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolTest` (E2E `@SpringBootTest`; deferred to stabilization) | done | `b08748b` |
+| 5 | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor` | `com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest` (E2E `@SpringBootTest`; deferred to stabilization) | done | _this commit_ |
 
 ### Migration Phase #4 — command-gateway
 

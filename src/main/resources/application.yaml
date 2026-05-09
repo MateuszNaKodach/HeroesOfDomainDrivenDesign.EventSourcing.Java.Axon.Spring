@@ -50,8 +50,6 @@ axon:
           enabled: true
       Automation_WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures_Processor:
         mode: pooled
-        # TODO AF5 migration: move to @SequencingPolicy on the handler class; this property is obsolete.
-        sequencing-policy: gameIdSequencingPolicy
         dlq:
           enabled: true
       ReadModel_Dwelling:
