@@ -28,14 +28,14 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — 2/6 done.
+- **Current Migration Phase:** `Migration Phase #4 — command-gateway (iterative)` — 3/6 done.
 - **Phase status:** Phase 4 in-progress.
-- **Next action (one sentence):** Migrate the next command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi` (REST controller, `PATCH /dwellings/{id}` style).
-- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi`
-- **Exact verification command:** `./mvnw -P migration-command-gateway-IncreaseAvailableCreaturesRestApi test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Next action (one sentence):** Migrate the next command-gateway caller `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp` (MCP adapter; same shape as BuildDwellingMcp — `.thenApply(...).exceptionally(...)` chain).
+- **Exact recipe:** `command-gateway` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp`
+- **Exact verification command:** `./mvnw -P migration-command-gateway-IncreaseAvailableCreaturesMcp test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / BuildDwellingMcp. Note: BuildDwellingRestApi commit (`69a686a`) accidentally bundled the user's pre-existing `.claude/skills/...` WIP. From this commit onwards the orchestrator stages explicit paths via `git commit <paths>` to avoid sweeping unrelated files.
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway BuildDwellingMcp to AF5 (Migration Phase #4)` (BuildDwellingRestApi was `69a686a`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 4 / IncreaseAvailableCreaturesRestApi.
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate command-gateway IncreaseAvailableCreaturesRestApi to AF5 (Migration Phase #4)` (BuildDwellingMcp was `18c618f`)
 
 ### Phase 3 summary (all 5 event-processors done)
 
@@ -124,7 +124,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
 | 2 | aggregate | iterative | complete | 5 / 5 | `37985b9` |
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
-| 4 | command-gateway | iterative | in-progress | 2 / 6 | _this commit (BuildDwellingMcp)_ |
+| 4 | command-gateway | iterative | in-progress | 3 / 6 | _this commit (IncreaseAvailableCreaturesRestApi)_ |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
 | 6 | query-handler | iterative | pending | 0 / 2 | — |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
@@ -196,7 +196,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 |---|---|---|---|---|
 | 1 | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingTest` (E2E — deferred to stabilization) | done | _this commit_ |
 | 2 | `com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp` | _none direct_ | done | _this commit_ |
-| 3 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest` | pending | — |
+| 3 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest` (E2E — deferred to stabilization) | done | _this commit_ |
 | 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp` | _none direct_ | pending | — |
 | 5 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi` | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureTest` | pending | — |
 | 6 | `com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp` | _none direct_ | pending | — |
