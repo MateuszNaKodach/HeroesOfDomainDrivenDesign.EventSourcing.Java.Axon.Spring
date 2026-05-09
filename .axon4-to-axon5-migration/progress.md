@@ -28,20 +28,31 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #6 — query-handler (iterative)` — 1/2 done.
-- **Phase status:** Phase 6 in-progress (item 1 done, item 2 pending).
-- **Next action (one sentence):** Migrate the second `@QueryHandler` class `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (dual-natured — `@EventHandler` shape already migrated in Phase 3; query-handler recipe finishes the unit).
-- **Exact recipe:** `query-handler` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler`
-- **Exact verification command:** `./mvnw -P migration-query-handler-GetAllDwellingsQueryHandler clean test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
+- **Current Migration Phase:** `Migration Phase #7 — read-configuration (iterative)` — Phase 6 complete (2/2).
+- **Phase status:** Phase 6 complete; Phase 7 pending.
+- **Next action (one sentence):** Start Migration Phase #7 — migrate `com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations` (injects AF4 `Configuration` / `EventProcessingConfiguration`).
+- **Exact recipe:** `read-configuration` with `target=com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations`
+- **Exact verification command:** to be derived from the read-configuration recipe.
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 6 / item 1 (GetDwellingByIdQueryHandler).
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-handler GetDwellingByIdQueryHandler to AF5 (Migration Phase #6)`
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 6 / GetAllDwellingsQueryHandler.
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-handler GetAllDwellingsQueryHandler to AF5 (Migration Phase #6)` (GetDwellingByIdQueryHandler was `addbc3d`)
 
-### Phase 6 progress
+### Phase 6 summary (all 2 query-handler classes done)
 
-| # | Class | Notes | Result |
+| # | Class | Shape | Commit |
 |---|---|---|---|
-| 1 | GetDwellingByIdQueryHandler | Single-natured `@QueryHandler` — already on AF5 import, no `MetaData`/`@MetaDataValue`/`UnitOfWork` params | recipe-pre-migrated by Phase 1 OpenRewrite — no code change. Added scoped profile, clean compile passes. |
+| 1 | GetDwellingByIdQueryHandler | Single-natured — already on AF5 import (profile only) | `addbc3d` |
+| 2 | GetAllDwellingsQueryHandler | Dual-natured `@QueryHandler` + `@EventHandler` — both annotations already on AF5 imports (profile only) | _this commit_ |
+
+**Pattern recap.** OpenRewrite (Phase 1) had already moved both `@QueryHandler` imports to `org.axonframework.messaging.queryhandling.annotation.QueryHandler`. Neither class uses `MetaData` / `@MetaDataValue` on a `@QueryHandler` method, neither has a `UnitOfWork` parameter, neither catches `QueryExecutionException`. Recipe is a no-op on the source — both items produce only their per-target Maven profile.
+
+For item 2 (dual-natured), the existing Phase 3 profile `migration-event-processor-GetAllDwellingsQueryHandler` covers the `@EventHandler` shape; the new `migration-query-handler-GetAllDwellingsQueryHandler` profile covers the `@QueryHandler` shape independently. Both profiles list the class itself plus its dependents — sibling profiles are independent (no shared `<include>` entries) per the maven-profile recipe.
+
+**Combined scoped compile across both Phase 6 profiles passes:**
+```bash
+./mvnw -P migration-query-handler-GetDwellingByIdQueryHandler,migration-query-handler-GetAllDwellingsQueryHandler \
+  clean test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false
+```
 
 ### Phase 5 summary (all 2 query-gateway callers done)
 
@@ -177,7 +188,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
 | 4 | command-gateway | iterative | complete | 6 / 6 | _this commit (RecruitCreatureMcp)_ |
 | 5 | query-gateway | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsMcp)_ |
-| 6 | query-handler | iterative | in-progress | 1 / 2 | _this commit (GetDwellingByIdQueryHandler)_ |
+| 6 | query-handler | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsQueryHandler)_ |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
 | 9 | event-storage-engine | one-shot | pending | — | — |
@@ -264,7 +275,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
 | 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (E2E — deferred to stabilization) | done (recipe-pre-migrated by OpenRewrite — only added scoped profile) | _this commit_ |
-| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` | pending | — |
+| 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` (E2E — deferred to stabilization) | done (recipe-pre-migrated by OpenRewrite — only added scoped profile; sibling Phase 3 profile covers `@EventHandler` shape) | _this commit_ |
 
 ### Migration Phase #7 — read-configuration
 
