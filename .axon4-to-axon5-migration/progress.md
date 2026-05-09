@@ -28,14 +28,20 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #6 — query-handler (iterative)` — Phase 5 complete (2/2).
-- **Phase status:** Phase 5 complete; Phase 6 pending.
-- **Next action (one sentence):** Start Migration Phase #6 — migrate the first `@QueryHandler` class `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler`.
-- **Exact recipe:** `query-handler` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler`
-- **Exact verification command:** to be derived from the query-handler recipe.
+- **Current Migration Phase:** `Migration Phase #6 — query-handler (iterative)` — 1/2 done.
+- **Phase status:** Phase 6 in-progress (item 1 done, item 2 pending).
+- **Next action (one sentence):** Migrate the second `@QueryHandler` class `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` (dual-natured — `@EventHandler` shape already migrated in Phase 3; query-handler recipe finishes the unit).
+- **Exact recipe:** `query-handler` with `target=com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler`
+- **Exact verification command:** `./mvnw -P migration-query-handler-GetAllDwellingsQueryHandler clean test-compile -DskipTests -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 5 / GetAllDwellingsMcp.
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-gateway GetAllDwellingsMcp to AF5 (Migration Phase #5)` (GetDwellingByIdRestApi was `b73a4f8`)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 6 / item 1 (GetDwellingByIdQueryHandler).
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-handler GetDwellingByIdQueryHandler to AF5 (Migration Phase #6)`
+
+### Phase 6 progress
+
+| # | Class | Notes | Result |
+|---|---|---|---|
+| 1 | GetDwellingByIdQueryHandler | Single-natured `@QueryHandler` — already on AF5 import, no `MetaData`/`@MetaDataValue`/`UnitOfWork` params | recipe-pre-migrated by Phase 1 OpenRewrite — no code change. Added scoped profile, clean compile passes. |
 
 ### Phase 5 summary (all 2 query-gateway callers done)
 
@@ -171,7 +177,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 3 | event-processor | iterative | complete | 5 / 5 | _this commit (WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures)_ |
 | 4 | command-gateway | iterative | complete | 6 / 6 | _this commit (RecruitCreatureMcp)_ |
 | 5 | query-gateway | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsMcp)_ |
-| 6 | query-handler | iterative | pending | 0 / 2 | — |
+| 6 | query-handler | iterative | in-progress | 1 / 2 | _this commit (GetDwellingByIdQueryHandler)_ |
 | 7 | read-configuration | iterative | pending | 0 / 1 | — |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
 | 9 | event-storage-engine | one-shot | pending | — | — |
@@ -257,7 +263,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
-| 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` | pending | — |
+| 1 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdTest` (E2E — deferred to stabilization) | done (recipe-pre-migrated by OpenRewrite — only added scoped profile) | _this commit_ |
 | 2 | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler` | `com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsTest` | pending | — |
 
 ### Migration Phase #7 — read-configuration
