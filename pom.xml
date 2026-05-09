@@ -172,6 +172,44 @@
 
 	<profiles>
 		<profile>
+			<id>migration-aggregate-ResourcesPool</id>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-annotations</artifactId>
+						<version>2.21</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPool.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPoolId.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPoolCommand.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/write/deposit/DepositResources.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/write/withdraw/WithdrawResources.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/write/withdraw/CannotWithdrawMoreThanDepositedResources.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/events/ResourcesPoolEvent.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/events/ResourcesDeposited.java</include>
+								<include>com/dddheroes/heroesofddd/resourcespool/events/ResourcesWithdrawn.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPoolTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/resourcespool/write/deposit/DepositResourcesTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/resourcespool/write/withdraw/WithdrawResourcesTest.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-aggregate-Dwelling</id>
 			<dependencyManagement>
 				<dependencies>

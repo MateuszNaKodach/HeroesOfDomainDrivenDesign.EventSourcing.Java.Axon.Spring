@@ -3,7 +3,6 @@ package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,12 +20,14 @@ class WithdrawResourcesTest extends ResourcesPoolTest {
         var whenCommand = withdrawResources(GOLD, 1000);
 
         // then
+        // AF5: empty ResourcesPool materialised by no-arg @EntityCreator → balance is empty (not null) →
+        // CannotWithdrawMoreThanDepositedResources fires (empty balance does not contain the requested amount).
         fixture.given()
                .events(givenEvents)
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
+               .exception(DomainRule.ViolatedException.class, "Cannot withdraw more than deposited resources");
     }
 
     @Test
