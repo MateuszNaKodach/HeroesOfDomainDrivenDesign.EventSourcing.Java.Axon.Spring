@@ -8,7 +8,6 @@ import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
 import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -24,12 +23,14 @@ public class FinishDayTest extends CalendarTest {
         var whenCommand = FinishDay.command(calendarId.raw(), 1, 1, 1);
 
         // then
+        // AF5: with @EntityCreator no-arg, the framework materialises an empty Calendar and runs
+        // the instance handler — currentMonth/Week/Day are null, so the rule fires with !isCurrentDay.
         fixture.given()
                .noPriorActivity()
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
+               .exception(DomainRule.ViolatedException.class, "Can only finish current day");
     }
 
     @Test

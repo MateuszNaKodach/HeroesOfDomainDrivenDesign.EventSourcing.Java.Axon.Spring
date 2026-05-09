@@ -29,19 +29,19 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 ## ▶︎ RESUME HERE — read this first
 
 - **Current Migration Phase:** `Migration Phase #2 — aggregate (iterative)`
-- **Phase status:** in-progress (2 / 5 done — Army, Astrologers)
-- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.calendar.write.Calendar` (same pattern applied to Army and Astrologers; expect mostly verification + `@AfterEach` on test base + profile setup).
-- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.calendar.write.Calendar`
+- **Phase status:** in-progress (3 / 5 done — Army, Astrologers, Calendar)
+- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling` (same pattern; Dwelling is the largest aggregate and may have an `IncreaseAvailableCreaturesTest` that still expects `AggregateNotFoundException` — needs the now-familiar fix).
+- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling`
 - **Exact verification command:**
   ```bash
-  ./mvnw test -P migration-aggregate-Calendar \
-    -Dtest='com.dddheroes.heroesofddd.calendar.write.startday.StartDayTest,com.dddheroes.heroesofddd.calendar.write.finishday.FinishDayTest' \
+  ./mvnw test -P migration-aggregate-Dwelling \
+    -Dtest='com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingTest,com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesTest,com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureTest,com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRequiresResourcesTest,com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest,com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingIdTest' \
     -DfailIfNoTests=false \
     -Dsurefire.failIfNoSpecifiedTests=false
   ```
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 2 / Astrologers. The user's WIP under `.claude/skills/axon4-to-axon5-migration/...` is unrelated and must NOT be staged by the orchestrator.
-- **Last commit recorded by orchestrator:** `8bf3deb` — `refactor(af5-migration): migrate aggregate Army to AF5 (Migration Phase #2)` (Astrologers commit SHA filled in by next commit per chicken-and-egg rule)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 2 / Calendar.
+- **Last commit recorded by orchestrator:** `2bcc939` — `refactor(af5-migration): migrate aggregate Astrologers to AF5 (Migration Phase #2)` (Calendar commit SHA filled in by next commit per chicken-and-egg rule)
 
 ### Pattern observed on Army (re-use for other aggregates)
 
@@ -60,7 +60,7 @@ What Phase 2 still has to do per aggregate:
 
 - **Target project:** `/Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring`
 - **Started:** 2026-05-09
-- **Last updated:** 2026-05-09 (Phase 2 / Astrologers done)
+- **Last updated:** 2026-05-09 (Phase 2 / Calendar done)
 - **Active branch:** `af5-migration/test1`
 - **Build tool:** Maven (single module)
 - **Starting Axon version:** 4.13.1 (`axon-spring-boot-starter`)
@@ -87,7 +87,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | # | Recipe | Mode | Status | Items done / total | Last commit |
 |---|---|---|---|---|---|
 | 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
-| 2 | aggregate | iterative | in-progress | 2 / 5 | _this commit (Astrologers)_ |
+| 2 | aggregate | iterative | in-progress | 3 / 5 | _this commit (Calendar)_ |
 | 3 | event-processor | iterative | pending | 0 / 5 | — |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
@@ -129,8 +129,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | # | FQ aggregate | FQ test | Status | Commit |
 |---|---|---|---|---|
 | 1 | `com.dddheroes.heroesofddd.armies.write.Army` | `com.dddheroes.heroesofddd.armies.write.ArmyTest` (base) + `AddCreatureToArmyTest`, `RemoveCreatureFromArmyTest` (8 tests) | done | `8bf3deb` |
-| 2 | `com.dddheroes.heroesofddd.astrologers.write.Astrologers` | `com.dddheroes.heroesofddd.astrologers.write.AstrologersTest` (base) + `proclaimweeksymbol.ProclaimWeekSymbolTest` (3 tests) | done | _this commit_ |
-| 3 | `com.dddheroes.heroesofddd.calendar.write.Calendar` | `com.dddheroes.heroesofddd.calendar.write.CalendarTest` | pending | — |
+| 2 | `com.dddheroes.heroesofddd.astrologers.write.Astrologers` | `com.dddheroes.heroesofddd.astrologers.write.AstrologersTest` (base) + `proclaimweeksymbol.ProclaimWeekSymbolTest` (3 tests) | done | `2bcc939` |
+| 3 | `com.dddheroes.heroesofddd.calendar.write.Calendar` | `com.dddheroes.heroesofddd.calendar.write.CalendarTest` (base) + `startday.StartDayTest`, `finishday.FinishDayTest` (8 tests) | done | _this commit_ |
 | 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling` | `com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest` | pending | — |
 | 5 | `com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool` | `com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest` | pending | — |
 
