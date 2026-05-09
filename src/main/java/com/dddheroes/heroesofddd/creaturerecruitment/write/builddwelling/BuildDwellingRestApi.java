@@ -39,6 +39,7 @@ class BuildDwellingRestApi {
                 requestBody.creatureId(),
                 requestBody.costPerTroop()
         );
-        return commandGateway.send(command, GameMetaData.with(gameId, playerId));
+        return commandGateway.send(command, GameMetaData.with(gameId, playerId))
+                             .resultAs(Void.class);
     }
 }
