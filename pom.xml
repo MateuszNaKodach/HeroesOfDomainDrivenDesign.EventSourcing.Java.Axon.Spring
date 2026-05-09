@@ -29,6 +29,7 @@
 	<properties>
 		<assertj.version>3.27.3</assertj.version>
 		<axon.version>5.1.1-SNAPSHOT</axon.version>
+		<axon5.version>5.1.1-SNAPSHOT</axon5.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<java.version>23</java.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
@@ -168,5 +169,48 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>migration-aggregate-Army</id>
+			<dependencyManagement>
+				<dependencies>
+					<!-- Jackson 3 (used by AF5 axon-conversion) requires jackson-annotations 2.21+.
+					     Spring Boot 3.5.x pins 2.19.x via its BOM, which breaks AxonTestFixture. -->
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-annotations</artifactId>
+						<version>2.21</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/armies/write/Army.java</include>
+								<include>com/dddheroes/heroesofddd/armies/write/ArmyCommand.java</include>
+								<include>com/dddheroes/heroesofddd/armies/write/addcreature/AddCreatureToArmy.java</include>
+								<include>com/dddheroes/heroesofddd/armies/write/addcreature/CanHaveMax7CreatureStacksInArmy.java</include>
+								<include>com/dddheroes/heroesofddd/armies/write/removecreature/RemoveCreatureFromArmy.java</include>
+								<include>com/dddheroes/heroesofddd/armies/write/removecreature/CanRemoveOnlyPresentCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/armies/events/ArmyEvent.java</include>
+								<include>com/dddheroes/heroesofddd/armies/events/CreatureAddedToArmy.java</include>
+								<include>com/dddheroes/heroesofddd/armies/events/CreatureRemovedFromArmy.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>com/dddheroes/heroesofddd/armies/write/ArmyTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/armies/write/addcreature/AddCreatureToArmyTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/armies/write/removecreature/RemoveCreatureFromArmyTest.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

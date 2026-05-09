@@ -8,6 +8,7 @@ import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.test.fixture.AxonTestFixture;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 public class ArmyTest {
@@ -19,6 +20,11 @@ public class ArmyTest {
     @BeforeEach
     void setUp() {
         fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(ArmyId.class, Army.class)));
+    }
+
+    @AfterEach
+    void tearDown() {
+        fixture.stop();
     }
 
     protected CreatureAddedToArmy creatureAddedToArmy(CreatureId creatureId, int quantity) {

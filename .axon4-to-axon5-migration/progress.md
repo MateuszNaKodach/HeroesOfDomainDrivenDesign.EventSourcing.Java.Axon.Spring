@@ -29,20 +29,31 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 ## ▶︎ RESUME HERE — read this first
 
 - **Current Migration Phase:** `Migration Phase #2 — aggregate (iterative)`
-- **Phase status:** pending (Phase 1 complete)
-- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.armies.write.Army` (the OpenRewrite recipe in Phase 1 already converted it to `@EventSourced` + `EventAppender` — Phase 2's job is per-aggregate verification, restoring `CREATE_IF_MISSING` semantics where needed via AF5's new entity-creation model, and seeding the per-target Maven profile).
-- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.armies.write.Army`
+- **Phase status:** in-progress (1 / 5 done — Army)
+- **Next action (one sentence):** Migrate aggregate `com.dddheroes.heroesofddd.astrologers.write.Astrologers` (Army migration confirmed OpenRewrite produced correct AF5 shape — same pattern likely holds for the other three aggregates with `CREATE_IF_MISSING` originally; per-aggregate work is mostly verification + test-expectation fixes for the AF5 "empty entity materialisation" gotcha).
+- **Exact recipe:** `aggregate` with `target=com.dddheroes.heroesofddd.astrologers.write.Astrologers`
 - **Exact verification command:**
   ```bash
-  ./mvnw test -P migration-aggregate-Army \
-    -Dtest='com.dddheroes.heroesofddd.armies.write.ArmyTest' \
+  ./mvnw test -P migration-aggregate-Astrologers \
+    -Dtest='com.dddheroes.heroesofddd.astrologers.write.AstrologersTest,com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbolTest' \
     -DfailIfNoTests=false \
     -Dsurefire.failIfNoSpecifiedTests=false
   ```
-  (Profile `migration-aggregate-Army` will be seeded by the recipe — see [maven-profile/maven-profile.md](../.claude/skills/axon4-to-axon5-migration/references/maven-profile/maven-profile.md).)
+  (Profile to be seeded by the recipe.)
 - **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 1 (`chore(af5-migration): apply OpenRewrite recipe UpgradeAxon4ToAxoniq5@5.1.1-SNAPSHOT (Migration Phase #1)`). The user's WIP under `.claude/skills/axon4-to-axon5-migration/...` is unrelated and must NOT be staged by the orchestrator.
-- **Last commit recorded by orchestrator:** `2e10065` — `chore(af5-migration): initialize migration` (Phase 1 commit SHA recorded in next item's commit per chicken-and-egg rule)
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 2 / Army. The user's WIP under `.claude/skills/axon4-to-axon5-migration/...` is unrelated and must NOT be staged by the orchestrator.
+- **Last commit recorded by orchestrator:** `1911b46` — `chore(af5-migration): apply OpenRewrite recipe UpgradeAxon4ToAxoniq5@5.1.1-SNAPSHOT (Migration Phase #1)` (Phase-2/Army commit SHA filled in by next commit per chicken-and-egg rule)
+
+### Pattern observed on Army (re-use for other aggregates)
+
+OpenRewrite (Phase 1) was exhaustive — for an aggregate with `CREATE_IF_MISSING` semantics it already produced the correct AF5 shape: instance `@CommandHandler` + no-arg `@EntityCreator`, `apply(...)` → `eventAppender.append(...)`, `@EventSourced(tagKey, idType)`, commands annotated `@Command` + `@TargetEntityId`, events annotated `@Event` + `@EventTag(key)`, test fixture migrated to `AxonTestFixture.with(EventSourcingConfigurer...)`.
+
+What Phase 2 still has to do per aggregate:
+
+1. Add `@AfterEach tearDown() { fixture.stop(); }` to the test base class (recipe T.2 — OpenRewrite skipped this).
+2. Update any test that expected `AggregateNotFoundException` against an empty/missing aggregate — AF5 with no-arg `@EntityCreator` materialises an empty entity, so the domain rule fires instead. Replace expectation with the actual domain exception.
+3. Seed `<profile id="migration-aggregate-<Name>">` in pom.xml — `<includes>` for the aggregate + commands + events + domain helpers, `<testIncludes>` for the test base + scenario tests, plus the `jackson-annotations:2.21` pin in `<dependencyManagement>` to make `AxonTestFixture` work under Spring Boot 3.5.x.
+4. Run scoped verify: `./mvnw -P <profile> test -Dtest='<FQ tests>' -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`.
 
 ---
 
@@ -50,7 +61,7 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 - **Target project:** `/Users/mateusznowak/GitRepos/MateuszNaKodach/HeroesOfDomainDrivenDesign.EventSourcing.Java.Axon.Spring`
 - **Started:** 2026-05-09
-- **Last updated:** 2026-05-09 (Phase 1 complete)
+- **Last updated:** 2026-05-09 (Phase 2 / Army done)
 - **Active branch:** `af5-migration/test1`
 - **Build tool:** Maven (single module)
 - **Starting Axon version:** 4.13.1 (`axon-spring-boot-starter`)
@@ -76,8 +87,8 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 
 | # | Recipe | Mode | Status | Items done / total | Last commit |
 |---|---|---|---|---|---|
-| 1 | openrewrite | one-shot | complete | n/a | _this commit (see `git log --grep='Migration Phase #1'`)_ |
-| 2 | aggregate | iterative | pending | 0 / 5 | — |
+| 1 | openrewrite | one-shot | complete | n/a | `1911b46` |
+| 2 | aggregate | iterative | in-progress | 1 / 5 | _this commit (Army)_ |
 | 3 | event-processor | iterative | pending | 0 / 5 | — |
 | 4 | command-gateway | iterative | pending | 0 / 6 | — |
 | 5 | query-gateway | iterative | pending | 0 / 2 | — |
@@ -118,7 +129,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 
 | # | FQ aggregate | FQ test | Status | Commit |
 |---|---|---|---|---|
-| 1 | `com.dddheroes.heroesofddd.armies.write.Army` | `com.dddheroes.heroesofddd.armies.write.ArmyTest` | pending | — |
+| 1 | `com.dddheroes.heroesofddd.armies.write.Army` | `com.dddheroes.heroesofddd.armies.write.ArmyTest` (base) + `AddCreatureToArmyTest`, `RemoveCreatureFromArmyTest` (8 tests) | done | _this commit_ |
 | 2 | `com.dddheroes.heroesofddd.astrologers.write.Astrologers` | `com.dddheroes.heroesofddd.astrologers.write.AstrologersTest` | pending | — |
 | 3 | `com.dddheroes.heroesofddd.calendar.write.Calendar` | `com.dddheroes.heroesofddd.calendar.write.CalendarTest` | pending | — |
 | 4 | `com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling` | `com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest` | pending | — |
