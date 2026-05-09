@@ -647,6 +647,28 @@
 			</build>
 		</profile>
 		<profile>
+			<id>migration-query-gateway-GetAllDwellingsMcp</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsMcp.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellings.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>__no_scoped_test__/None.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-event-processor-GetAllDwellingsQueryHandler</id>
 			<build>
 				<plugins>
