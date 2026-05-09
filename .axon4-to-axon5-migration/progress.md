@@ -28,14 +28,33 @@ scoped through phases 2–8. Stabilization drops all `migration-*` profiles.
 
 ## ▶︎ RESUME HERE — read this first
 
-- **Current Migration Phase:** `Migration Phase #7 — read-configuration (iterative)` — Phase 6 complete (2/2).
-- **Phase status:** Phase 6 complete; Phase 7 pending.
-- **Next action (one sentence):** Start Migration Phase #7 — migrate `com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations` (injects AF4 `Configuration` / `EventProcessingConfiguration`).
-- **Exact recipe:** `read-configuration` with `target=com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations`
-- **Exact verification command:** to be derived from the read-configuration recipe.
-- **Awaiting user input?** no
-- **Working-tree expectation at resume time:** clean — last migration commit is Phase 6 / GetAllDwellingsQueryHandler.
-- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate query-handler GetAllDwellingsQueryHandler to AF5 (Migration Phase #6)` (GetDwellingByIdQueryHandler was `addbc3d`)
+- **Current Migration Phase:** `Migration Phase #9 — event-storage-engine (one-shot)` — Phase 7 complete (1/1), Phase 8 already skipped (no candidates).
+- **Phase status:** Phase 7 complete; Phase 8 skipped; Phase 9 pending.
+- **Next action (one sentence):** Start Migration Phase #9 — run the one-shot `event-storage-engine` recipe to swap the project's existing JPA event store config to AF5 (likely Path A — JPA event store via `axoniq-spring-boot-starter` + PostgreSQL Testcontainers, no explicit `EventStorageEngine` bean declared).
+- **Exact recipe:** `event-storage-engine` (one-shot, no `target` — orchestrator picks Path A/B/C from the project's existing storage path)
+- **Exact verification command:** to be derived from the event-storage-engine recipe.
+- **Awaiting user input?** no — but Phase 9 will surface storage-path AskUserQuestion (Path A vs B vs C) per pinned-decisions block.
+- **Working-tree expectation at resume time:** clean — last migration commit is Phase 7 / StreamProcessorsOperations.
+- **Last commit recorded by orchestrator:** _this commit_ — `refactor(af5-migration): migrate read-configuration StreamProcessorsOperations to AF5 (Migration Phase #7)`
+
+### Phase 7 summary (1/1 read-configuration class done)
+
+| # | Class | Notes | Commit |
+|---|---|---|---|
+| 1 | StreamProcessorsOperations | `reset(...)` migrated end-to-end (AxonConfiguration, StreamingEventProcessor, async lifecycle); `progressOf(...)` stubbed (`UnsupportedOperationException` + `TODO #LLM`) — AF5 `TokenStore.fetchSegments/fetchToken` are async + ProcessingContext-required, beyond read-configuration recipe scope. `progressOf` is unused outside this class. | _this commit_ |
+
+**Pattern recap.** Real migration this time, not a no-op. Switched `EventProcessingConfiguration` + `TokenStore` injection to a single `AxonConfiguration` (per recipe step 2 — `EventProcessingConfiguration` injectors switch to `AxonConfiguration`, the entry point for module lookups). Rewrote the AF4 dedicated lookup `eventProcessorByProcessingGroup(name, TrackingEventProcessor.class)` as the AF5 module hop:
+
+```java
+axonConfiguration
+    .getModuleConfiguration("EventProcessor[" + processor + "]")
+    .flatMap(m -> m.getOptionalComponent(StreamingEventProcessor.class))
+```
+
+`TrackingEventProcessor` (removed in AF5) → `StreamingEventProcessor`. Async lifecycle bridged with `.orTimeout(30, TimeUnit.SECONDS).join()` per recipe step 5 — `shutDown()` (capital `D`, AF4) became `shutdown()` (AF5).
+
+**Pinned for stabilization:**
+- `progressOf` is a TODO (admin endpoint, currently unreferenced). Reimplement via `StreamingEventProcessor.processingStatus()` (synchronous `Map<Integer, EventTrackerStatus>` API) when needed.
 
 ### Phase 6 summary (all 2 query-handler classes done)
 
@@ -189,7 +208,7 @@ Legend: `pending` · `in-progress` · `awaiting-checkpoint` · `complete` · `pa
 | 4 | command-gateway | iterative | complete | 6 / 6 | _this commit (RecruitCreatureMcp)_ |
 | 5 | query-gateway | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsMcp)_ |
 | 6 | query-handler | iterative | complete | 2 / 2 | _this commit (GetAllDwellingsQueryHandler)_ |
-| 7 | read-configuration | iterative | pending | 0 / 1 | — |
+| 7 | read-configuration | iterative | complete | 1 / 1 | _this commit (StreamProcessorsOperations)_ |
 | 8 | write-configuration | iterative | skipped | 0 / 0 (none discovered) | — |
 | 9 | event-storage-engine | one-shot | pending | — | — |
 | — | stabilization | — | pending | — | — |
@@ -281,7 +300,7 @@ After exclude-when filter (rows whose file also has `@EventHandler` / `@CommandH
 
 | # | FQ class | FQ test | Status | Commit |
 |---|---|---|---|---|
-| 1 | `com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations` | _none direct_ | pending | — |
+| 1 | `com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations` | _none direct_ | done (`reset(...)` migrated; `progressOf(...)` deferred — AF5 `TokenStore` async + ProcessingContext-required) | _this commit_ |
 
 ### Migration Phase #8 — write-configuration
 
