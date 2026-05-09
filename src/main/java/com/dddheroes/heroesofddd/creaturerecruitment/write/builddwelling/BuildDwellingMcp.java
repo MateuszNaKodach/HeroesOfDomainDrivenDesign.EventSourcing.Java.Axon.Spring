@@ -42,6 +42,7 @@ public class BuildDwellingMcp {
             var command = BuildDwelling.command(dwellingId, creatureId, costPerTroop);
 
             return commandGateway.send(command, GameMetaData.with(gameId, playerId))
+                    .resultAs(Void.class)
                     .thenApply(_ -> getSuccess(dwellingId, creatureId, costPerTroop, playerId))
                     .exceptionally(throwable -> failure(dwellingId, throwable));
         }
