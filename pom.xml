@@ -172,6 +172,25 @@
 
 	<profiles>
 		<profile>
+			<id>migration-event-store-EventStoreConfiguration</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/shared/infrastructure/EventStoreConfiguration.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>**/__none__</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
 			<id>migration-aggregate-ResourcesPool</id>
 			<dependencyManagement>
 				<dependencies>
