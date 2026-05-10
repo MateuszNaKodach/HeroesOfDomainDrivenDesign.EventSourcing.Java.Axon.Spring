@@ -1,10 +1,8 @@
 package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
-import com.dddheroes.heroesofddd.astrologers.events.AstrologersEvent;
 import com.dddheroes.heroesofddd.astrologers.write.AstrologersId;
 import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
-import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingEvent;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreatures;
@@ -15,11 +13,9 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
+import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
-import org.axonframework.messaging.eventhandling.DomainEventMessage;
-import org.axonframework.messaging.eventhandling.GenericDomainEventMessage;
-import org.axonframework.messaging.eventhandling.gateway.EventGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +33,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
     private static final String PLAYER_ID = PlayerId.random().raw();
 
     @Autowired
-    private EventGateway eventGateway;
+    private AggregateEventPublisher aggregateEventPublisher;
 
     @MockitoSpyBean
     private CommandGateway commandGateway;
@@ -103,61 +99,21 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
         var dwellingId = DwellingId.random();
         var costPerTroop = Resources.from(ResourceType.GOLD, Amount.of(1000));
         var event = DwellingBuilt.event(dwellingId, CreatureId.of(creatureId), costPerTroop);
-        eventGateway.publish(dwellingDomainEvent(dwellingId.raw(), 0, event));
+        aggregateEventPublisher.publish("Dwelling", dwellingId.raw(), gameMetaData(), event);
         return dwellingId.raw();
     }
 
-    private void astrologersEvents(String gameId, WeekSymbolProclaimed... events) {
-        for (var event : events) {
-            var aggregateSequence = event.week() - 1;
-            eventGateway.publish(astrologersDomainEvent(gameId, aggregateSequence, event));
-        }
+    private void astrologersEvents(String astrologersId, WeekSymbolProclaimed... events) {
+        aggregateEventPublisher.publish("Astrologers", astrologersId, gameMetaData(), (Object[]) events);
     }
 
-    private static DomainEventMessage<?> astrologersDomainEvent(String identifier, int sequenceNumber,
-                                                                AstrologersEvent payload) {
-        return givenDomainEvent(
-                "Astrologers",
-                identifier,
-                sequenceNumber,
-                payload
-        );
-    }
-
-    private static DomainEventMessage<?> dwellingDomainEvent(
-            String identifier,
-            int sequenceNumber,
-            DwellingEvent payload
-    ) {
-        return givenDomainEvent(
-                "Dwelling",
-                identifier,
-                sequenceNumber,
-                payload
-        );
-    }
-
-    private static DomainEventMessage<?> givenDomainEvent(
-            String aggregateType,
-            String identifier,
-            int sequenceNumber,
-            Object payload
-    ) {
-        return new GenericDomainEventMessage<>(
-                aggregateType,
-                identifier,
-                sequenceNumber,
-                payload
-        ).andMetaData(gameMetaData());
-    }
-
-    private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand1) {
+    private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand) {
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(expectedCommand1, gameMetaData()));
+                .send(expectedCommand, gameMetaData()).resultAs(Void.class).join());
     }
 
     private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
-        verify(commandGateway, never()).sendAndWait(notExpectedCommand, gameMetaData());
+        verify(commandGateway, never()).send(notExpectedCommand, gameMetaData()).resultAs(Void.class).join();
     }
 
     private static Metadata gameMetaData() {

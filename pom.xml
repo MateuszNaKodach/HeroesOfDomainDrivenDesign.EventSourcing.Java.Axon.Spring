@@ -76,11 +76,11 @@
 			<artifactId>axoniq-spring-boot-starter</artifactId>
             <version>5.1.1-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>io.axoniq.console</groupId>
-			<artifactId>console-framework-client-spring-boot-starter</artifactId>
-			<version>${axoniq-console.version}</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>io.axoniq.console</groupId>-->
+<!--			<artifactId>console-framework-client-spring-boot-starter</artifactId>-->
+<!--			<version>${axoniq-console.version}</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-eventsourcing</artifactId>
@@ -101,6 +101,11 @@
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
 			<version>${spring-ai.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains</groupId>
+			<artifactId>annotations</artifactId>
+			<version>26.0.2-1</version>
 		</dependency>
 
 		<!-- Runtime dependencies -->
@@ -171,6 +176,33 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>stabilization-WhenWeekStartedThenProclaimWeekSymbolTest</id>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-annotations</artifactId>
+						<version>2.21</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<testIncludes>
+								<testInclude>com/dddheroes/heroesofddd/TestcontainersConfiguration.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/utils/AwaitilityUtils.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolTest.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>migration-event-store-EventStoreConfiguration</id>
 			<build>

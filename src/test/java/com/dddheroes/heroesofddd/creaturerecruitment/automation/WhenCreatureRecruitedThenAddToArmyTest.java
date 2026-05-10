@@ -16,11 +16,9 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
+import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
-import org.axonframework.messaging.eventhandling.DomainEventMessage;
-import org.axonframework.messaging.eventhandling.GenericDomainEventMessage;
-import org.axonframework.messaging.eventhandling.gateway.EventGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,7 +42,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
     );
 
     @Autowired
-    private EventGateway eventGateway;
+    private AggregateEventPublisher aggregateEventPublisher;
 
     @MockitoSpyBean
     private CommandGateway commandGateway;
@@ -67,7 +65,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData())
+                .send(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData()).resultAs(Void.class).join()
         );
     }
 
@@ -99,10 +97,10 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData())
+                .send(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData()).resultAs(Void.class).join()
         );
         awaitUntilAsserted(() -> verify(commandGateway, never())
-                .sendAndWait(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData())
+                .send(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData()).resultAs(Void.class).join()
         );
     }
 
@@ -135,42 +133,19 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, never())
-                .sendAndWait(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData())
+                .send(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData()).resultAs(Void.class).join()
         );
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData())
+                .send(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData()).resultAs(Void.class).join()
         );
     }
 
     private void givenDwellingEvents(String dwellingId, DwellingEvent... events) {
-        for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]));
-        }
-    }
-
-    private DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber, DwellingEvent payload) {
-        return new GenericDomainEventMessage<>(
-                "Dwelling",
-                dwellingId,
-                sequenceNumber,
-                payload
-        ).andMetaData(gameMetaData());
+        aggregateEventPublisher.publish("Dwelling", dwellingId, gameMetaData(), (Object[]) events);
     }
 
     private void givenArmyEvents(String armyId, ArmyEvent... events) {
-        for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(armyDomainEvent(armyId, i, events[i]));
-        }
-    }
-
-
-    private DomainEventMessage<?> armyDomainEvent(String armyId, int sequenceNumber, ArmyEvent payload) {
-        return new GenericDomainEventMessage<>(
-                "Army",
-                armyId,
-                sequenceNumber,
-                payload
-        ).andMetaData(gameMetaData());
+        aggregateEventPublisher.publish("Army", armyId, gameMetaData(), (Object[]) events);
     }
 
     private static Metadata gameMetaData() {

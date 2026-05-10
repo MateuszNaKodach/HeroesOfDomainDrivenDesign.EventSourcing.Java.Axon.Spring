@@ -80,12 +80,12 @@ class RecruitCreatureRequiresResourcesTest {
 
         // then
         assertDoesNotThrow(() -> executePlayerCommand(recruitCommand));
-        eventStoreAssertions.assertEventStored(dwellingId, CreatureRecruited.class);
-        eventStoreAssertions.assertEventNotStored(dwellingId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertEventStored("Dwelling", dwellingId, CreatureRecruited.class);
+        eventStoreAssertions.assertEventNotStored("Dwelling", dwellingId, ResourcesWithdrawn.class);
     }
 
     private void executePlayerCommand(Command command) {
-        commandGateway.sendAndWait(command, gameMetaData());
+        commandGateway.send(command, gameMetaData()).resultAs(Void.class).join();
     }
 
     private static Metadata gameMetaData() {
