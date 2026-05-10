@@ -5,9 +5,7 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
-import org.axonframework.messaging.eventhandling.DomainEventMessage;
-import org.axonframework.messaging.eventhandling.GenericDomainEventMessage;
-import org.axonframework.messaging.eventhandling.gateway.EventGateway;
+import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 
 import java.util.Map;
 
@@ -20,25 +18,18 @@ public abstract class DwellingReadModelTest {
             ResourceType.MERCURY.name(), 1
     );
 
-    protected EventGateway eventGateway;
+    protected AggregateEventPublisher aggregateEventPublisher;
 
-    protected DwellingReadModelTest(EventGateway eventGateway) {
-        this.eventGateway = eventGateway;
+    protected DwellingReadModelTest(AggregateEventPublisher aggregateEventPublisher) {
+        this.aggregateEventPublisher = aggregateEventPublisher;
     }
 
     protected void givenDwellingEvents(String dwellingId, DwellingEvent... events) {
-        for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(dwellingDomainEvent(dwellingId, i, events[i]));
-        }
-    }
-
-    protected DomainEventMessage<?> dwellingDomainEvent(String dwellingId, int sequenceNumber,
-                                                             DwellingEvent payload) {
-        return new GenericDomainEventMessage<>(
+        aggregateEventPublisher.publish(
                 "Dwelling",
                 dwellingId,
-                sequenceNumber,
-                payload
-        ).andMetaData(GameMetaData.with(GAME_ID, PLAYER_ID));
+                GameMetaData.with(GAME_ID, PLAYER_ID),
+                (Object[]) events
+        );
     }
 }

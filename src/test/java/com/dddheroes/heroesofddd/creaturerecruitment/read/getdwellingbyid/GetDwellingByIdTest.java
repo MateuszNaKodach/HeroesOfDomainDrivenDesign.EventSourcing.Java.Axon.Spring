@@ -9,7 +9,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesCh
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
-import org.axonframework.messaging.eventhandling.gateway.EventGateway;
+import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 import org.axonframework.messaging.queryhandling.gateway.QueryGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,10 +25,10 @@ class GetDwellingByIdTest extends DwellingReadModelTest {
     private final QueryGateway queryGateway;
 
     GetDwellingByIdTest(
-            EventGateway eventGateway,
+            AggregateEventPublisher aggregateEventPublisher,
             QueryGateway queryGateway
     ) {
-        super(eventGateway);
+        super(aggregateEventPublisher);
         this.queryGateway = queryGateway;
     }
 

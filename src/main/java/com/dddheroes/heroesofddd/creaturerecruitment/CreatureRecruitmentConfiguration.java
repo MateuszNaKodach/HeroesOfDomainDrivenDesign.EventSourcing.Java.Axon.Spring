@@ -9,9 +9,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
-import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
-import org.axonframework.eventsourcing.snapshot.api.Snapshotter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,10 +32,10 @@ class CreatureRecruitmentConfiguration {
         };
     }
 
-    @Bean
-    SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
-        return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
-    }
+//    @Bean
+//    SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
+//        return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
+//    }
 
     @Bean
     public Module dwellingIdSerializationModule() {

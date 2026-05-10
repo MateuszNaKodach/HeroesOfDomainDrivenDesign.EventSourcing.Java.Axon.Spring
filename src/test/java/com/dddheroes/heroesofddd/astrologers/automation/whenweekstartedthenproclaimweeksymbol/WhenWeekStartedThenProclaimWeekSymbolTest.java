@@ -9,11 +9,9 @@ import com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcesso
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
+import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
-import org.axonframework.messaging.eventhandling.DomainEventMessage;
-import org.axonframework.messaging.eventhandling.GenericDomainEventMessage;
-import org.axonframework.messaging.eventhandling.gateway.EventGateway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,7 +31,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
     private static final String PLAYER_ID = PlayerId.random().raw();
 
     @Autowired
-    private EventGateway eventGateway;
+    private AggregateEventPublisher aggregateEventPublisher;
 
     @Autowired
     private StreamProcessorsOperations streamProcessorsOperations;
@@ -47,7 +45,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
         var gameId = UUID.randomUUID().toString();
         var calendarId = CalendarId.of(gameId);
         givenCalendarEvents(
-                gameId,
+                calendarId,
                 new DayStarted(calendarId.raw(), 1, 1, 1)
         );
 
@@ -56,7 +54,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
+                .send(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData())).resultAs(Void.class).join()
         );
     }
 
@@ -66,7 +64,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
         var gameId = UUID.randomUUID().toString();
         var calendarId = CalendarId.of(gameId);
         givenCalendarEvents(
-                gameId,
+                calendarId,
                 new DayStarted(calendarId.raw(), 1, 1, 1)
         );
 
@@ -75,7 +73,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()))
+                .send(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData())).resultAs(Void.class).join()
         );
 
         // when
@@ -83,23 +81,11 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         verify(commandGateway, times(1))
-                .sendAndWait(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData()));
+                .send(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData())).resultAs(Void.class).join();
     }
 
-    private void givenCalendarEvents(String gameId, CalendarEvent... events) {
-        for (int i = 0; i < events.length; i++) {
-            eventGateway.publish(calendarDomainEvent(gameId, i, events[i]));
-        }
-    }
-
-    private static DomainEventMessage<?> calendarDomainEvent(String identifier, int sequenceNumber,
-                                                             CalendarEvent payload) {
-        return new GenericDomainEventMessage<>(
-                "Calendar",
-                identifier,
-                sequenceNumber,
-                payload
-        ).andMetaData(gameMetaData());
+    private void givenCalendarEvents(CalendarId calendarId, CalendarEvent... events) {
+        aggregateEventPublisher.publish("Calendar", calendarId.raw(), gameMetaData(), (Object[]) events);
     }
 
     private static Metadata gameMetaData() {
