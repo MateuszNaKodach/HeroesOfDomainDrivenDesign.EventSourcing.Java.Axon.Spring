@@ -10,7 +10,7 @@ import java.util.Objects;
 @Entity
 @Table(
         name = "read_model_built_dwelling",
-        indexes = @Index(name = "idx_game_id", columnList = "gameId")
+        indexes = @Index(name = "idx_read_model_built_dwelling_game_id", columnList = "gameId")
 )
 public class BuiltDwellingReadModel {
 
