@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<assertj.version>3.27.3</assertj.version>
+		<assertj.version>3.27.7</assertj.version>
 		<axon.version>5.1.1-SNAPSHOT</axon.version>
 		<axon5.version>5.1.1-SNAPSHOT</axon5.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
