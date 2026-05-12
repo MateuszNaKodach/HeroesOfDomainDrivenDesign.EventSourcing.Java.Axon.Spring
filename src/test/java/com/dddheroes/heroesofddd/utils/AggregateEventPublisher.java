@@ -1,12 +1,16 @@
 package com.dddheroes.heroesofddd.utils;
 
+import org.axonframework.eventsourcing.eventstore.EventStore;
+import org.axonframework.eventsourcing.eventstore.EventStoreTransaction;
+import org.axonframework.eventsourcing.eventstore.SourcingCondition;
 import org.axonframework.messaging.core.LegacyResources;
 import org.axonframework.messaging.core.MessageType;
 import org.axonframework.messaging.core.Metadata;
 import org.axonframework.messaging.core.unitofwork.UnitOfWorkFactory;
 import org.axonframework.messaging.eventhandling.EventMessage;
-import org.axonframework.messaging.eventhandling.EventSink;
 import org.axonframework.messaging.eventhandling.GenericEventMessage;
+import org.axonframework.messaging.eventstreaming.EventCriteria;
+import org.axonframework.messaging.eventstreaming.Tag;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -20,8 +24,11 @@ import java.util.List;
  *
  *   - aggregate identifier / aggregate type on the WRITE path are read from @EventTag on the
  *     event payload by AnnotationBasedTagResolver and consumed by
- *     AggregateBasedJpaEventStorageEngine.mapToEntry; the AggregateSequencer auto-allocates
- *     aggregate_sequence_number from 0 when AppendCondition.none() is in effect.
+ *     AggregateBasedJpaEventStorageEngine.mapToEntry; the AggregateSequencer allocates each new
+ *     aggregate_sequence_number based on the AppendCondition's consistency marker. With an
+ *     AppendCondition of `none()`, allocation starts at 0 — so two publish() calls for the same
+ *     aggregate_identifier collide on the unique (aggregate_identifier, aggregate_sequence_number)
+ *     index.
  *
  *   - publishing has to happen inside an active ProcessingContext so events flow through
  *     DefaultEventStoreTransaction and commit atomically. We obtain one from the framework's
@@ -32,10 +39,17 @@ import java.util.List;
  *     side; we mirror them on the write side so any handler/parameter resolver that reads them
  *     via LegacyResources sees the same values AF4 would have set on the message envelope.
  *
- * The utility resolves the EventSink from the ProcessingContext rather than @Autowiring it,
- * because AF5 framework components are registered as Spring beans lazily by SpringComponentRegistry
- * (during postProcessAfterInitialization) and ctx.component(EventSink.class) hits the AF5
- * component registry directly without the timing issue.
+ * To support multiple publish() calls per aggregate, we first source the aggregate's existing
+ * stream within the same ProcessingContext. DefaultEventStoreTransaction.source() captures the
+ * stream's ConsistencyMarker into its internal appendPositionKey resource, and
+ * attachAppendEventsStep() then builds an AppendCondition that includes that marker, so
+ * AggregateSequencer.incrementAndGetSequenceOf(...) continues from the existing position rather
+ * than restarting at 0. An empty aggregate still works — the marker has no entry for that
+ * identifier and the sequencer falls back to 0.
+ *
+ * Tag key for the SourcingCondition is the same key used by the application's @EventTag /
+ * AnnotationBasedTagResolver on the event payloads, i.e. the aggregate type name. This must match
+ * how the production aggregates are tagged (Dwelling, Army, Calendar, Astrologers, …).
  */
 @Component
 public class AggregateEventPublisher {
@@ -56,13 +70,18 @@ public class AggregateEventPublisher {
                     ctx.putResource(LegacyResources.AGGREGATE_TYPE_KEY, aggregateType);
                     ctx.putResource(LegacyResources.AGGREGATE_IDENTIFIER_KEY, aggregateId);
 
-                    List<EventMessage> messages = payloads.stream()
-                            .map(payload -> (EventMessage) new GenericEventMessage(
-                                    new MessageType(payload.getClass()),
-                                    payload,
-                                    metadata))
-                            .toList();
-                    return ctx.component(EventSink.class).publish(ctx, messages);
+                    EventStoreTransaction transaction = ctx.component(EventStore.class).transaction(ctx);
+
+                    SourcingCondition existing = SourcingCondition.conditionFor(
+                            EventCriteria.havingTags(Tag.of(aggregateType, aggregateId))
+                    );
+                    return transaction.source(existing).ignoreEntries().asCompletableFuture()
+                            .thenAccept(__ -> payloads.stream()
+                                    .map(payload -> (EventMessage) new GenericEventMessage(
+                                            new MessageType(payload.getClass()),
+                                            payload,
+                                            metadata))
+                                    .forEach(transaction::appendEvent));
                 })
                 .join();
     }
