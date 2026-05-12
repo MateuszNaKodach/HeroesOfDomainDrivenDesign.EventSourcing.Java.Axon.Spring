@@ -1,11 +1,13 @@
 package com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol;
 
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
+import com.dddheroes.heroesofddd.astrologers.write.WeekSymbol;
 import com.dddheroes.heroesofddd.astrologers.write.proclaimweeksymbol.ProclaimWeekSymbol;
 import com.dddheroes.heroesofddd.calendar.events.CalendarEvent;
 import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcessorsOperations;
+import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.UUID;
 
@@ -42,9 +45,16 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
     @Autowired
     private CommandGateway commandGateway;
 
+    @MockitoBean
+    private WeekSymbolCalculator weekSymbolCalculator;
+
+    private static final int STUBBED_GROWTH = 3;
+
     @BeforeEach
     void resetSpy() {
         reset(commandGateway);
+        when(weekSymbolCalculator.apply(any()))
+                .thenReturn(WeekSymbol.of(CreatureId.of("angel"), STUBBED_GROWTH));
     }
 
     @Test
@@ -62,7 +72,8 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(eq(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", null)), eq(gameMetaData()), any())
+                .send(eq(ProclaimWeekSymbol.command(calendarId.raw(), 1, 1, "angel", STUBBED_GROWTH)),
+                      eq(gameMetaData()), any())
         );
     }
 
@@ -81,7 +92,8 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(eq(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", null)), eq(gameMetaData()), any())
+                .send(eq(ProclaimWeekSymbol.command(calendarId.raw(), 1, 1, "angel", STUBBED_GROWTH)),
+                      eq(gameMetaData()), any())
         );
 
         // when
@@ -89,7 +101,8 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         verify(commandGateway, times(1))
-                .send(eq(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", null)), eq(gameMetaData()), any());
+                .send(eq(ProclaimWeekSymbol.command(calendarId.raw(), 1, 1, "angel", STUBBED_GROWTH)),
+                      eq(gameMetaData()), any());
     }
 
     private void givenCalendarEvents(CalendarId calendarId, CalendarEvent... events) {

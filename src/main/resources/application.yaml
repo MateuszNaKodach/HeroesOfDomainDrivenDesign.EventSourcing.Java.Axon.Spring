@@ -54,7 +54,7 @@ axon:
           enabled: true
       ReadModel_Dwelling:
         mode: pooled
-        initial-segment-count: 2
+        initial-segment-count: 1
         batch-size: 5
       Read_GetAllDwellings_QueryCache:
         mode: subscribing

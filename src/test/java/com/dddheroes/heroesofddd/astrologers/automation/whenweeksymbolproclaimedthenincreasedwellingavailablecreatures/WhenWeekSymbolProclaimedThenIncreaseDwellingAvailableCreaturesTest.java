@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @Import({TestcontainersConfiguration.class, CommandGatewaySpyConfiguration.class})
@@ -40,6 +41,9 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     @Autowired
     private CommandGateway commandGateway;
+
+    @Autowired
+    private BuiltDwellingReadModelRepository builtDwellingReadModelRepository;
 
     @BeforeEach
     void resetSpy() {
@@ -73,29 +77,32 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     @Test
     void whenWeekSymbolProclaimed_thenIncreaseAllDwellingsBuiltBeforeTheProclamation() {
-        // given
+        // given - week 1: only dwelling 1 exists
         var astrologersId = AstrologersId.random();
         var angelDwellingId1 = dwellingBuiltEvent("angel");
         astrologersEvents(
                 astrologersId.raw(),
                 new WeekSymbolProclaimed(astrologersId.raw(), 1, 1, "angel", 1)
         );
-        var angelDwellingId2 = dwellingBuiltEvent("angel");
 
-        // when
+        // then - week 1 dispatch must complete before we widen the world
+        var week1ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 1);
+        assertCommandExecuted(week1ExpectedCommand1);
+        var week1NotExpectedCommand1 = IncreaseAvailableCreatures.command(
+                DwellingId.random().raw(), "angel", 1);
+        assertCommandNotExecuted(week1NotExpectedCommand1);
+
+        // and - dwelling 2 is added between proclamations
+        var angelDwellingId2 = dwellingBuiltEvent("angel");
+        awaitDwellingProjected(angelDwellingId2);
+
+        // when - week 2 proclamation should now reach BOTH dwellings
         astrologersEvents(
                 astrologersId.raw(),
                 new WeekSymbolProclaimed(astrologersId.raw(), 1, 2, "angel", 2)
         );
 
-        // then
-        // week 1 - only 1 dwelling built
-        var week1ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 1);
-        assertCommandExecuted(week1ExpectedCommand1);
-        var week1NotExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 1);
-        assertCommandNotExecuted(week1NotExpectedCommand1);
-
-        // week 2 - 2 dwellings built
+        // then - week 2 - 2 dwellings built
         var week2ExpectedCommand1 = IncreaseAvailableCreatures.command(angelDwellingId1, "angel", 2);
         assertCommandExecuted(week2ExpectedCommand1);
         var week2ExpectedCommand2 = IncreaseAvailableCreatures.command(angelDwellingId2, "angel", 2);
@@ -113,6 +120,12 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     private void astrologersEvents(String astrologersId, WeekSymbolProclaimed... events) {
         aggregateEventPublisher.publish("Astrologers", astrologersId, gameMetaData(), (Object[]) events);
+    }
+
+    private void awaitDwellingProjected(String dwellingId) {
+        awaitUntilAsserted(() ->
+                assertThat(builtDwellingReadModelRepository.findById(dwellingId)).isPresent()
+        );
     }
 
     private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand) {
