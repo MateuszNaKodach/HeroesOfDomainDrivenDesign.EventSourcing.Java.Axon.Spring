@@ -10,25 +10,26 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
+import com.dddheroes.heroesofddd.utils.CommandGatewaySpyConfiguration;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.UUID;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
 import static org.mockito.Mockito.*;
 
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, CommandGatewaySpyConfiguration.class})
 @SpringBootTest
 class WhenWeekStartedThenProclaimWeekSymbolTest {
 
-    private static final String GAME_ID = GameId.random().raw();
-    private static final String PLAYER_ID = PlayerId.random().raw();
+    private final String GAME_ID = GameId.random().raw();
+    private final String PLAYER_ID = PlayerId.random().raw();
 
     @Autowired
     private AggregateEventPublisher aggregateEventPublisher;
@@ -36,8 +37,13 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
     @Autowired
     private StreamProcessorsOperations streamProcessorsOperations;
 
-    @MockitoSpyBean
+    @Autowired
     private CommandGateway commandGateway;
+
+    @BeforeEach
+    void resetSpy() {
+        reset(commandGateway);
+    }
 
     @Test
     void whenDayStartedForFirstDayOfTheWeek_ThenProclaimWeekSymbol() {
@@ -54,7 +60,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData())).resultAs(Void.class).join()
+                .send(eq(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", null)), eq(gameMetaData()), any())
         );
     }
 
@@ -73,7 +79,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData())).resultAs(Void.class).join()
+                .send(eq(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", null)), eq(gameMetaData()), any())
         );
 
         // when
@@ -81,14 +87,14 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
 
         // then
         verify(commandGateway, times(1))
-                .send(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", any()), eq(gameMetaData())).resultAs(Void.class).join();
+                .send(eq(ProclaimWeekSymbol.command(gameId, 1, 1, "angel", null)), eq(gameMetaData()), any());
     }
 
     private void givenCalendarEvents(CalendarId calendarId, CalendarEvent... events) {
         aggregateEventPublisher.publish("Calendar", calendarId.raw(), gameMetaData(), (Object[]) events);
     }
 
-    private static Metadata gameMetaData() {
+    private Metadata gameMetaData() {
         return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }
