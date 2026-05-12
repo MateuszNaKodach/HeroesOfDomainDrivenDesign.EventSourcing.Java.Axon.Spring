@@ -5,6 +5,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatu
 import com.dddheroes.heroesofddd.creaturerecruitment.events.CreatureRecruited;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.messaging.commandhandling.gateway.CommandDispatcher;
+import org.axonframework.messaging.core.Message;
 import org.axonframework.messaging.core.annotation.MetadataValue;
 import org.axonframework.messaging.core.annotation.Namespace;
 import org.axonframework.messaging.core.annotation.SequencingPolicy;
@@ -23,23 +24,24 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
 
     @EventHandler
     CompletableFuture<?> react(
-            CreatureRecruited event, 
-            @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId, 
+            CreatureRecruited event,
+            @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId,
             @MetadataValue(GameMetaData.PLAYER_ID_KEY) String playerId, CommandDispatcher commandDispatcher) {
-        try {
-            var command = AddCreatureToArmy.command(
-                    event.toArmy(),
-                    event.creatureId(),
-                    event.quantity()
-            );
-            return commandDispatcher.send(command, GameMetaData.with(gameId, playerId)).getResultMessage();
-        } catch (Exception e) {
+        var metadata = GameMetaData.with(gameId, playerId);
+        var command = AddCreatureToArmy.command(
+                event.toArmy(),
+                event.creatureId(),
+                event.quantity()
+        );
+        CompletableFuture<Message> result = commandDispatcher.send(command, metadata).getResultMessage()
+                .thenApply(m -> m);
+        return result.exceptionallyCompose(error -> {
             var compensatingAction = IncreaseAvailableCreatures.command(
                     event.dwellingId(),
                     event.creatureId(),
                     event.quantity()
             );
-            return commandDispatcher.send(compensatingAction, GameMetaData.with(gameId, playerId)).getResultMessage();
-        }
+            return commandDispatcher.send(compensatingAction, metadata).getResultMessage().thenApply(m -> m);
+        });
     }
 }

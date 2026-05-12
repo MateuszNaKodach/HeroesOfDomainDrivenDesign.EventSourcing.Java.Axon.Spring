@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.UUID;
 
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.*;
 
 @Import({TestcontainersConfiguration.class, CommandGatewaySpyConfiguration.class})
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class WhenWeekStartedThenProclaimWeekSymbolTest {
 
     private final String GAME_ID = GameId.random().raw();
