@@ -14,29 +14,35 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
+import com.dddheroes.heroesofddd.utils.CommandGatewaySpyConfiguration;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
 import static org.mockito.Mockito.*;
 
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, CommandGatewaySpyConfiguration.class})
 @SpringBootTest
 class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
-    private static final String GAME_ID = GameId.random().raw();
-    private static final String PLAYER_ID = PlayerId.random().raw();
+    private final String GAME_ID = GameId.random().raw();
+    private final String PLAYER_ID = PlayerId.random().raw();
 
     @Autowired
     private AggregateEventPublisher aggregateEventPublisher;
 
-    @MockitoSpyBean
+    @Autowired
     private CommandGateway commandGateway;
+
+    @BeforeEach
+    void resetSpy() {
+        reset(commandGateway);
+    }
 
     @Test
     void whenWeekSymbolProclaimed_thenIncreaseDwellingsAvailableCreaturesIfSymbolSameAsSymbol() {
@@ -109,14 +115,14 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     private void assertCommandExecuted(IncreaseAvailableCreatures expectedCommand) {
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(expectedCommand, gameMetaData()).resultAs(Void.class).join());
+                .send(eq(expectedCommand), eq(gameMetaData()), any()));
     }
 
     private void assertCommandNotExecuted(IncreaseAvailableCreatures notExpectedCommand) {
-        verify(commandGateway, never()).send(notExpectedCommand, gameMetaData()).resultAs(Void.class).join();
+        verify(commandGateway, never()).send(eq(notExpectedCommand), eq(gameMetaData()), any());
     }
 
-    private static Metadata gameMetaData() {
+    private Metadata gameMetaData() {
         return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }

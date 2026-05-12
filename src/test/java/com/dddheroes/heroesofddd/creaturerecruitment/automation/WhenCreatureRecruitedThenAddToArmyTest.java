@@ -17,25 +17,26 @@ import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
+import com.dddheroes.heroesofddd.utils.CommandGatewaySpyConfiguration;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.Map;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
 import static org.mockito.Mockito.*;
 
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, CommandGatewaySpyConfiguration.class})
 @SpringBootTest
 class WhenCreatureRecruitedThenAddToArmyTest {
 
-    private static final String GAME_ID = GameId.random().raw();
-    private static final String PLAYER_ID = PlayerId.random().raw();
+    private final String GAME_ID = GameId.random().raw();
+    private final String PLAYER_ID = PlayerId.random().raw();
     private static final Map<String, Integer> PHOENIX_COST = Map.of(
             ResourceType.GOLD.name(), 2000,
             ResourceType.MERCURY.name(), 1
@@ -44,8 +45,13 @@ class WhenCreatureRecruitedThenAddToArmyTest {
     @Autowired
     private AggregateEventPublisher aggregateEventPublisher;
 
-    @MockitoSpyBean
+    @Autowired
     private CommandGateway commandGateway;
+
+    @BeforeEach
+    void resetSpy() {
+        reset(commandGateway);
+    }
 
     @Test
     void whenCreatureRecruited_ThenAddCreatureToArmy() {
@@ -65,7 +71,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData()).resultAs(Void.class).join()
+                .send(eq(AddCreatureToArmy.command(armyId, creatureId, 1)), eq(gameMetaData()), any())
         );
     }
 
@@ -97,10 +103,10 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData()).resultAs(Void.class).join()
+                .send(eq(AddCreatureToArmy.command(armyId, creatureId, 1)), eq(gameMetaData()), any())
         );
         awaitUntilAsserted(() -> verify(commandGateway, never())
-                .send(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData()).resultAs(Void.class).join()
+                .send(eq(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2)), eq(gameMetaData()), any())
         );
     }
 
@@ -133,10 +139,10 @@ class WhenCreatureRecruitedThenAddToArmyTest {
 
         // then
         awaitUntilAsserted(() -> verify(commandGateway, never())
-                .send(AddCreatureToArmy.command(armyId, creatureId, 1), gameMetaData()).resultAs(Void.class).join()
+                .send(eq(AddCreatureToArmy.command(armyId, creatureId, 1)), eq(gameMetaData()), any())
         );
         awaitUntilAsserted(() -> verify(commandGateway, times(1))
-                .send(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2), gameMetaData()).resultAs(Void.class).join()
+                .send(eq(IncreaseAvailableCreatures.command(dwellingId, creatureId, 2)), eq(gameMetaData()), any())
         );
     }
 
@@ -148,7 +154,7 @@ class WhenCreatureRecruitedThenAddToArmyTest {
         aggregateEventPublisher.publish("Army", armyId, gameMetaData(), (Object[]) events);
     }
 
-    private static Metadata gameMetaData() {
+    private Metadata gameMetaData() {
         return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }
