@@ -1,14 +1,22 @@
 package com.dddheroes.heroesofddd.calendar.write;
 
-import org.axonframework.test.aggregate.AggregateTestFixture;
-import org.junit.jupiter.api.*;
+import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
+import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
+import org.axonframework.test.fixture.AxonTestFixture;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class CalendarTest {
 
-    protected AggregateTestFixture<?> fixture;
+    protected AxonTestFixture fixture;
 
     @BeforeEach
     void setUp() {
-        fixture = new AggregateTestFixture<>(Calendar.class);
+        fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(CalendarId.class, Calendar.class)));
+    }
+
+    @AfterEach
+    void tearDown() {
+        fixture.stop();
     }
 }

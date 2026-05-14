@@ -7,40 +7,33 @@ import com.dddheroes.heroesofddd.armies.events.CreatureRemovedFromArmy;
 import com.dddheroes.heroesofddd.armies.write.removecreature.CanRemoveOnlyPresentCreatures;
 import com.dddheroes.heroesofddd.armies.write.removecreature.RemoveCreatureFromArmy;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
+import org.axonframework.eventsourcing.annotation.EventSourcingHandler;
+import org.axonframework.eventsourcing.annotation.reflection.EntityCreator;
+import org.axonframework.extension.spring.stereotype.EventSourced;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.eventsourcing.EventSourcingHandler;
-import org.axonframework.modelling.command.AggregateCreationPolicy;
-import org.axonframework.modelling.command.AggregateIdentifier;
-import org.axonframework.modelling.command.CreationPolicy;
-import org.axonframework.spring.stereotype.Aggregate;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.eventhandling.gateway.EventAppender;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.axonframework.modelling.command.AggregateLifecycle.apply;
-
 // todo: probably we should model events ArmyEstablished and ArmyDestroyed, more on that on Event Model
-@Aggregate
+@EventSourced(tagKey = "Army", idType = ArmyId.class)
 class Army {
 
-    @AggregateIdentifier
     private ArmyId armyId;
     private final Map<CreatureId, Amount> creatureStacks = new HashMap<>();
 
-    @CommandHandler
-    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
-    void decide(AddCreatureToArmy command) {
+    @CommandHandler // performance downside in comparison to constructor
+    void decide(AddCreatureToArmy command, EventAppender eventAppender) {
         new CanHaveMax7CreatureStacksInArmy(command.creatureId(), creatureStacks).verify();
 
-        apply(
-                CreatureAddedToArmy.event(
-                        command.armyId(),
-                        command.creatureId(),
-                        command.quantity()
-                )
-        );
+        eventAppender.append(CreatureAddedToArmy.event(
+                command.armyId(),
+                command.creatureId(),
+                command.quantity()
+        ));
     }
 
     @EventSourcingHandler
@@ -50,16 +43,14 @@ class Army {
     }
 
     @CommandHandler
-    void decide(RemoveCreatureFromArmy command) {
+    void decide(RemoveCreatureFromArmy command, EventAppender eventAppender) {
         new CanRemoveOnlyPresentCreatures(command.creatureId(), command.quantity(), creatureStacks).verify();
 
-        apply(
-                CreatureRemovedFromArmy.event(
-                        command.armyId(),
-                        command.creatureId(),
-                        command.quantity()
-                )
-        );
+        eventAppender.append(CreatureRemovedFromArmy.event(
+                command.armyId(),
+                command.creatureId(),
+                command.quantity()
+        ));
     }
 
     @EventSourcingHandler
@@ -78,6 +69,7 @@ class Army {
         }
     }
 
+    @EntityCreator
     Army() {
         // required by Axon
     }

@@ -1,11 +1,11 @@
 package com.dddheroes.heroesofddd;
 
 import io.axoniq.axonserver.connector.AxonServerConnection;
-import org.axonframework.axonserver.connector.AxonServerConfiguration;
-import org.axonframework.axonserver.connector.AxonServerConnectionManager;
-import org.axonframework.springboot.service.connection.AxonServerConnectionDetails;
-import org.axonframework.test.server.AxonServerContainer;
-import org.junit.jupiter.api.*;
+import io.axoniq.framework.axonserver.connector.AxonServerConfiguration;
+import io.axoniq.framework.axonserver.connector.AxonServerConnectionManager;
+import io.axoniq.framework.testcontainer.AxonServerContainer;
+import org.axonframework.extension.springboot.service.connection.AxonServerConnectionDetails;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;

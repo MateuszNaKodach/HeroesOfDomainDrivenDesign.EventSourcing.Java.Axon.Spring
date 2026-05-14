@@ -6,17 +6,20 @@ import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
-import org.axonframework.commandhandling.CommandMessage;
-import org.axonframework.messaging.InterceptorChain;
-import org.axonframework.messaging.MessageHandlerInterceptor;
-import org.axonframework.messaging.unitofwork.UnitOfWork;
-import org.axonframework.modelling.command.Repository;
+import org.axonframework.messaging.commandhandling.CommandMessage;
+import org.axonframework.messaging.core.MessageHandlerInterceptor;
+import org.axonframework.messaging.core.MessageHandlerInterceptorChain;
+import org.axonframework.messaging.core.MessageStream;
+import org.axonframework.messaging.core.Metadata;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
+import org.axonframework.modelling.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
-public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage<?>> {
+// TODO #LLM: migrate the body of this interceptor to the AF5 API — the signature has been rewritten but the body still references the AF4 `unitOfWork` / `interceptorChain` / `messages` parameters. Replace those with calls on `message`, `context`, `chain`. See docs/reference-guide/modules/migration/pages/paths/interceptors.adoc
+public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage> {
 
     private static final Logger log = LoggerFactory.getLogger(PaidCommandInterceptor.class);
 
@@ -32,17 +35,14 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
     }
 
     @Override
-    public Object handle(
-            @Nonnull UnitOfWork<? extends CommandMessage<?>> unitOfWork,
-            @Nonnull InterceptorChain interceptorChain
-    ) throws Exception {
+    public MessageStream<?> interceptOnHandle(CommandMessage message, ProcessingContext context, MessageHandlerInterceptorChain<CommandMessage> chain) {
         var command = unitOfWork.getMessage();
 
-        if (command.getPayload() instanceof Command payload) {
+        if (command.payload() instanceof Command payload) {
             var cost = commandCostResolver.cost(payload);
             var isPaidCommand = !cost.isEmpty();
             if (isPaidCommand) {
-                var metadata = command.getMetaData();
+                var metadata = command.metadata();
                 var playerId = (String) metadata.get(GameMetaData.PLAYER_ID_KEY);
                 var playerResourcesPool = ResourcesPoolId.of(playerId);
                 withdrawResourcesToSpend(playerResourcesPool, cost);

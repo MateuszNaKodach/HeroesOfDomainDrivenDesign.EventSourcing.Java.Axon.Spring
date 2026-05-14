@@ -10,12 +10,12 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
 import com.dddheroes.heroesofddd.utils.EventStoreAssertions;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.commandhandling.RoutingKey;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.eventhandling.GenericDomainEventMessage;
-import org.axonframework.eventhandling.gateway.EventGateway;
-import org.axonframework.messaging.MetaData;
+import org.axonframework.messaging.commandhandling.annotation.Command;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.core.Metadata;
+import org.axonframework.messaging.eventhandling.GenericDomainEventMessage;
+import org.axonframework.messaging.eventhandling.gateway.EventGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -168,8 +168,8 @@ class PaidCommandInterceptorTest {
         commandGateway.sendAndWait(command, gameMetaData());
     }
 
-    private MetaData gameMetaData() {
-        return MetaData.with("gameId", GAME_ID)
+    private Metadata gameMetaData() {
+        return Metadata.with("gameId", GAME_ID)
                        .and("playerId", playerId);
     }
 
@@ -177,8 +177,8 @@ class PaidCommandInterceptorTest {
         return ResourcesPoolId.of(playerId).raw();
     }
 
+    @Command(routingKey = "identifier")
     record TestPaidCommand(
-            @RoutingKey
             String identifier,
             Map<String, Integer> cost,
             boolean failing
@@ -193,7 +193,8 @@ class PaidCommandInterceptorTest {
         }
     }
 
-    record TestNonPaidCommand(@RoutingKey String identifier) implements Command {
+    @Command(routingKey = "identifier")
+    record TestNonPaidCommand(String identifier) implements Command {
 
         TestNonPaidCommand() {
             this(UUID.randomUUID().toString());

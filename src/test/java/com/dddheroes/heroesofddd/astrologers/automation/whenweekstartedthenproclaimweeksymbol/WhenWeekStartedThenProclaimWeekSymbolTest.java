@@ -9,12 +9,12 @@ import com.dddheroes.heroesofddd.maintenance.write.resetprocessor.StreamProcesso
 import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.eventhandling.DomainEventMessage;
-import org.axonframework.eventhandling.GenericDomainEventMessage;
-import org.axonframework.eventhandling.gateway.EventGateway;
-import org.axonframework.messaging.MetaData;
-import org.junit.jupiter.api.*;
+import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.core.Metadata;
+import org.axonframework.messaging.eventhandling.DomainEventMessage;
+import org.axonframework.messaging.eventhandling.GenericDomainEventMessage;
+import org.axonframework.messaging.eventhandling.gateway.EventGateway;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -102,7 +102,7 @@ class WhenWeekStartedThenProclaimWeekSymbolTest {
         ).andMetaData(gameMetaData());
     }
 
-    private static MetaData gameMetaData() {
+    private static Metadata gameMetaData() {
         return GameMetaData.with(GAME_ID, PLAYER_ID);
     }
 }

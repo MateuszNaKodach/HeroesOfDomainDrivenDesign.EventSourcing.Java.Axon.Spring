@@ -12,41 +12,35 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Recru
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreaturesNotExceedAvailableCreatures;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
+import org.axonframework.eventsourcing.annotation.EventSourcingHandler;
+import org.axonframework.eventsourcing.annotation.reflection.EntityCreator;
+import org.axonframework.extension.spring.stereotype.EventSourced;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.eventsourcing.EventSourcingHandler;
-import org.axonframework.modelling.command.AggregateCreationPolicy;
-import org.axonframework.modelling.command.AggregateIdentifier;
-import org.axonframework.modelling.command.CreationPolicy;
-import org.axonframework.spring.stereotype.Aggregate;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.eventhandling.gateway.EventAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.axonframework.modelling.command.AggregateLifecycle.*;
-
-@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")
+// TODO #LLM: reconfigure snapshot trigger (AF4 had snapshotTriggerDefinition = "dwellingSnapshotTrigger")
+@EventSourced(tagKey = "Dwelling", idType = DwellingId.class)
 public class Dwelling {
 
     private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
 
-    @AggregateIdentifier
     public DwellingId dwellingId; // needs to be public for snapshotting
     public CreatureId creatureId;
     public Resources costPerTroop;
     public Amount availableCreatures;
 
-    @CommandHandler
-    @CreationPolicy(AggregateCreationPolicy.CREATE_IF_MISSING) // performance downside in comparison to constructor
-    void decide(BuildDwelling command) {
+    @CommandHandler // performance downside in comparison to constructor
+    void decide(BuildDwelling command, EventAppender eventAppender) {
         new OnlyNotBuiltBuildingCanBeBuild(dwellingId).verify();
 
-        apply(
-                DwellingBuilt.event(
-                        command.dwellingId(),
-                        command.creatureId(),
-                        command.costPerTroop()
-                )
-        );
+        eventAppender.append(DwellingBuilt.event(
+                command.dwellingId(),
+                command.creatureId(),
+                command.costPerTroop()
+        ));
     }
 
     @EventSourcingHandler
@@ -59,17 +53,15 @@ public class Dwelling {
     }
 
     @CommandHandler
-    void decide(IncreaseAvailableCreatures command) {
+    void decide(IncreaseAvailableCreatures command, EventAppender eventAppender) {
         new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
         // todo: check creatureId for the dwelling!
 
-        apply(
-                AvailableCreaturesChanged.event(
-                        command.dwellingId(),
-                        command.creatureId(),
-                        availableCreatures.plus(command.increaseBy())
-                )
-        );
+        eventAppender.append(AvailableCreaturesChanged.event(
+                command.dwellingId(),
+                command.creatureId(),
+                availableCreatures.plus(command.increaseBy())
+        ));
     }
 
     @EventSourcingHandler
@@ -80,7 +72,7 @@ public class Dwelling {
     }
 
     @CommandHandler
-    void decide(RecruitCreature command) {
+    void decide(RecruitCreature command, EventAppender eventAppender) {
         new RecruitCreaturesNotExceedAvailableCreatures(
                 creatureId,
                 availableCreatures,
@@ -94,15 +86,13 @@ public class Dwelling {
                 command.expectedCost()
         ).verify();
 
-        apply(
-                CreatureRecruited.event(
-                        command.dwellingId(),
-                        command.creatureId(),
-                        command.toArmy(),
-                        command.quantity(),
-                        recruitCost
-                )
-        );
+        eventAppender.append(CreatureRecruited.event(
+                command.dwellingId(),
+                command.creatureId(),
+                command.toArmy(),
+                command.quantity(),
+                recruitCost
+        ));
     }
 
     @EventSourcingHandler
@@ -113,6 +103,7 @@ public class Dwelling {
         this.availableCreatures = this.availableCreatures.minus(new Amount(event.quantity()));
     }
 
+    @EntityCreator
     Dwelling() {
         logger.info("\uD83D\uDC80 Dwelling non-args constructor");
         // required by Axon

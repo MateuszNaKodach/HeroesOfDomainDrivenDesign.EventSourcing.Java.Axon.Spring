@@ -5,10 +5,9 @@ import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelTest;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
-import org.axonframework.eventhandling.gateway.EventGateway;
-import org.axonframework.queryhandling.QueryGateway;
-import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.axonframework.messaging.eventhandling.gateway.EventGateway;
+import org.axonframework.messaging.queryhandling.gateway.QueryGateway;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
@@ -21,7 +20,6 @@ class GetAllDwellingsTest extends DwellingReadModelTest {
 
     private final QueryGateway queryGateway;
 
-    @Autowired
     GetAllDwellingsTest(
             EventGateway eventGateway,
             QueryGateway queryGateway

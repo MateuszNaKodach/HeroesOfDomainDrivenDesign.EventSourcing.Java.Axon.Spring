@@ -1,10 +1,11 @@
 package com.dddheroes.heroesofddd.utils;
 
 import org.axonframework.eventsourcing.eventstore.EventStore;
-import org.axonframework.messaging.Message;
+import org.axonframework.messaging.core.Message;
 import org.springframework.stereotype.Component;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Component
 public class EventStoreAssertions {
@@ -16,17 +17,17 @@ public class EventStoreAssertions {
     }
 
     public void assertEventStored(String streamId, Class<?> eventType) {
-        var events = eventStore.readEvents(streamId).asStream().map(e -> e.getPayload().getClass());
+        var events = eventStore.readEvents(streamId).asStream().map(e -> e.payload().getClass());
         assertTrue(events.anyMatch(eventType::equals));
     }
 
     public void assertEventNotStored(String streamId, Class<?> eventType) {
-        var events = eventStore.readEvents(streamId).asStream().map(e -> e.getPayload().getClass());
+        var events = eventStore.readEvents(streamId).asStream().map(e -> e.payload().getClass());
         assertTrue(events.noneMatch(eventType::equals));
     }
 
     public void assertEventStored(String streamId, Object payload) {
-        var events = eventStore.readEvents(streamId).asStream().map(Message::getPayload);
+        var events = eventStore.readEvents(streamId).asStream().map(Message::payload);
         assertTrue(events.anyMatch(payload::equals));
     }
 

@@ -4,8 +4,10 @@ import com.dddheroes.heroesofddd.calendar.write.CalendarId;
 import com.dddheroes.heroesofddd.calendar.write.Day;
 import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
+import org.axonframework.eventsourcing.annotation.EventTag;
 
 public record DayFinished(
+        @EventTag(key = "Calendar")
         String calendarId,
         Integer month,
         Integer week,

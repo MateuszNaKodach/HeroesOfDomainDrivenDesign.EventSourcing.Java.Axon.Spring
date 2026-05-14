@@ -6,6 +6,8 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 @Configuration
 public class AstrologersConfiguration {
 
@@ -16,6 +18,6 @@ public class AstrologersConfiguration {
     }
 
     private static int random(int min, int max) {
-        return (int) (Math.random() * (max - min + 1) + min);
+        return (int) (ThreadLocalRandom.current().nextDouble() * (max - min + 1) + min);
     }
 }
