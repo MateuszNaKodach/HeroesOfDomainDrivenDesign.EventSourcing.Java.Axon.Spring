@@ -22,8 +22,8 @@ note: 78 files changed, committed 0fad52d
 | 1 | aggregate | com.dddheroes.heroesofddd.armies.write.Army | done | | RemoveCreatureFromArmyTest: AggregateNotFoundException→DomainRule.ViolatedException; 8/8 tests green |
 | 2 | aggregate | com.dddheroes.heroesofddd.astrologers.write.Astrologers | done | | Already AF5 shape post-OpenRewrite; 3/3 tests green |
 | 3 | aggregate | com.dddheroes.heroesofddd.calendar.write.Calendar | done | | DayFinished: added @Event; FinishDayTest: exception→DomainRule.ViolatedException; 8/8 tests green |
-| 4 | aggregate | com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling | pending | | |
-| 5 | aggregate | com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool | pending | | |
+| 4 | aggregate | com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling | in-progress | | |
+| 5 | aggregate | com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool | in-progress | | |
 | 6 | event-processor | com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor | pending | | |
 | 7 | event-processor | com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor | pending | | |
 | 8 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor | pending | | |
