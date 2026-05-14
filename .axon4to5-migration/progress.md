@@ -19,9 +19,9 @@ note: 78 files changed, committed 0fad52d
 ## Queue
 | # | recipe | source | status | last-commit | notes |
 |---|--------|--------|--------|-------------|-------|
-| 1 | aggregate | com.dddheroes.heroesofddd.armies.write.Army | pending | | |
-| 2 | aggregate | com.dddheroes.heroesofddd.astrologers.write.Astrologers | pending | | |
-| 3 | aggregate | com.dddheroes.heroesofddd.calendar.write.Calendar | pending | | |
+| 1 | aggregate | com.dddheroes.heroesofddd.armies.write.Army | in-progress | | |
+| 2 | aggregate | com.dddheroes.heroesofddd.astrologers.write.Astrologers | in-progress | | |
+| 3 | aggregate | com.dddheroes.heroesofddd.calendar.write.Calendar | in-progress | | |
 | 4 | aggregate | com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling | pending | | |
 | 5 | aggregate | com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool | pending | | |
 | 6 | event-processor | com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor | pending | | |
