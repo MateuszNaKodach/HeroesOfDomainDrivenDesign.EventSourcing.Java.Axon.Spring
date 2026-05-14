@@ -10,9 +10,9 @@
 framework=axoniq configuration=spring mode=project execution=inline
 
 ## OpenRewrite
-status: not-run
-ts:
-note:
+status: success
+ts: 2026-05-15T01:28:30+02:00
+note: 78 files changed, committed 0fad52d
 
 ## Pinned decisions
 
