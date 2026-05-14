@@ -8,7 +8,6 @@ import com.dddheroes.heroesofddd.calendar.write.Month;
 import com.dddheroes.heroesofddd.calendar.write.Week;
 import com.dddheroes.heroesofddd.calendar.events.DayStarted;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -29,7 +28,7 @@ public class FinishDayTest extends CalendarTest {
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
+               .exception(DomainRule.ViolatedException.class, "Can only finish current day");
     }
 
     @Test

@@ -5,7 +5,6 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.CreatureIds;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,7 +25,7 @@ class RemoveCreatureFromArmyTest extends ArmyTest {
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
+               .exception(DomainRule.ViolatedException.class, "Can remove only present creatures");
     }
 
     @Test

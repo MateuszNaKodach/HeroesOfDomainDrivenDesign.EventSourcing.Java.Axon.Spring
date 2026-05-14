@@ -1,8 +1,8 @@
 ## ▶︎ RESUME HERE
-- next: drain queue — item 1 (aggregate/Army)
+- next: drain queue — item 4 (aggregate/Dwelling)
 - recipe: aggregate
-- source: com.dddheroes.heroesofddd.armies.write.Army
-- verify: axon4to5-isolatedtest target-name=Army
+- source: com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling
+- verify: axon4to5-isolatedtest target-name=Dwelling
 - tree: clean
 - awaiting-caller: no
 
@@ -19,9 +19,9 @@ note: 78 files changed, committed 0fad52d
 ## Queue
 | # | recipe | source | status | last-commit | notes |
 |---|--------|--------|--------|-------------|-------|
-| 1 | aggregate | com.dddheroes.heroesofddd.armies.write.Army | in-progress | | |
-| 2 | aggregate | com.dddheroes.heroesofddd.astrologers.write.Astrologers | in-progress | | |
-| 3 | aggregate | com.dddheroes.heroesofddd.calendar.write.Calendar | in-progress | | |
+| 1 | aggregate | com.dddheroes.heroesofddd.armies.write.Army | done | | RemoveCreatureFromArmyTest: AggregateNotFoundException→DomainRule.ViolatedException; 8/8 tests green |
+| 2 | aggregate | com.dddheroes.heroesofddd.astrologers.write.Astrologers | done | | Already AF5 shape post-OpenRewrite; 3/3 tests green |
+| 3 | aggregate | com.dddheroes.heroesofddd.calendar.write.Calendar | done | | DayFinished: added @Event; FinishDayTest: exception→DomainRule.ViolatedException; 8/8 tests green |
 | 4 | aggregate | com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling | pending | | |
 | 5 | aggregate | com.dddheroes.heroesofddd.resourcespool.write.ResourcesPool | pending | | |
 | 6 | event-processor | com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor | pending | | |
