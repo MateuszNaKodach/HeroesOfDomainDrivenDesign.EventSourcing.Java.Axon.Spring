@@ -1,7 +1,7 @@
 ## ▶︎ RESUME HERE
-- next: drain queue — item 9 (event-processor/DwellingReadModelProjector)
-- recipe: event-processor
-- source: com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector
+- next: drain queue — item 11 (command-gateway/BuildDwellingMcp)
+- recipe: command-gateway
+- source: com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp
 - tree: clean
 - awaiting-caller: no
 
@@ -26,8 +26,8 @@ note: 78 files changed, committed 0fad52d
 | 6 | event-processor | com.dddheroes.heroesofddd.astrologers.automation.whenweekstartedthenproclaimweeksymbol.WhenWeekStartedThenProclaimWeekSymbolProcessor | done | | Added @SequencingPolicy(MetadataSequencingPolicy, GAME_ID_KEY); removed YAML sequencing-policy; tests use @SpringBootTest not AggregateTestFixture |
 | 7 | event-processor | com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor | done | | CommandGateway field → CommandDispatcher param; forEach→allOf async pattern; @SequencingPolicy added; orphaned Automation_WhenWeekSymbol*_Processor YAML key removed |
 | 8 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor | done | | @SequencingPolicy added; try/catch→exceptionallyCompose for compensation; removed YAML sequencing-policy |
-| 9 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector | pending | | |
-| 10 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | pending | | |
+| 9 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector | done | | @SequencingPolicy(MetadataSequencingPolicy, GAME_ID_KEY) added; already AF5-shaped post-OpenRewrite |
+| 10 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | done | | @SequencingPolicy added; YAML Read_GetAllDwellings_QueryCache.sequencing-policy removed; dual-role event+query handler |
 | 11 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp | pending | | |
 | 12 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi | pending | | |
 | 13 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp | pending | | |

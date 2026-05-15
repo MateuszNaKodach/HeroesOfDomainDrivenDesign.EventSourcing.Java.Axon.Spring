@@ -6,6 +6,8 @@ import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.messaging.core.annotation.MetadataValue;
 import org.axonframework.messaging.core.annotation.Namespace;
+import org.axonframework.messaging.core.sequencing.MetadataSequencingPolicy;
+import org.axonframework.messaging.core.sequencing.annotation.SequencingPolicy;
 import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Stream;
 
 @Namespace("Read_GetAllDwellings_QueryCache")
+@SequencingPolicy(type = MetadataSequencingPolicy.class, parameters = GameMetaData.GAME_ID_KEY)
 @Component
 class GetAllDwellingsQueryHandler {
 
