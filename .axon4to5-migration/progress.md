@@ -1,7 +1,7 @@
 ## ▶︎ RESUME HERE
-- next: drain queue — item 22 (event-store/HeroesOfDDDApplication)
-- recipe: event-store
-- source: com.dddheroes.heroesofddd.HeroesOfDDDApplication
+- next: FINALIZE — all items done; run full compile + render report
+- recipe: (finalize)
+- source: project
 - tree: clean
 - awaiting-caller: no
 
@@ -39,6 +39,6 @@ note: 78 files changed, committed 0fad52d
 | 19 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | done | | Already AF5-shaped; @QueryHandler import correct, no queryName/QueryUpdateEmitter |
 | 20 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler | done | | Already AF5-shaped; idempotent success |
 | 21 | interceptors | com.dddheroes.heroesofddd.resourcespool.write.withdraw.PaidCommandInterceptor | done | | Fixed body: message param used directly, chain.proceed() replaces interceptorChain.proceed(); removed throws Exception |
-| 22 | event-store | com.dddheroes.heroesofddd.HeroesOfDDDApplication | pending | | |
+| 22 | event-store | com.dddheroes.heroesofddd.HeroesOfDDDApplication | done | | Path A.JPA: EventStoreConfiguration @Bean + @EntityScan(com.dddheroes, org.axonframework, io.axoniq.framework) on main class; schema change required out-of-band |
 
 ## Caller decisions log
