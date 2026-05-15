@@ -16,9 +16,6 @@ import org.axonframework.modelling.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.annotation.Nonnull;
-
-// TODO #LLM: migrate the body of this interceptor to the AF5 API — the signature has been rewritten but the body still references the AF4 `unitOfWork` / `interceptorChain` / `messages` parameters. Replace those with calls on `message`, `context`, `chain`. See docs/reference-guide/modules/migration/pages/paths/interceptors.adoc
 public class PaidCommandInterceptor implements MessageHandlerInterceptor<CommandMessage> {
 
     private static final Logger log = LoggerFactory.getLogger(PaidCommandInterceptor.class);
@@ -36,13 +33,11 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
 
     @Override
     public MessageStream<?> interceptOnHandle(CommandMessage message, ProcessingContext context, MessageHandlerInterceptorChain<CommandMessage> chain) {
-        var command = unitOfWork.getMessage();
-
-        if (command.payload() instanceof Command payload) {
+        if (message.payload() instanceof Command payload) {
             var cost = commandCostResolver.cost(payload);
             var isPaidCommand = !cost.isEmpty();
             if (isPaidCommand) {
-                var metadata = command.metadata();
+                var metadata = message.metadata();
                 var playerId = (String) metadata.get(GameMetaData.PLAYER_ID_KEY);
                 var playerResourcesPool = ResourcesPoolId.of(playerId);
                 withdrawResourcesToSpend(playerResourcesPool, cost);
@@ -50,10 +45,10 @@ public class PaidCommandInterceptor implements MessageHandlerInterceptor<Command
             }
         }
 
-        return interceptorChain.proceed();
+        return chain.proceed();
     }
 
-    private void withdrawResourcesToSpend(ResourcesPoolId resourcesPoolId, Resources cost) throws Exception {
+    private void withdrawResourcesToSpend(ResourcesPoolId resourcesPoolId, Resources cost) {
         var rawResourcesPoolId = resourcesPoolId.raw();
         var withdrawResources = WithdrawResources.command(rawResourcesPoolId, cost.raw());
         resourcesPoolRepository.loadOrCreate(rawResourcesPoolId, () -> new ResourcesPool(resourcesPoolId))

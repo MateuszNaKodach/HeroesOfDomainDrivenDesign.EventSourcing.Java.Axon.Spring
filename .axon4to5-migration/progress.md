@@ -1,7 +1,7 @@
 ## ▶︎ RESUME HERE
-- next: drain queue — item 19 (query-handler/GetAllDwellingsQueryHandler)
-- recipe: query-handler
-- source: com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler
+- next: drain queue — item 22 (event-store/HeroesOfDDDApplication)
+- recipe: event-store
+- source: com.dddheroes.heroesofddd.HeroesOfDDDApplication
 - tree: clean
 - awaiting-caller: no
 
@@ -36,9 +36,9 @@ note: 78 files changed, committed 0fad52d
 | 16 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi | done | | .send().resultAs(Void.class) |
 | 17 | query-gateway | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp | done | | .get() → .get(5, TimeUnit.SECONDS) for timeout |
 | 18 | query-gateway | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdRestApi | done | | Already AF5-shaped; no changes |
-| 19 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | pending | | |
-| 20 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler | pending | | |
-| 21 | interceptors | com.dddheroes.heroesofddd.resourcespool.write.withdraw.PaidCommandInterceptor | pending | | |
+| 19 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | done | | Already AF5-shaped; @QueryHandler import correct, no queryName/QueryUpdateEmitter |
+| 20 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler | done | | Already AF5-shaped; idempotent success |
+| 21 | interceptors | com.dddheroes.heroesofddd.resourcespool.write.withdraw.PaidCommandInterceptor | done | | Fixed body: message param used directly, chain.proceed() replaces interceptorChain.proceed(); removed throws Exception |
 | 22 | event-store | com.dddheroes.heroesofddd.HeroesOfDDDApplication | pending | | |
 
 ## Caller decisions log
