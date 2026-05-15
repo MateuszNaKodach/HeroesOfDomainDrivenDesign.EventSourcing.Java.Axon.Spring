@@ -1,5 +1,5 @@
 ## ▶︎ RESUME HERE
-- next: FINALIZE — all items done; run full compile + render report
+- next: DONE — migration complete, build green
 - recipe: (finalize)
 - source: project
 - tree: clean
@@ -40,5 +40,10 @@ note: 78 files changed, committed 0fad52d
 | 20 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler | done | | Already AF5-shaped; idempotent success |
 | 21 | interceptors | com.dddheroes.heroesofddd.resourcespool.write.withdraw.PaidCommandInterceptor | done | | Fixed body: message param used directly, chain.proceed() replaces interceptorChain.proceed(); removed throws Exception |
 | 22 | event-store | com.dddheroes.heroesofddd.HeroesOfDDDApplication | done | | Path A.JPA: EventStoreConfiguration @Bean + @EntityScan(com.dddheroes, org.axonframework, io.axoniq.framework) on main class; schema change required out-of-band |
+
+## Final compile status
+status: ✅ green (BUILD SUCCESS)
+ts: 2026-05-15
+errors: 0
 
 ## Caller decisions log
