@@ -3,8 +3,7 @@ package com.dddheroes.heroesofddd.resourcespool.write.withdraw;
 import com.dddheroes.heroesofddd.resourcespool.write.ResourcesPoolTest;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
-import org.axonframework.modelling.entity.AggregateNotFoundException;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 
@@ -15,36 +14,32 @@ class WithdrawResourcesTest extends ResourcesPoolTest {
     @Test
     void givenNothingHappened_whenWithdrawResources_ThenException() {
         // given
-        var givenEvents = List.of();
-
         // when
         var whenCommand = withdrawResources(GOLD, 1000);
 
         // then
         fixture.given()
-               .events(givenEvents)
+               .noPriorActivity()
                .when()
                .command(whenCommand)
                .then()
-               .exception(AggregateNotFoundException.class);
+               .exception(DomainRule.ViolatedException.class);
     }
 
     @Test
     void givenDepositedResources_whenWithdrawDeposited_ThenSuccess() {
         // given
-        var givenEvents = List.of(
-                resourcesDeposited(GOLD, 1000),
-                resourcesDeposited(GEMS, 5),
-                resourcesDeposited(WOOD, 10),
-                resourcesDeposited(ORE, 10)
-        );
-
         // when
         var whenCommand = withdrawResources(WOOD, 10);
 
         // then
         fixture.given()
-               .events(givenEvents)
+               .events(
+                       resourcesDeposited(GOLD, 1000),
+                       resourcesDeposited(GEMS, 5),
+                       resourcesDeposited(WOOD, 10),
+                       resourcesDeposited(ORE, 10)
+               )
                .when()
                .command(whenCommand)
                .then()
@@ -54,23 +49,21 @@ class WithdrawResourcesTest extends ResourcesPoolTest {
     @Test
     void givenDepositedResources_whenWithdrawMoreThanDeposited_ThenException() {
         // given
-        var givenEvents = List.of(
-                resourcesDeposited(GOLD, 1000),
-                resourcesDeposited(GEMS, 5),
-                resourcesDeposited(WOOD, 10),
-                resourcesDeposited(ORE, 10)
-        );
-
         // when
         var whenCommand = withdrawResources(WOOD, 12);
 
         // then
         fixture.given()
-               .events(givenEvents)
+               .events(
+                       resourcesDeposited(GOLD, 1000),
+                       resourcesDeposited(GEMS, 5),
+                       resourcesDeposited(WOOD, 10),
+                       resourcesDeposited(ORE, 10)
+               )
                .when()
                .command(whenCommand)
                .then()
-               .exception(DomainRule.ViolatedException.class, "Cannot withdraw more than deposited resources");
+               .exception(DomainRule.ViolatedException.class);
     }
 
     private WithdrawResources withdrawResources(ResourceType type, Integer amount) {

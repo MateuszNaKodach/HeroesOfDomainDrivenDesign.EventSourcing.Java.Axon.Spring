@@ -8,8 +8,7 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
 import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
 import org.axonframework.test.fixture.AxonTestFixture;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.*;
 
 public class ResourcesPoolTest {
 
@@ -18,7 +17,15 @@ public class ResourcesPoolTest {
 
     @BeforeEach
     void setUp() {
-        fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(ResourcesPoolId.class, ResourcesPool.class)));
+        fixture = AxonTestFixture.with(
+                EventSourcingConfigurer.create()
+                                       .registerEntity(EventSourcedEntityModule.autodetected(ResourcesPoolId.class, ResourcesPool.class))
+        );
+    }
+
+    @AfterEach
+    void tearDown() {
+        fixture.stop();
     }
 
     protected ResourcesDeposited resourcesDeposited(ResourceType type, Integer amount) {
@@ -27,10 +34,5 @@ public class ResourcesPoolTest {
 
     protected ResourcesWithdrawn resourcesWithdrawn(ResourceType type, Integer amount) {
         return ResourcesWithdrawn.event(resourcesPoolId, Resources.from(type, Amount.of(amount)));
-    }
-
-    @AfterEach
-    void tearDown() {
-        fixture.stop();
     }
 }
