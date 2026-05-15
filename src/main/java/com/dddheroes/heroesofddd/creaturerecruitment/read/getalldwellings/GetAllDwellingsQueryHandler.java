@@ -7,7 +7,7 @@ import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.messaging.core.annotation.MetadataValue;
 import org.axonframework.messaging.core.annotation.Namespace;
 import org.axonframework.messaging.core.sequencing.MetadataSequencingPolicy;
-import org.axonframework.messaging.core.sequencing.annotation.SequencingPolicy;
+import org.axonframework.messaging.core.annotation.SequencingPolicy;
 import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;

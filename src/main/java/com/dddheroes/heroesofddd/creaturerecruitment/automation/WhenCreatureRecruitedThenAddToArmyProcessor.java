@@ -8,8 +8,8 @@ import org.axonframework.messaging.commandhandling.gateway.CommandDispatcher;
 import org.axonframework.messaging.core.Message;
 import org.axonframework.messaging.core.annotation.MetadataValue;
 import org.axonframework.messaging.core.annotation.Namespace;
+import org.axonframework.messaging.core.annotation.SequencingPolicy;
 import org.axonframework.messaging.core.sequencing.MetadataSequencingPolicy;
-import org.axonframework.messaging.core.sequencing.annotation.SequencingPolicy;
 import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.eventhandling.replay.annotation.DisallowReplay;
 import org.springframework.stereotype.Component;
@@ -34,6 +34,6 @@ class WhenCreatureRecruitedThenAddToArmyProcessor {
                                 .getResultMessage()
                                 .thenApply(m -> (Message) m)
                                 .exceptionallyCompose(error -> commandDispatcher.send(compensatingAction, GameMetaData.with(gameId, playerId))
-                                                                               .getResultMessage());
+                                                                               .resultAs(Message.class));
     }
 }

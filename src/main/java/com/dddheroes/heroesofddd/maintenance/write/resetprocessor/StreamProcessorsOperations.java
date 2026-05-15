@@ -1,62 +1,53 @@
 package com.dddheroes.heroesofddd.maintenance.write.resetprocessor;
 
-import org.axonframework.common.configuration.EventProcessingConfiguration;
-import org.axonframework.messaging.eventhandling.TrackingEventProcessor;
-import org.axonframework.messaging.eventhandling.processing.streaming.token.ReplayToken;
-import org.axonframework.messaging.eventhandling.processing.streaming.token.store.TokenStore;
+import org.axonframework.messaging.eventhandling.processing.streaming.StreamingEventProcessor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
-import java.util.OptionalLong;
-import java.util.stream.IntStream;
 
 @Component
 public class StreamProcessorsOperations {
 
-    private final EventProcessingConfiguration eventProcessingConfiguration;
-    private final TokenStore tokenStore;
+    private final ApplicationContext applicationContext;
 
-    StreamProcessorsOperations(EventProcessingConfiguration eventProcessingConfiguration, TokenStore tokenStore) {
-        this.eventProcessingConfiguration = eventProcessingConfiguration;
-        this.tokenStore = tokenStore;
+    StreamProcessorsOperations(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
     public void reset(String processor) {
-        eventProcessingConfiguration
-                .eventProcessorByProcessingGroup(processor, TrackingEventProcessor.class)
+        applicationContext.getBeansOfType(StreamingEventProcessor.class).values().stream()
+                .filter(ep -> ep.name().equals(processor))
+                .findFirst()
                 .ifPresent(eventProcessor -> {
                     if (eventProcessor.supportsReset()) {
-                        eventProcessor.shutDown();
-                        eventProcessor.resetTokens();
-                        eventProcessor.start();
+                        eventProcessor.shutdown().join();
+                        eventProcessor.resetTokens().join();
+                        eventProcessor.start().join();
                     }
                 });
     }
 
-    @Transactional
     public Optional<Progress> progressOf(String processor) {
-        var segments = tokenStore.fetchSegments(processor);
-
-        if (segments.length == 0) {
-            return Optional.empty();
-        } else {
-            var accumulatedProgress = IntStream.of(segments).mapToObj(segment -> {
-                var token = tokenStore.fetchToken(processor, segment);
-
-                var maybeCurrent = token.position();
-                var maybePositionAtReset = token instanceof ReplayToken replayToken
-                        ? replayToken.getTokenAtReset().position()
-                        : OptionalLong.empty();
-
-                return new Progress(maybeCurrent.orElse(0L), maybePositionAtReset.orElse(0L));
-            }).reduce(new Progress(0, 0), (acc, progress) ->
-                    new Progress(acc.current + progress.current, acc.tail + progress.tail));
-
-            return (accumulatedProgress.tail == 0L) ? Optional.empty() : Optional.of(accumulatedProgress);
-        }
+        return applicationContext.getBeansOfType(StreamingEventProcessor.class).values().stream()
+                .filter(ep -> ep.name().equals(processor))
+                .findFirst()
+                .flatMap(eventProcessor -> {
+                    var statusMap = eventProcessor.processingStatus();
+                    if (statusMap.isEmpty()) {
+                        return Optional.empty();
+                    }
+                    var accumulated = statusMap.values().stream()
+                            .reduce(new Progress(0, 0),
+                                    (acc, status) -> new Progress(
+                                            acc.current() + status.getCurrentPosition().orElse(0L),
+                                            acc.tail() + status.getResetPosition().orElse(0L)
+                                    ),
+                                    (a, b) -> new Progress(a.current() + b.current(), a.tail() + b.tail()));
+                    return accumulated.tail() == 0L ? Optional.empty() : Optional.of(accumulated);
+                });
     }
 
     public record Progress(long current, long tail) {
