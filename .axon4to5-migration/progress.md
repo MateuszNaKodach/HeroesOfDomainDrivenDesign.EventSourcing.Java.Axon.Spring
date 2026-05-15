@@ -1,7 +1,7 @@
 ## ▶︎ RESUME HERE
-- next: drain queue — item 11 (command-gateway/BuildDwellingMcp)
-- recipe: command-gateway
-- source: com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp
+- next: drain queue — item 19 (query-handler/GetAllDwellingsQueryHandler)
+- recipe: query-handler
+- source: com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler
 - tree: clean
 - awaiting-caller: no
 
@@ -28,14 +28,14 @@ note: 78 files changed, committed 0fad52d
 | 8 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.automation.WhenCreatureRecruitedThenAddToArmyProcessor | done | | @SequencingPolicy added; try/catch→exceptionallyCompose for compensation; removed YAML sequencing-policy |
 | 9 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelProjector | done | | @SequencingPolicy(MetadataSequencingPolicy, GAME_ID_KEY) added; already AF5-shaped post-OpenRewrite |
 | 10 | event-processor | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | done | | @SequencingPolicy added; YAML Read_GetAllDwellings_QueryCache.sequencing-policy removed; dual-role event+query handler |
-| 11 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp | pending | | |
-| 12 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi | pending | | |
-| 13 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp | pending | | |
-| 14 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi | pending | | |
-| 15 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp | pending | | |
-| 16 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi | pending | | |
-| 17 | query-gateway | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp | pending | | |
-| 18 | query-gateway | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdRestApi | pending | | |
+| 11 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingMcp | done | | .send().resultAs(Void.class) before .thenApply chain |
+| 12 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDwellingRestApi | done | | .send().resultAs(Void.class) |
+| 13 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesMcp | done | | .send().resultAs(Void.class) before .thenApply chain |
+| 14 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreatures.IncreaseAvailableCreaturesRestApi | done | | .send().resultAs(Void.class) |
+| 15 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureMcp | done | | .send().resultAs(Void.class) before .thenApply chain |
+| 16 | command-gateway | com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreatureRestApi | done | | .send().resultAs(Void.class) |
+| 17 | query-gateway | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsMcp | done | | .get() → .get(5, TimeUnit.SECONDS) for timeout |
+| 18 | query-gateway | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdRestApi | done | | Already AF5-shaped; no changes |
 | 19 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getalldwellings.GetAllDwellingsQueryHandler | pending | | |
 | 20 | query-handler | com.dddheroes.heroesofddd.creaturerecruitment.read.getdwellingbyid.GetDwellingByIdQueryHandler | pending | | |
 | 21 | interceptors | com.dddheroes.heroesofddd.resourcespool.write.withdraw.PaidCommandInterceptor | pending | | |

@@ -45,7 +45,7 @@ public class GetAllDwellingsMcp {
                                 .orElseThrow(() -> new IllegalArgumentException("gameId parameter is required in URI (e.g., heroesofddd://games/game-123/dwellings)"));
 
                         var query = GetAllDwellings.query(gameId);
-                        var result = queryGateway.query(query, GetAllDwellings.Result.class).get();
+                        var result = queryGateway.query(query, GetAllDwellings.Result.class).get(5, java.util.concurrent.TimeUnit.SECONDS);
 
                         var jsonContent = formatDwellings(result);
 

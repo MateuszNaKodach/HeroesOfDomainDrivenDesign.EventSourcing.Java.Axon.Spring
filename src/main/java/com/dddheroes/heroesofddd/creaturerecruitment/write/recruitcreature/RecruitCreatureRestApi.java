@@ -41,6 +41,6 @@ class RecruitCreatureRestApi {
                 requestBody.quantity(),
                 requestBody.expectedCost()
         );
-        return commandGateway.send(command, GameMetaData.with(gameId, playerId));
+        return commandGateway.send(command, GameMetaData.with(gameId, playerId)).resultAs(Void.class);
     }
 }
