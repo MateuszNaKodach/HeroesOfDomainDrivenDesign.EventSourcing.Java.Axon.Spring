@@ -268,6 +268,85 @@
 				</plugins>
 			</build>
 		</profile>
+		<profile>
+			<id>isolated-Dwelling</id>
+			<dependencies>
+				<!-- AF5 core — override AF4 axon-spring-boot-starter and axon-test -->
+				<dependency>
+					<groupId>org.axonframework</groupId>
+					<artifactId>axon-modelling</artifactId>
+					<version>5.2.0-SNAPSHOT</version>
+				</dependency>
+				<dependency>
+					<groupId>org.axonframework</groupId>
+					<artifactId>axon-eventsourcing</artifactId>
+					<version>5.2.0-SNAPSHOT</version>
+				</dependency>
+				<dependency>
+					<groupId>org.axonframework</groupId>
+					<artifactId>axon-test</artifactId>
+					<version>5.2.0-SNAPSHOT</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.axonframework.extensions.spring</groupId>
+					<artifactId>axon-spring</artifactId>
+					<version>5.2.0-SNAPSHOT</version>
+				</dependency>
+				<dependency>
+					<groupId>org.axonframework</groupId>
+					<artifactId>axon-messaging</artifactId>
+					<version>5.2.0-SNAPSHOT</version>
+				</dependency>
+				<!-- Jackson 2.21 required: Jackson 3.x (used by axon-messaging) references
+				     com.fasterxml.jackson.annotation.JsonSerializeAs which was added in 2.21;
+				     Spring Boot ships 2.19.x which is missing this class. -->
+				<dependency>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-annotations</artifactId>
+					<version>2.21</version>
+				</dependency>
+			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<configuration>
+							<includes>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/Dwelling.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/AvailableCreaturesChanged.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/CreatureRecruited.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwelling.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreature.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingId.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingCommand.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/OnlyNotBuiltBuildingCanBeBuild.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/OnlyBuiltDwellingCanHaveAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreaturesNotExceedAvailableCreatures.java</include>
+								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCostCannotDifferThanExpectedCost.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/DomainRule.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/valueobjects/Amount.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/valueobjects/Resources.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/CreatureId.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/ArmyId.java</include>
+								<include>com/dddheroes/heroesofddd/shared/domain/valueobjects/ResourceType.java</include>
+								<include>com/dddheroes/heroesofddd/shared/slices/write/Command.java</include>
+							</includes>
+							<testIncludes>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesTest.java</testInclude>
+								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreatureTest.java</testInclude>
+							</testIncludes>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 </project>

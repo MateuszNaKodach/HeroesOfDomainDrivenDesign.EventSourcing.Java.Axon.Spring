@@ -5,6 +5,8 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.eventsourcing.annotation.EventTag;
 import org.axonframework.messaging.eventhandling.annotation.Event;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+import org.axonframework.eventsourcing.annotation.EventTag;
+import org.axonframework.messaging.eventhandling.annotation.Event;
 
 import java.util.Map;
 

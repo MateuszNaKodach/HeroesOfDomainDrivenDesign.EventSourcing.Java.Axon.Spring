@@ -5,6 +5,8 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import org.axonframework.eventsourcing.annotation.EventTag;
 import org.axonframework.messaging.eventhandling.annotation.Event;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+import org.axonframework.eventsourcing.annotation.EventTag;
+import org.axonframework.messaging.eventhandling.annotation.Event;
 
 @Event
 public record AvailableCreaturesChanged(

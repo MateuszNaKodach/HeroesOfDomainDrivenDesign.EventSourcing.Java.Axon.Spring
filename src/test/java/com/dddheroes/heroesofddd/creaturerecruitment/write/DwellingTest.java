@@ -4,13 +4,12 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling.BuildDw
 import com.dddheroes.heroesofddd.creaturerecruitment.events.DwellingBuilt;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
-import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
+import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
+import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
 import org.axonframework.test.fixture.AxonTestFixture;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.*;
 
 public class DwellingTest {
 
@@ -24,7 +23,15 @@ public class DwellingTest {
 
     @BeforeEach
     void setUp() {
-        fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class, Dwelling.class)));
+        fixture = AxonTestFixture.with(
+                EventSourcingConfigurer.create()
+                        .registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class, Dwelling.class))
+        );
+    }
+
+    @AfterEach
+    void tearDown() {
+        fixture.stop();
     }
 
     protected DwellingBuilt dwellingBuilt() {
@@ -33,10 +40,5 @@ public class DwellingTest {
 
     protected BuildDwelling buildDwelling() {
         return BuildDwelling.command(dwellingId.raw(), angelId.raw(), costPerTroop.raw());
-    }
-
-    @AfterEach
-    void tearDown() {
-        fixture.stop();
     }
 }
