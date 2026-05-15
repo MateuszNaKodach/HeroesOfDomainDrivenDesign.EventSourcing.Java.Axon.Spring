@@ -9,9 +9,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
-import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
-import org.axonframework.eventsourcing.Snapshotter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,10 +32,12 @@ class CreatureRecruitmentConfiguration {
         };
     }
 
-    @Bean
-    SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
-        return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
-    }
+    // NOTE: The dwellingSnapshotTrigger bean (EventCountSnapshotTriggerDefinition, N=5) is now dead code
+    // after the AF4→AF5 migration. Snapshotting in AF5 requires explicit EventSourcedEntityModule
+    // registration via declarative(...).snapshotPolicy(c -> SnapshotPolicy.afterEvents(5)).build(),
+    // which is not supported through Spring's @EventSourced auto-detection path.
+    // Snapshotting can be re-enabled by providing a declarative EventSourcedEntityModule @Bean
+    // (without @EventSourced on the entity class) once the Spring extension supports it.
 
     @Bean
     public Module dwellingIdSerializationModule() {

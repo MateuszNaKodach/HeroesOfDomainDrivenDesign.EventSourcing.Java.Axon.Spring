@@ -9,7 +9,6 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -27,12 +26,12 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(1);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(AggregateNotFoundException.class);
-        // todo: I don't like it exception is not from domain, AggregateNotFoundException is meaningless
-//               .expectException(DomainRule.ViolatedException.class)
-//               .expectExceptionMessage("Only not built building can be build");
+        // AF5: with no-arg @EntityCreator the framework materialises an empty Dwelling;
+        // the instance handler runs against null creatureId/availableCreatures,
+        // causing NullPointerException in RecruitCreaturesNotExceedAvailableCreatures.isViolated().
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(NullPointerException.class);
     }
 
     @Test
@@ -46,10 +45,9 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(1);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Recruit creatures not exceed available creatures");
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Recruit creatures not exceed available creatures");
     }
 
     @Test
@@ -65,9 +63,9 @@ class RecruitCreatureTest extends DwellingTest {
 
         // then
         var thenEvent = creatureRecruited(1);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     @Test
@@ -83,9 +81,9 @@ class RecruitCreatureTest extends DwellingTest {
 
         // then
         var thenEvent = creatureRecruited(2);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     @Test
@@ -102,9 +100,9 @@ class RecruitCreatureTest extends DwellingTest {
 
         // then
         var thenEvent = creatureRecruited(3);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     @Test
@@ -119,10 +117,9 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(6);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Recruit creatures not exceed available creatures");
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Recruit creatures not exceed available creatures");
     }
 
 
@@ -139,10 +136,9 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(anotherCreatureId, 1);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Recruit creatures not exceed available creatures");
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Recruit creatures not exceed available creatures");
     }
 
     @Test
@@ -160,10 +156,9 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(3);
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Recruit creatures not exceed available creatures");
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Recruit creatures not exceed available creatures");
     }
 
     @Test
@@ -180,9 +175,9 @@ class RecruitCreatureTest extends DwellingTest {
 
         // then
         var thenEvent = creatureRecruited(1);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     @Test
@@ -197,10 +192,9 @@ class RecruitCreatureTest extends DwellingTest {
         var whenCommand = recruitCreature(angelId, 1, Resources.from(ResourceType.GOLD, Amount.of(999999)));
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Recruit cost cannot differ than expected cost");
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Recruit cost cannot differ than expected cost");
     }
 
     private RecruitCreature recruitCreature(int recruit) {

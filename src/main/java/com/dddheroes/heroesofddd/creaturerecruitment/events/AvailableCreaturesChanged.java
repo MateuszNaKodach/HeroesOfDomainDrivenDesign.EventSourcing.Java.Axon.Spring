@@ -3,8 +3,12 @@ package com.dddheroes.heroesofddd.creaturerecruitment.events;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
+import org.axonframework.eventsourcing.annotation.EventTag;
+import org.axonframework.messaging.eventhandling.annotation.Event;
 
+@Event
 public record AvailableCreaturesChanged(
+        @EventTag(key = "Dwelling")
         String dwellingId,
         String creatureId,
         Integer changedTo

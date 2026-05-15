@@ -2,8 +2,8 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreat
 
 import com.dddheroes.heroesofddd.creaturerecruitment.events.AvailableCreaturesChanged;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingTest;
+import com.dddheroes.heroesofddd.shared.domain.DomainRule;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
-import org.axonframework.modelling.command.AggregateNotFoundException;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -19,10 +19,12 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
         var whenCommand = increaseAvailableCreatures(3);
 
         // then
-        var thenEvent = availableCreaturesChanged(3);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(AggregateNotFoundException.class);
+        // AF5: with no-arg @EntityCreator the framework materialises an empty Dwelling;
+        // the instance handler runs against null dwellingId and the domain rule fires instead
+        // of AggregateNotFoundException.
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Only built dwelling can have available creatures");
     }
 
     @Test
@@ -37,9 +39,9 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
 
         // then
         var thenEvent = availableCreaturesChanged(3);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     @Test
@@ -55,9 +57,9 @@ class IncreaseAvailableCreaturesTest extends DwellingTest {
 
         // then
         var thenEvent = availableCreaturesChanged(4);
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     protected IncreaseAvailableCreatures increaseAvailableCreatures(int increaseBy) {

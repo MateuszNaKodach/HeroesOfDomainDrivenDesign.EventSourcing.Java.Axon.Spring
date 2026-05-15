@@ -6,7 +6,9 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
-import org.axonframework.test.aggregate.AggregateTestFixture;
+import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
+import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
+import org.axonframework.test.fixture.AxonTestFixture;
 import org.junit.jupiter.api.*;
 
 public class DwellingTest {
@@ -17,11 +19,19 @@ public class DwellingTest {
             .from(ResourceType.GOLD, Amount.of(3000))
             .plus(ResourceType.GEMS, Amount.of(1));
 
-    protected AggregateTestFixture<?> fixture;
+    protected AxonTestFixture fixture;
 
     @BeforeEach
     void setUp() {
-        fixture = new AggregateTestFixture<>(Dwelling.class);
+        fixture = AxonTestFixture.with(
+                EventSourcingConfigurer.create()
+                        .registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class, Dwelling.class))
+        );
+    }
+
+    @AfterEach
+    void tearDown() {
+        fixture.stop();
     }
 
     protected DwellingBuilt dwellingBuilt() {

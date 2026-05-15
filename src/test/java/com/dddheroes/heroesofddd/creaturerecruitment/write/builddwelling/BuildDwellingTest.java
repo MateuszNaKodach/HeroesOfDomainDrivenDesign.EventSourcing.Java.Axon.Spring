@@ -18,9 +18,9 @@ class BuildDwellingTest extends DwellingTest {
 
         // then
         var thenEvent = dwellingBuilt();
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectEvents(thenEvent);
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().events(thenEvent);
     }
 
     @Test
@@ -34,9 +34,8 @@ class BuildDwellingTest extends DwellingTest {
         var whenCommand = buildDwelling();
 
         // then
-        fixture.given(givenEvents)
-               .when(whenCommand)
-               .expectException(DomainRule.ViolatedException.class)
-               .expectExceptionMessage("Only not built building can be build");
+        fixture.given().events(givenEvents)
+               .when().command(whenCommand)
+               .then().exception(DomainRule.ViolatedException.class, "Only not built building can be build");
     }
 }
