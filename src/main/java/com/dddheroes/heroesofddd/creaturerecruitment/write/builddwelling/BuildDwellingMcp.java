@@ -2,7 +2,6 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.annotation.Tool;
@@ -46,7 +45,6 @@ public class BuildDwellingMcp {
                     .exceptionally(throwable -> failure(dwellingId, throwable));
         }
 
-        @NotNull
         private static Map<String, Object> failure(String dwellingId, Throwable throwable) {
             return Map.of(
                     "success", false,
@@ -56,7 +54,6 @@ public class BuildDwellingMcp {
             );
         }
 
-        @NotNull
         private static Map<String, Object> getSuccess(String dwellingId, String creatureId, Map<String, Integer> costPerTroop, String playerId) {
             return Map.of(
                     "success", true,

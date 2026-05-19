@@ -2,7 +2,6 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.changeavailablecreat
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.annotation.Tool;
@@ -46,7 +45,6 @@ public class IncreaseAvailableCreaturesMcp {
                     .exceptionally(throwable -> failure(dwellingId, throwable));
         }
 
-        @NotNull
         private static Map<String, Object> success(String dwellingId, String creatureId, Integer increaseBy, String playerId) {
             return Map.of(
                     "success", true,
@@ -58,7 +56,6 @@ public class IncreaseAvailableCreaturesMcp {
             );
         }
 
-        @NotNull
         private static Map<String, Object> failure(String dwellingId, Throwable throwable) {
             return Map.of(
                     "success", false,

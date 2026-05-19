@@ -75,11 +75,11 @@
 			<artifactId>axoniq-spring-boot-starter</artifactId>
             <version>5.1.1-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>io.axoniq.console</groupId>
-			<artifactId>console-framework-client-spring-boot-starter</artifactId>
-			<version>${axoniq-console.version}</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>io.axoniq.console</groupId>-->
+<!--			<artifactId>console-framework-client-spring-boot-starter</artifactId>-->
+<!--			<version>${axoniq-console.version}</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>org.axonframework</groupId>
 			<artifactId>axon-eventsourcing</artifactId>

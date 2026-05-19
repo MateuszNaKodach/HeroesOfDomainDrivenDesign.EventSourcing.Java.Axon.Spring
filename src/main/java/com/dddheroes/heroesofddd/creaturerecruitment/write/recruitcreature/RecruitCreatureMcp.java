@@ -2,7 +2,6 @@ package com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature;
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.annotation.Tool;
@@ -48,7 +47,6 @@ public class RecruitCreatureMcp {
                     .exceptionally(throwable -> failure(dwellingId, throwable));
         }
 
-        @NotNull
         private static Map<String, Object> success(String dwellingId, String creatureId, String armyId, Integer quantity, String playerId) {
             return Map.of(
                     "success", true,
@@ -61,7 +59,6 @@ public class RecruitCreatureMcp {
             );
         }
 
-        @NotNull
         private static Map<String, Object> failure(String dwellingId, Throwable throwable) {
             return Map.of(
                     "success", false,
