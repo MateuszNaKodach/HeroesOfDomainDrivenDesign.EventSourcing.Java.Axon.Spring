@@ -9,11 +9,13 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
-import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 import com.dddheroes.heroesofddd.utils.EventStoreAssertions;
+import org.axonframework.eventsourcing.annotation.EventTag;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.core.Metadata;
+import org.axonframework.messaging.eventhandling.annotation.Event;
+import org.axonframework.messaging.eventhandling.gateway.EventAppender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -200,6 +202,12 @@ class PaidCommandInterceptorTest {
         }
     }
 
+    @Event
+    record TestEvent(
+            @EventTag(key = "TestAggregate")
+            String identifier
+    ) {}
+
 
     @TestConfiguration
     static class TestConfig {
@@ -226,23 +234,17 @@ class PaidCommandInterceptorTest {
         @Component
         static class TestCommandHandler {
 
-            private final AggregateEventPublisher aggregateEventPublisher;
-
-            TestCommandHandler(AggregateEventPublisher aggregateEventPublisher) {
-                this.aggregateEventPublisher = aggregateEventPublisher;
-            }
-
             @CommandHandler
-            public void handle(TestPaidCommand command) {
+            public void handle(TestPaidCommand command, EventAppender eventAppender) {
                 if (command.failing) {
                     throw new RuntimeException("TestPaidCommand failed! Resources withdrawal should be rolled back");
                 }
-                aggregateEventPublisher.publish("TestAggregate", command.identifier, Metadata.emptyInstance(), "TestEvent");
+                eventAppender.append(new TestEvent(command.identifier));
             }
 
             @CommandHandler
-            public void handle(TestNonPaidCommand command) {
-                aggregateEventPublisher.publish("TestAggregate", command.identifier, Metadata.emptyInstance(), "TestEvent");
+            public void handle(TestNonPaidCommand command, EventAppender eventAppender) {
+                eventAppender.append(new TestEvent(command.identifier));
             }
         }
     }
