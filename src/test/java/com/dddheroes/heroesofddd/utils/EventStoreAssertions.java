@@ -4,6 +4,8 @@ import org.axonframework.eventsourcing.eventstore.ConsistencyMarker;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.SourcingCondition;
 import org.axonframework.messaging.core.MessageStream;
+import org.axonframework.messaging.core.MessageType;
+import org.axonframework.messaging.core.conversion.MessageConverter;
 import org.axonframework.messaging.eventhandling.EventMessage;
 import org.axonframework.messaging.eventstreaming.EventCriteria;
 import org.axonframework.messaging.eventstreaming.Tag;
@@ -26,28 +28,34 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class EventStoreAssertions {
 
     private final EventStorageEngine eventStorageEngine;
+    private final MessageConverter messageConverter;
 
-    EventStoreAssertions(EventStorageEngine eventStorageEngine) {
+    EventStoreAssertions(EventStorageEngine eventStorageEngine, MessageConverter messageConverter) {
         this.eventStorageEngine = eventStorageEngine;
+        this.messageConverter = messageConverter;
     }
 
     public void assertEventStored(String aggregateType, String aggregateId, Class<?> eventType) {
         var events = readEvents(aggregateType, aggregateId);
-        assertTrue(events.stream().map(e -> e.payload().getClass()).anyMatch(eventType::equals),
+        var expectedQualifiedName = new MessageType(eventType).qualifiedName();
+        assertTrue(events.stream().map(e -> e.type().qualifiedName()).anyMatch(expectedQualifiedName::equals),
                 () -> "Expected event of type " + eventType.getName() + " for "
                       + aggregateType + " " + aggregateId + " but found: " + payloadTypes(events));
     }
 
     public void assertEventNotStored(String aggregateType, String aggregateId, Class<?> eventType) {
         var events = readEvents(aggregateType, aggregateId);
-        assertTrue(events.stream().map(e -> e.payload().getClass()).noneMatch(eventType::equals),
+        var expectedQualifiedName = new MessageType(eventType).qualifiedName();
+        assertTrue(events.stream().map(e -> e.type().qualifiedName()).noneMatch(expectedQualifiedName::equals),
                 () -> "Expected no event of type " + eventType.getName() + " for "
                       + aggregateType + " " + aggregateId + " but found one in: " + payloadTypes(events));
     }
 
-    public void assertEventStored(String aggregateType, String aggregateId, Object payload) {
+    @SuppressWarnings("unchecked")
+    public <T> void assertEventStored(String aggregateType, String aggregateId, T payload) {
         var events = readEvents(aggregateType, aggregateId);
-        assertTrue(events.stream().map(EventMessage::payload).anyMatch(payload::equals));
+        var payloadType = (Class<T>) payload.getClass();
+        assertTrue(events.stream().anyMatch(e -> payload.equals(e.payloadAs(payloadType, messageConverter))));
     }
 
     public void assertNoEventsStored(String aggregateType, String aggregateId) {
@@ -77,7 +85,7 @@ public class EventStoreAssertions {
         ).join();
     }
 
-    private static List<String> payloadTypes(List<EventMessage> events) {
-        return events.stream().map(e -> e.payload().getClass().getSimpleName()).toList();
+    private static List<MessageType> payloadTypes(List<EventMessage> events) {
+        return events.stream().map(EventMessage::type).toList();
     }
 }
