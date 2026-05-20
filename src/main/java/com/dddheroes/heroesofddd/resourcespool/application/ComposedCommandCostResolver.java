@@ -1,39 +1,44 @@
 package com.dddheroes.heroesofddd.resourcespool.application;
 
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import com.dddheroes.heroesofddd.shared.slices.write.Command;
+import org.axonframework.messaging.commandhandling.CommandMessage;
+import org.axonframework.messaging.core.QualifiedName;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ComposedCommandCostResolver implements CommandCostResolver<Command> {
+public class ComposedCommandCostResolver implements CommandCostResolver {
 
-    private final Map<Class<? extends Command>, CommandCostResolver<?>> resolvers;
+    private final Map<QualifiedName, CommandCostResolver> resolvers;
 
-    public ComposedCommandCostResolver(Set<CommandCostResolver<?>> commandCostResolvers) {
+    public ComposedCommandCostResolver(Set<CommandCostResolver> commandCostResolvers) {
         this.resolvers = commandCostResolvers
                 .stream()
                 .collect(Collectors.toMap(
-                        CommandCostResolver::supportedCommandType,
+                        CommandCostResolver::supportedCommand,
                         Function.identity()
                 ));
     }
 
-
     @Override
-    public <T extends Command> Resources resolve(T command) {
-        @SuppressWarnings("unchecked")
-        var resolver = (CommandCostResolver<T>) resolvers.get(command.getClass());
+    public Resources resolve(CommandMessage message, ProcessingContext context) {
+        var resolver = resolvers.get(message.type().qualifiedName());
         if (resolver == null) {
             return Resources.empty();
         }
-        return resolver.resolve(command);
+        return resolver.resolve(message, context);
     }
 
     @Override
-    public Class<? extends Command> supportedCommandType() {
-        return Command.class;
+    public boolean isSupported(CommandMessage message) {
+        return resolvers.containsKey(message.type().qualifiedName());
+    }
+
+    @Override
+    public QualifiedName supportedCommand() {
+        throw new UnsupportedOperationException("ComposedCommandCostResolver delegates to specific resolvers");
     }
 }

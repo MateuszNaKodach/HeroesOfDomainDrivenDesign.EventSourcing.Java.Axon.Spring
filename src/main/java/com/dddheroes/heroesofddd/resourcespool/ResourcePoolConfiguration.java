@@ -14,7 +14,7 @@ class ResourcePoolConfiguration {
 
     @ConditionalOnProperty(value = "application.interceptors.paid-commands.enabled", havingValue = "true")
     @Bean
-    PaidCommandInterceptor paidCommandInterceptor(Set<CommandCostResolver<?>> commandCostResolvers) {
+    PaidCommandInterceptor paidCommandInterceptor(Set<CommandCostResolver> commandCostResolvers) {
         return new PaidCommandInterceptor(new ComposedCommandCostResolver(commandCostResolvers));
     }
 }

@@ -11,9 +11,14 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
 import com.dddheroes.heroesofddd.utils.EventStoreAssertions;
 import org.axonframework.eventsourcing.annotation.EventTag;
+import org.axonframework.messaging.commandhandling.CommandMessage;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.core.MessageType;
 import org.axonframework.messaging.core.Metadata;
+import org.axonframework.messaging.core.QualifiedName;
+import org.axonframework.messaging.core.conversion.MessageConverter;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
 import org.axonframework.messaging.eventhandling.annotation.Event;
 import org.axonframework.messaging.eventhandling.gateway.EventAppender;
 import org.junit.jupiter.api.BeforeEach;
@@ -214,20 +219,18 @@ class PaidCommandInterceptorTest {
 
         @Component
         @Primary
-        static class TestCommandCostResolver
-                implements CommandCostResolver<PaidCommandInterceptorTest.TestPaidCommand> {
+        static class TestCommandCostResolver implements CommandCostResolver {
 
             @Override
-            public <T extends PaidCommandInterceptorTest.TestPaidCommand> Resources resolve(T command) {
-                if (command instanceof PaidCommandInterceptorTest.TestPaidCommand paidCommand) {
-                    return Resources.from(paidCommand.cost());
-                }
-                return Resources.empty();
+            public Resources resolve(CommandMessage message, ProcessingContext context) {
+                var converter = context.component(MessageConverter.class);
+                var command = message.payloadAs(PaidCommandInterceptorTest.TestPaidCommand.class, converter);
+                return Resources.from(command.cost());
             }
 
             @Override
-            public Class<? extends PaidCommandInterceptorTest.TestPaidCommand> supportedCommandType() {
-                return PaidCommandInterceptorTest.TestPaidCommand.class;
+            public QualifiedName supportedCommand() {
+                return new MessageType(PaidCommandInterceptorTest.TestPaidCommand.class).qualifiedName();
             }
         }
 

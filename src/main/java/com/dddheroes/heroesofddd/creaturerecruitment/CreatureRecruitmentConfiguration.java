@@ -5,6 +5,11 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Recru
 import com.dddheroes.heroesofddd.resourcespool.application.CommandCostResolver;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.fasterxml.jackson.core.JsonGenerator;
+import org.axonframework.messaging.commandhandling.CommandMessage;
+import org.axonframework.messaging.core.MessageType;
+import org.axonframework.messaging.core.QualifiedName;
+import org.axonframework.messaging.core.conversion.MessageConverter;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.Module;
@@ -18,16 +23,17 @@ import java.io.IOException;
 class CreatureRecruitmentConfiguration {
 
     @Bean
-    CommandCostResolver<RecruitCreature> recruitCreatureCostResolver() {
-        return new CommandCostResolver<>() {
+    CommandCostResolver recruitCreatureCostResolver() {
+        return new CommandCostResolver() {
             @Override
-            public <T extends RecruitCreature> Resources resolve(T command) {
-                return command.expectedCost();
+            public Resources resolve(CommandMessage message, ProcessingContext context) {
+                var converter = context.component(MessageConverter.class);
+                return message.payloadAs(RecruitCreature.class, converter).expectedCost();
             }
 
             @Override
-            public Class<? extends RecruitCreature> supportedCommandType() {
-                return RecruitCreature.class;
+            public QualifiedName supportedCommand() {
+                return new MessageType(RecruitCreature.class).qualifiedName();
             }
         };
     }

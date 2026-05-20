@@ -1,23 +1,24 @@
 package com.dddheroes.heroesofddd.resourcespool.application;
 
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
-import com.dddheroes.heroesofddd.shared.slices.write.Command;
+import org.axonframework.messaging.commandhandling.CommandMessage;
+import org.axonframework.messaging.core.QualifiedName;
+import org.axonframework.messaging.core.unitofwork.ProcessingContext;
 
-public interface CommandCostResolver<C extends Command> {
+public interface CommandCostResolver {
 
-    default <T extends C> Resources cost(T command) {
-        if (isSupported(command)) {
-            return resolve(command);
-        } else {
-            return Resources.empty();
+    default Resources cost(CommandMessage message, ProcessingContext context) {
+        if (isSupported(message)) {
+            return resolve(message, context);
         }
+        return Resources.empty();
     }
 
-    <T extends C> Resources resolve(T command);
+    Resources resolve(CommandMessage message, ProcessingContext context);
 
-    default <T extends C> boolean isSupported(T command) {
-        return supportedCommandType().isAssignableFrom(command.getClass());
+    default boolean isSupported(CommandMessage message) {
+        return supportedCommand().equals(message.type().qualifiedName());
     }
 
-    Class<? extends C> supportedCommandType();
+    QualifiedName supportedCommand();
 }
