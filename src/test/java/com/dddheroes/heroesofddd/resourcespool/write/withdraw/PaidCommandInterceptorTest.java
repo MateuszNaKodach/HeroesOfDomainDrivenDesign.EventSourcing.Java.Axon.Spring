@@ -9,13 +9,11 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.GameId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.PlayerId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import com.dddheroes.heroesofddd.shared.slices.write.Command;
+import com.dddheroes.heroesofddd.utils.AggregateEventPublisher;
 import com.dddheroes.heroesofddd.utils.EventStoreAssertions;
-import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.commandhandling.RoutingKey;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.eventhandling.GenericDomainEventMessage;
-import org.axonframework.eventhandling.gateway.EventGateway;
-import org.axonframework.messaging.MetaData;
+import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
+import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.core.Metadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +71,7 @@ class PaidCommandInterceptorTest {
 
         // then
         eventStoreAssertions.assertEventStored(
+                "ResourcesPool",
                 resourcesPoolId,
                 ResourcesWithdrawn.event(
                         ResourcesPoolId.of(resourcesPoolId),
@@ -98,8 +97,8 @@ class PaidCommandInterceptorTest {
                         "TestPaidCommand failed! Resources withdrawal should be rolled back"));
 
         // then
-        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
-        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
+        eventStoreAssertions.assertEventNotStored("ResourcesPool", resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored("TestAggregate", paidCommand.identifier);
     }
 
     @Test
@@ -115,8 +114,8 @@ class PaidCommandInterceptorTest {
         // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
-        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
+        eventStoreAssertions.assertEventNotStored("ResourcesPool", resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored("TestAggregate", paidCommand.identifier);
     }
 
     @Test
@@ -132,8 +131,8 @@ class PaidCommandInterceptorTest {
         // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
-        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
+        eventStoreAssertions.assertEventNotStored("ResourcesPool", resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored("TestAggregate", paidCommand.identifier);
     }
 
     @Test
@@ -148,8 +147,8 @@ class PaidCommandInterceptorTest {
         executePlayerCommand(nonPaidCommand);
 
         // then
-        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
-        eventStoreAssertions.assertEventsStoredCount(nonPaidCommand.identifier, 1);
+        eventStoreAssertions.assertEventNotStored("ResourcesPool", resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertEventsStoredCount("TestAggregate", nonPaidCommand.identifier, 1);
     }
 
     @Test
@@ -160,16 +159,16 @@ class PaidCommandInterceptorTest {
         // then
         assertThatThrownBy(() -> executePlayerCommand(paidCommand))
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-        eventStoreAssertions.assertEventNotStored(resourcesPoolId, ResourcesWithdrawn.class);
-        eventStoreAssertions.assertNoEventsStored(paidCommand.identifier);
+        eventStoreAssertions.assertEventNotStored("ResourcesPool", resourcesPoolId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertNoEventsStored("TestAggregate", paidCommand.identifier);
     }
 
     private void executePlayerCommand(Command command) {
-        commandGateway.sendAndWait(command, gameMetaData());
+        commandGateway.send(command, gameMetaData()).resultAs(Void.class).join();
     }
 
-    private MetaData gameMetaData() {
-        return MetaData.with("gameId", GAME_ID)
+    private Metadata gameMetaData() {
+        return Metadata.with("gameId", GAME_ID)
                        .and("playerId", playerId);
     }
 
@@ -177,8 +176,8 @@ class PaidCommandInterceptorTest {
         return ResourcesPoolId.of(playerId).raw();
     }
 
+    @org.axonframework.messaging.commandhandling.annotation.Command(routingKey = "identifier")
     record TestPaidCommand(
-            @RoutingKey
             String identifier,
             Map<String, Integer> cost,
             boolean failing
@@ -193,7 +192,8 @@ class PaidCommandInterceptorTest {
         }
     }
 
-    record TestNonPaidCommand(@RoutingKey String identifier) implements Command {
+    @org.axonframework.messaging.commandhandling.annotation.Command(routingKey = "identifier")
+    record TestNonPaidCommand(String identifier) implements Command {
 
         TestNonPaidCommand() {
             this(UUID.randomUUID().toString());
@@ -226,10 +226,10 @@ class PaidCommandInterceptorTest {
         @Component
         static class TestCommandHandler {
 
-            private final EventGateway eventGateway;
+            private final AggregateEventPublisher aggregateEventPublisher;
 
-            TestCommandHandler(EventGateway eventGateway) {
-                this.eventGateway = eventGateway;
+            TestCommandHandler(AggregateEventPublisher aggregateEventPublisher) {
+                this.aggregateEventPublisher = aggregateEventPublisher;
             }
 
             @CommandHandler
@@ -237,18 +237,12 @@ class PaidCommandInterceptorTest {
                 if (command.failing) {
                     throw new RuntimeException("TestPaidCommand failed! Resources withdrawal should be rolled back");
                 }
-                eventGateway.publish(new GenericDomainEventMessage<>("TestAggregate",
-                                                                     command.identifier,
-                                                                     0,
-                                                                     "TestEvent"));
+                aggregateEventPublisher.publish("TestAggregate", command.identifier, Metadata.emptyInstance(), "TestEvent");
             }
 
             @CommandHandler
             public void handle(TestNonPaidCommand command) {
-                eventGateway.publish(new GenericDomainEventMessage<>("TestAggregate",
-                                                                     command.identifier,
-                                                                     0,
-                                                                     "TestEvent"));
+                aggregateEventPublisher.publish("TestAggregate", command.identifier, Metadata.emptyInstance(), "TestEvent");
             }
         }
     }

@@ -5,18 +5,20 @@ import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.jpa.AggregateBasedJpaEventStorageEngine;
 import org.axonframework.messaging.core.unitofwork.transaction.jpa.JpaTransactionalExecutorProvider;
 import org.axonframework.messaging.eventhandling.conversion.EventConverter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.function.UnaryOperator;
 
-// Forces aggregate-based JPA storage. Without this @Bean, axon-server-connector's
-// ServiceLoader-discovered AxonServerConfigurationEnhancer (order = MIN_VALUE+10)
-// runs before JpaEventStoreAutoConfiguration's enhancer (order ≈ MAX_VALUE) and
-// registers AxonServerEventStorageEngine (DCB-flat) via registerIfNotPresent —
-// even with axon.axonserver.enabled=false. SearchScope.ALL on registerIfNotPresent
-// makes a Spring bean of EventStorageEngine win.
 @Configuration
+@EntityScan(basePackages = {
+        "com.dddheroes.heroesofddd",
+        "org.axonframework",
+        "io.axoniq.framework"
+})
+@ConditionalOnProperty(name = "axon.axonserver.enabled", havingValue = "false")
 public class EventStoreConfiguration {
 
     @Bean

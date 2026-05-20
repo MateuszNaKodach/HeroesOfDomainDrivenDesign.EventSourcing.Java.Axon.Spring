@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Import;
 
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Import(TestcontainersConfiguration.class)
@@ -116,8 +118,8 @@ class RecruitCreatureRequiresResourcesTest {
         // then
         assertThatThrownBy(() -> executePlayerCommand(recruitCommand))
                 .satisfies(e -> assertThat(e).hasMessageContaining("Cannot withdraw more than deposited resources"));
-        eventStoreAssertions.assertEventNotStored(dwellingId, CreatureRecruited.class);
-        eventStoreAssertions.assertEventNotStored(dwellingId, ResourcesWithdrawn.class);
+        eventStoreAssertions.assertEventNotStored("Dwelling", dwellingId, CreatureRecruited.class);
+        eventStoreAssertions.assertEventNotStored("ResourcesPool", playerResourcesPoolId(), ResourcesWithdrawn.class);
     }
 
     private void executePlayerCommand(Command command) {
