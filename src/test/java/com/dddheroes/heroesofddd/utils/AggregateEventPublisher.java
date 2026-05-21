@@ -64,6 +64,25 @@ public class AggregateEventPublisher {
         publish(aggregateType, aggregateId, metadata, Arrays.asList(payloads));
     }
 
+    /**
+     * Publishes events for the given aggregate within a fresh UnitOfWork.
+     * <p>
+     * <b>Why {@code source(existing)} is required:</b> AF5's aggregate sequencer assigns the next
+     * {@code aggregate_sequence_number} by reading an {@code aggregatePositions} map that is populated
+     * from the {@link org.axonframework.eventsourcing.eventstore.AppendCondition}'s
+     * {@link org.axonframework.eventsourcing.eventstore.ConsistencyMarker}. Without sourcing first, the map is
+     * empty and the sequencer always starts at 0. On the second separate {@code publish()} call for the same
+     * aggregate that would produce a duplicate {@code (aggregate_identifier, aggregate_sequence_number = 0)}
+     * and trigger a unique-constraint violation. Calling {@code transaction.source(existing)} populates the
+     * marker so the sequencer continues from the existing position instead of restarting.
+     * <p>
+     * <b>Why {@link org.axonframework.messaging.eventhandling.gateway.EventAppender#forContext} cannot replace this:</b>
+     * {@code EventAppender.forContext(ctx).append(...)} delegates to
+     * {@link org.axonframework.eventsourcing.eventstore.StorageEngineBackedEventStore#publish}, which calls
+     * {@code eventStorageEngine.appendEvents(AppendCondition.none(), ...)} directly — bypassing the
+     * transaction's sequence tracking entirely. That path is correct for single-shot publishes where no
+     * prior aggregate state exists, but not for the multi-call "given" setup pattern used in tests.
+     */
     public void publish(String aggregateType, String aggregateId, Metadata metadata, List<?> payloads) {
         unitOfWorkFactory.create()
                 .executeWithResult(ctx -> {
