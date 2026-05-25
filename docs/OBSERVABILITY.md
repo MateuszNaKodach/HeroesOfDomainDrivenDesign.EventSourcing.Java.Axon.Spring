@@ -1,52 +1,82 @@
 # 📊 Observability — distributed tracing
 
-The app can emit distributed traces to an Elastic APM stack (Elasticsearch + Kibana + APM Server) via OpenTelemetry. Tracing is **off by default** and activated by the `observability` Spring profile, with its own Docker Compose overlay.
+The app can emit distributed traces to either **Elastic APM** or **Jaeger** via OpenTelemetry. Tracing is **off by default** and activated by one of two Spring profiles, each paired with its own Docker Compose overlay.
 
 > 👉 Back to the [main README](../README.md).
 
 ## Table of contents
 
-1. [Stack](#stack)
-2. [Run with tracing enabled](#run-with-tracing-enabled)
-3. [Run without tracing (default)](#run-without-tracing-default)
-4. [Ports & URLs](#ports--urls)
-5. [Exploring traces in Kibana — guided tour](#exploring-traces-in-kibana--guided-tour)
-6. [Useful Kibana filters](#useful-kibana-filters)
-7. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
+1. [Backends — pick one](#backends--pick-one)
+2. [Stack components](#stack-components)
+3. [Run with Elastic APM](#run-with-elastic-apm)
+4. [Run with Jaeger](#run-with-jaeger)
+5. [Run without tracing (default)](#run-without-tracing-default)
+6. [Ports & URLs](#ports--urls)
+7. [Exploring traces in Kibana — guided tour](#exploring-traces-in-kibana--guided-tour)
+8. [Same traces in Jaeger](#same-traces-in-jaeger)
+9. [Useful filters](#useful-filters)
+10. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
 
-## Stack
+## Backends — pick one
+
+| Backend         | Spring profile             | Compose overlay                                  | Footprint    | UI                                  | When to use                                    |
+|-----------------|----------------------------|--------------------------------------------------|--------------|-------------------------------------|------------------------------------------------|
+| **Elastic APM** | `observability-elastic`    | `docker-compose.observability-elastic.yaml`      | ~2 GB RAM    | Kibana APM (rich, service map, KQL) | Production-realistic UX, queries, dashboards   |
+| **Jaeger**      | `observability-jaeger`     | `docker-compose.observability-jaeger.yaml`       | ~150 MB RAM  | Jaeger UI (simple waterfall)        | Quick spin-up, demos, CI, constrained machines |
+
+The two profiles are **alternatives** — pick the backend you want for a given session. The base `observability` profile (sampling, OTLP/HTTP transport, Axon `OpenTelemetrySpanFactory` wiring) is inherited by both via Spring's `spring.profiles.group`, so switching backends is a one-line change.
+
+## Stack components
 
 | Component | Role |
 |---|---|
 | [`axon-tracing-opentelemetry`](https://docs.axoniq.io/axon-framework-reference/4.13/monitoring/tracing/) | Instruments command/event/query handlers, aggregates, repositories, event store |
 | [`micrometer-tracing-bridge-otel`](https://docs.spring.io/spring-boot/reference/actuator/tracing.html) | Spring Boot's official bridge from Micrometer Observation to OpenTelemetry |
-| [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the APM Server |
+| [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the chosen backend |
 | [Elastic APM 9.x](https://www.elastic.co/observability/application-performance-monitoring) | Receives OTLP, stores in Elasticsearch, visualizes in Kibana |
+| [Jaeger 2.x](https://www.jaegertracing.io/) | Receives OTLP directly, in-memory storage, lightweight UI |
 
 Activation surface:
-- New Spring profile **`observability`**
-- New Docker Compose overlay **`docker-compose.observability.yaml`** (Elasticsearch + Kibana + APM Server, pinned to `9.4.1`)
-- New config file **`apm-server.docker.yml`** mounted into the APM Server container
-- New profile-specific config **`src/main/resources/application-observability.yaml`** (enables tracing, 100% sampling, OTLP endpoint)
-- New bean in **`shared/infrastructure/TracingConfiguration.java`** — wires Axon's `OpenTelemetrySpanFactory` to Micrometer-managed `OpenTelemetry` so Axon and Spring spans land in the same trace tree
+- Base profile **`observability`** — common tracing config (sampling, transport, Axon span factory bean). Never activated directly.
+- Profile **`observability-elastic`** — base + Elastic APM endpoint
+- Profile **`observability-jaeger`** — base + Jaeger endpoint
+- Profile groups in `application.yaml` make the two child profiles automatically include the base.
 
-## Run with tracing enabled
+## Run with Elastic APM
 
-1. Start the base stack + observability stack:
+1. Start the base stack + Elastic observability stack:
    ```bash
-   docker compose -f docker-compose.yaml -f docker-compose.observability.yaml up -d
+   docker compose -f docker-compose.yaml -f docker-compose.observability-elastic.yaml up -d
    ```
    Wait ~60s for Elasticsearch and Kibana to be ready.
 
-2. Run the app with the `observability` profile:
+2. Run the app with the `observability-elastic` profile:
    ```bash
-   SPRING_PROFILES_ACTIVE=observability ./mvnw spring-boot:run
+   SPRING_PROFILES_ACTIVE=observability-elastic ./mvnw spring-boot:run
    ```
-   Or via Maven flag: `./mvnw spring-boot:run -Dspring-boot.run.profiles=observability`.
+   Or: `./mvnw spring-boot:run -Dspring-boot.run.profiles=observability-elastic`.
 
 3. Generate some traffic via Swagger UI at [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html).
 
 4. Open Kibana APM — see [the guided tour below](#exploring-traces-in-kibana--guided-tour).
+
+## Run with Jaeger
+
+1. Start the base stack + Jaeger:
+   ```bash
+   docker compose -f docker-compose.yaml -f docker-compose.observability-jaeger.yaml up -d
+   ```
+   Jaeger v2 starts in seconds — UI is ready almost immediately.
+
+2. Run the app with the `observability-jaeger` profile:
+   ```bash
+   SPRING_PROFILES_ACTIVE=observability-jaeger ./mvnw spring-boot:run
+   ```
+   Or: `./mvnw spring-boot:run -Dspring-boot.run.profiles=observability-jaeger`.
+
+3. Generate some traffic via Swagger UI at [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html).
+
+4. Open Jaeger UI at [http://localhost:16686](http://localhost:16686) — see [Same traces in Jaeger](#same-traces-in-jaeger) below.
 
 ## Run without tracing (default)
 
@@ -55,21 +85,24 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-No `observability` profile = no traces emitted, no extra containers needed. Useful for daily development.
+No `observability-*` profile = no traces emitted, no extra containers needed. Useful for daily development.
 
 ## Ports & URLs
 
-| Service                    | Port | URL                                                                                       |
-|----------------------------|------|-------------------------------------------------------------------------------------------|
-| Kibana (APM UI)            | 5601 | [http://localhost:5601](http://localhost:5601)                                            |
-| Kibana → APM → Services    |      | [http://localhost:5601/app/apm/services](http://localhost:5601/app/apm/services)          |
-| Kibana → APM → Traces      |      | [http://localhost:5601/app/apm/traces](http://localhost:5601/app/apm/traces)              |
-| Elasticsearch              | 9200 | [http://localhost:9200](http://localhost:9200)                                            |
-| APM Server (OTLP receiver) | 8200 | [http://localhost:8200/v1/traces](http://localhost:8200/v1/traces)                        |
+| Service                              | Port  | URL                                                                                | Used by profile           |
+|--------------------------------------|-------|------------------------------------------------------------------------------------|---------------------------|
+| Kibana (APM UI)                      | 5601  | [http://localhost:5601](http://localhost:5601)                                     | `observability-elastic`   |
+| Kibana → APM → Services              |       | [http://localhost:5601/app/apm/services](http://localhost:5601/app/apm/services)   | `observability-elastic`   |
+| Kibana → APM → Traces                |       | [http://localhost:5601/app/apm/traces](http://localhost:5601/app/apm/traces)       | `observability-elastic`   |
+| Elasticsearch                        | 9200  | [http://localhost:9200](http://localhost:9200)                                     | `observability-elastic`   |
+| Elastic APM Server (OTLP receiver)   | 8200  | [http://localhost:8200/v1/traces](http://localhost:8200/v1/traces)                 | `observability-elastic`   |
+| Jaeger UI                            | 16686 | [http://localhost:16686](http://localhost:16686)                                   | `observability-jaeger`    |
+| Jaeger OTLP receiver (HTTP)          | 4318  | [http://localhost:4318/v1/traces](http://localhost:4318/v1/traces)                 | `observability-jaeger`    |
+| Jaeger OTLP receiver (gRPC)          | 4317  | grpc://localhost:4317                                                              | `observability-jaeger`    |
 
 ## Exploring traces in Kibana — guided tour
 
-A quick walkthrough of what you can see and where to click. Examples below were captured after running the full chain `BuildDwelling → IncreaseAvailableCreatures → RecruitCreature → GetDwellingById` through Swagger UI.
+A quick walkthrough of what you can see and where to click. Examples below were captured after running the full chain `BuildDwelling → IncreaseAvailableCreatures → RecruitCreature → GetDwellingById` through Swagger UI with the `observability-elastic` profile active.
 
 ### 1. Service inventory
 
@@ -135,7 +168,27 @@ labels.axon_payload_type       = com.dddheroes…RecruitCreature
 
 This is the practical payoff: filtering traces by `labels.axon_metadata_gameId : "scenario-1"` in the Kibana search bar isolates every span — across every aggregate, processor and projector — that participated in one game session.
 
-## Useful Kibana filters
+## Same traces in Jaeger
+
+With `observability-jaeger` active, the **same** trace data is produced — Jaeger just renders it differently:
+
+1. Open [http://localhost:16686](http://localhost:16686).
+2. **Service** dropdown → pick `heroesofddd`.
+3. **Operation** dropdown → e.g. `CommandBus.handleCommand(RecruitCreature)`.
+4. Click **Find Traces** → see the same waterfall tree (`Repository.load`, `Dwelling.decide`, `EventBus.publishEvent`, …).
+5. Click any span → "Tags" panel shows the same OTel attributes as Kibana labels, with dot-notation: `axon.message.id`, `axon.message.name`, `axon.metadata.gameId`, `axon.metadata.playerId`, etc.
+
+Trade-offs vs Kibana APM:
+- ✅ **Lighter** — one container, instant startup, no Elasticsearch index management
+- ✅ **Simpler** — direct trace search by service / operation / tag / duration
+- ❌ **No service map** — Kibana shows topology between services; Jaeger v2 OSS doesn't
+- ❌ **No KQL** — Jaeger uses a simpler tag-equality search (`tag: axon.metadata.gameId=scenario-1`) rather than full KQL
+- ❌ **No persistence by default** — all-in-one stores traces in memory; restart loses them
+- ❌ **No metrics/logs correlation** — Kibana correlates traces with the rest of the Elastic stack
+
+## Useful filters
+
+### Kibana (KQL)
 
 Paste into the Kibana search bar (KQL) at the top of any APM page:
 
@@ -147,8 +200,20 @@ Paste into the Kibana search bar (KQL) at the top of any APM page:
 | Only automation reactions | `span.name : "*Processor.react(*)"` |
 | Only event publications | `span.name : "EventBus.publishEvent(*)"` |
 
+### Jaeger (Tags field)
+
+In the Jaeger UI search form, the **Tags** field accepts space-separated `key=value` pairs:
+
+| Goal | Tag query |
+|---|---|
+| Traces for one game | `axon.metadata.gameId=scenario-1` |
+| One specific player's traces | `axon.metadata.playerId=player-1` |
+| Combine | `axon.metadata.gameId=scenario-1 axon.metadata.playerId=player-1` |
+
+(Operation-level filtering — e.g. "only `Dwelling.decide` spans" — is done via the **Operation** dropdown, not the Tags field.)
+
 ## Why Axon splits work across multiple traces
 
-You'll notice that an HTTP request often produces *two or three* separate trace trees rather than one giant tree. That's expected. Axon hops over async boundaries that don't preserve OpenTelemetry context: the gRPC call to Axon Server (server-side `handleDistributedCommand` starts a new root) and the asynchronous event processors (each `process(Event)` is its own root). Inside one boundary, however, the tree is complete — as the waterfall above shows.
+You'll notice that an HTTP request often produces *two or three* separate trace trees rather than one giant tree. That's expected. Axon hops over async boundaries that don't preserve OpenTelemetry context: the gRPC call to Axon Server (server-side `handleDistributedCommand` starts a new root) and the asynchronous event processors (each `process(Event)` is its own root). Inside one boundary, however, the tree is complete — as the waterfall above shows. Behavior is identical in both Kibana APM and Jaeger.
 
-To stitch sessions together end-to-end, use the `axon_metadata_gameId` label filter described above.
+To stitch sessions together end-to-end, use the `axon_metadata_gameId` (Kibana) / `axon.metadata.gameId` (Jaeger) tag filter described above.

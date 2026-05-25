@@ -1,0 +1,4 @@
+management:
+  otlp:
+    tracing:
+      endpoint: http://localhost:8200/v1/traces

@@ -3,6 +3,10 @@ server:
 spring:
   application:
     name: heroesofddd
+  profiles:
+    group:
+      observability-elastic: observability
+      observability-jaeger: observability
   threads:
     virtual:
       enabled: true
