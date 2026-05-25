@@ -81,6 +81,21 @@
 			<version>${axoniq-console.version}</version>
 		</dependency>
 
+		<!-- Distributed tracing: activated by the 'observability' Spring profile -->
+		<dependency>
+			<groupId>org.axonframework</groupId>
+			<artifactId>axon-tracing-opentelemetry</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
