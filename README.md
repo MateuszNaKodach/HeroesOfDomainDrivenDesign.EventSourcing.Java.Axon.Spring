@@ -37,6 +37,45 @@ The application exposes a Model Context Protocol Server that allows AI assistant
 claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
 ```
 
+## 📊 Observability (distributed tracing)
+
+The app can emit distributed traces to an Elastic APM stack (Elasticsearch + Kibana + APM Server) via OpenTelemetry. Tracing is **off by default** and activated by the `observability` Spring profile, with its own Docker Compose overlay.
+
+### Run with tracing enabled
+
+1. Start the base stack + observability stack:
+   ```bash
+   docker compose -f docker-compose.yaml -f docker-compose.observability.yaml up -d
+   ```
+   Wait ~60s for Elasticsearch and Kibana to be ready.
+
+2. Run the app with the `observability` profile:
+   ```bash
+   SPRING_PROFILES_ACTIVE=observability ./mvnw spring-boot:run
+   ```
+   Or: `./mvnw spring-boot:run -Dspring-boot.run.profiles=observability`.
+
+3. Generate some traffic via Swagger UI at [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html).
+
+4. View traces in Kibana at [http://localhost:5601](http://localhost:5601) → ☰ → **Observability → APM → Services → heroesofddd**. Each HTTP transaction shows its child spans: command dispatch, aggregate handler, event publication, event handlers / projections, etc.
+
+### Run without tracing (default)
+
+```bash
+docker compose up -d
+./mvnw spring-boot:run
+```
+
+No `observability` profile = no traces emitted, no extra containers needed. Useful for daily development.
+
+### Ports
+
+| Service                    | Port | URL                                  |
+|----------------------------|------|--------------------------------------|
+| Kibana (APM UI)            | 5601 | http://localhost:5601                |
+| Elasticsearch              | 9200 | http://localhost:9200                |
+| APM Server (OTLP receiver) | 8200 | http://localhost:8200/v1/traces      |
+
 ## 🧱 Modules
 
 Modules (mostly designed using Bounded Context heuristic) are designed and documented on EventModeling below.
