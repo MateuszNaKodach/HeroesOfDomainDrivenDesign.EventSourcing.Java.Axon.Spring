@@ -16,66 +16,6 @@ I'm focused on domain modeling on the backend, but I'm going to implement UI lik
 
 ![Heroes3_CreatureRecruitment_ExampleGif](https://github.com/user-attachments/assets/0e503a1e-e5d2-4e4a-9150-1a224e603be8)
 
-## 🚀 How to run the project locally?
-
-0. Install Java 23 on your machine
-1. `./mvnw install -DskipTests`
-2. `docker compose up`
-3. `./mvnw spring-boot:run` or `./mvnw test`
-
-## 🌐 Interacting with the Application
-
-You can interact with the system in two ways:
-
-### REST API
-Access the REST API documentation at: [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html)
-
-### Model Context Protocol (MCP) Server
-The application exposes a Model Context Protocol Server that allows AI assistants to interact directly with the domain. You can add it to Claude Code with:
-
-```bash
-claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
-```
-
-## 📊 Observability (distributed tracing)
-
-The app can emit distributed traces to an Elastic APM stack (Elasticsearch + Kibana + APM Server) via OpenTelemetry. Tracing is **off by default** and activated by the `observability` Spring profile, with its own Docker Compose overlay.
-
-### Run with tracing enabled
-
-1. Start the base stack + observability stack:
-   ```bash
-   docker compose -f docker-compose.yaml -f docker-compose.observability.yaml up -d
-   ```
-   Wait ~60s for Elasticsearch and Kibana to be ready.
-
-2. Run the app with the `observability` profile:
-   ```bash
-   SPRING_PROFILES_ACTIVE=observability ./mvnw spring-boot:run
-   ```
-   Or: `./mvnw spring-boot:run -Dspring-boot.run.profiles=observability`.
-
-3. Generate some traffic via Swagger UI at [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html).
-
-4. View traces in Kibana at [http://localhost:5601](http://localhost:5601) → ☰ → **Observability → APM → Services → heroesofddd**. Each HTTP transaction shows its child spans: command dispatch, aggregate handler, event publication, event handlers / projections, etc.
-
-### Run without tracing (default)
-
-```bash
-docker compose up -d
-./mvnw spring-boot:run
-```
-
-No `observability` profile = no traces emitted, no extra containers needed. Useful for daily development.
-
-### Ports
-
-| Service                    | Port | URL                                  |
-|----------------------------|------|--------------------------------------|
-| Kibana (APM UI)            | 5601 | http://localhost:5601                |
-| Elasticsearch              | 9200 | http://localhost:9200                |
-| APM Server (OTLP receiver) | 8200 | http://localhost:8200/v1/traces      |
-
 ## 🧱 Modules
 
 Modules (mostly designed using Bounded Context heuristic) are designed and documented on EventModeling below.
@@ -203,6 +143,32 @@ void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
 }
 ```
 
+## 🚀 How to run the project locally?
+
+0. Install Java 23 on your machine
+1. `./mvnw install -DskipTests`
+2. `docker compose up`
+3. `./mvnw spring-boot:run` or `./mvnw test`
+
+## 🌐 Interacting with the Application
+
+You can interact with the system in two ways:
+
+### REST API
+Access the REST API documentation at: [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html)
+
+### Model Context Protocol (MCP) Server
+The application exposes a Model Context Protocol Server that allows AI assistants to interact directly with the domain. You can add it to Claude Code with:
+
+```bash
+claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
+```
+
+## 📊 Observability (distributed tracing)
+
+The app can emit distributed traces to an Elastic APM stack via OpenTelemetry (off by default, activated by the `observability` Spring profile and a Docker Compose overlay).
+
+👉 See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the run instructions and a guided Kibana tour with screenshots.
 
 -------
 

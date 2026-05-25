@@ -34,3 +34,5 @@ build/
 
 ### Axon Server ###
 axonserver/
+
+.playwright-mcp
