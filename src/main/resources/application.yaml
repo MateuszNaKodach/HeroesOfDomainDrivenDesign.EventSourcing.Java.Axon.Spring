@@ -66,10 +66,11 @@ axon:
     # All Axon attribute providers stay at their defaults (true)
     show-event-sourcing-handlers: false
     event-processor:
-      # Nest async (StreamingEventProcessor / pooled) event handler spans into the trace
-      # that published the event, when handled within the time limit below. Off by default.
-      distributed-in-same-trace: true
-      distributed-in-same-trace-time-limit: 2m
+      # Disable the StreamingEventProcessor.batch root span. Each event handler becomes
+      # its own root trace with an OpenTelemetry LINK back to the publish-event span —
+      # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
+      # across async boundaries. Off by default in Axon (batch trace = no links).
+      disable-batch-trace: true
 #  update-check:
 #    disabled: true
 
