@@ -166,9 +166,9 @@ claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
 
 ## 📊 Observability (distributed tracing)
 
-The app can emit distributed traces to an Elastic APM stack via OpenTelemetry (off by default, activated by the `observability` Spring profile and a Docker Compose overlay).
+The app can emit distributed traces to **Elastic APM** or **Jaeger** via OpenTelemetry (off by default, activated by `observability-elastic` or `observability-jaeger` Spring profile and a matching Docker Compose overlay).
 
-👉 See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the run instructions and a guided Kibana tour with screenshots.
+👉 See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the run instructions and a guided tour with screenshots.
 
 -------
 
