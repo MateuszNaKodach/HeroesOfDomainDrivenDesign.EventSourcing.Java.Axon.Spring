@@ -65,6 +65,11 @@ axon:
   tracing:
     # All Axon attribute providers stay at their defaults (true)
     show-event-sourcing-handlers: false
+    event-processor:
+      # Nest async (StreamingEventProcessor / pooled) event handler spans into the trace
+      # that published the event, when handled within the time limit below. Off by default.
+      distributed-in-same-trace: true
+      distributed-in-same-trace-time-limit: 2m
 #  update-check:
 #    disabled: true
 
