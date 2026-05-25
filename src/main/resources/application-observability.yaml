@@ -5,5 +5,4 @@ management:
       probability: 1.0
   otlp:
     tracing:
-      endpoint: http://localhost:8200/v1/traces
       transport: http
