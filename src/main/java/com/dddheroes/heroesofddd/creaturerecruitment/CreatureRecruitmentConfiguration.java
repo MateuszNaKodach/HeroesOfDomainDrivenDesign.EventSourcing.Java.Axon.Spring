@@ -1,5 +1,6 @@
 package com.dddheroes.heroesofddd.creaturerecruitment;
 
+import com.dddheroes.heroesofddd.creaturerecruitment.write.Dwelling;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.DwellingId;
 import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature;
 import com.dddheroes.heroesofddd.resourcespool.application.CommandCostResolver;
@@ -12,6 +13,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.Snapshotter;
+import org.axonframework.eventsourcing.snapshotting.RevisionSnapshotFilter;
+import org.axonframework.eventsourcing.snapshotting.SnapshotFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,6 +41,18 @@ class CreatureRecruitmentConfiguration {
     @Bean
     SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
         return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
+    }
+
+    @Bean
+    SnapshotFilter dwellingSnapshotFilter() {
+        // Only load snapshots matching the current aggregate revision; stale-revision
+        // snapshots are skipped and the aggregate is rebuilt from its events instead.
+        // The type must match the aggregate type identifier in the event store, which
+        // defaults to the aggregate's simple name (not the fully-qualified class name).
+        return RevisionSnapshotFilter.builder()
+                .type(Dwelling.class.getSimpleName())
+                .revision(Dwelling.REVISION)
+                .build();
     }
 
     @Bean

@@ -18,14 +18,21 @@ import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateCreationPolicy;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.CreationPolicy;
+import org.axonframework.serialization.Revision;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
-@Aggregate(snapshotTriggerDefinition = "dwellingSnapshotTrigger")
+@Aggregate(
+        snapshotTriggerDefinition = "dwellingSnapshotTrigger",
+        snapshotFilter = "dwellingSnapshotFilter"
+)
+@Revision(Dwelling.REVISION)
 public class Dwelling {
+
+    public static final String REVISION = "1.0";
 
     private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
 
