@@ -38,11 +38,6 @@ class CreatureRecruitmentConfiguration {
         };
     }
 
-//    @Bean
-//    SnapshotTriggerDefinition dwellingSnapshotTrigger(Snapshotter snapshotter) {
-//        return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
-//    }
-
     @Bean
     public Module dwellingIdSerializationModule() {
         return new DwellingIdSerializationModule();

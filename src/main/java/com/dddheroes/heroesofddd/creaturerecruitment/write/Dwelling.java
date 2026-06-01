@@ -13,6 +13,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.Recru
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.eventsourcing.annotation.EventSourcingHandler;
+import org.axonframework.eventsourcing.annotation.Snapshotting;
 import org.axonframework.eventsourcing.annotation.reflection.EntityCreator;
 import org.axonframework.extension.spring.stereotype.EventSourced;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
@@ -21,8 +22,8 @@ import org.axonframework.messaging.eventhandling.gateway.EventAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO #LLM: reconfigure snapshot trigger (AF4 had snapshotTriggerDefinition = "dwellingSnapshotTrigger")
 @EventSourced(tagKey = "Dwelling", idType = DwellingId.class)
+@Snapshotting(afterEvents = 5)
 public class Dwelling {
 
     private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);

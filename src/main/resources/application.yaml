@@ -61,6 +61,10 @@ axon:
 #  update-check:
 #    disabled: true
 application:
+  eventstore:
+    # dcb = Axon Server default (Dynamic Consistency Boundary) | aggregate-based = legacy aggregate engine.
+    # Only takes effect when axon.axonserver.enabled=true (no-op with the JPA event store below).
+    mode: aggregate-based
   maintenance:
     enabled: true
   interceptors:
