@@ -43,17 +43,17 @@ class CreatureRecruitmentConfiguration {
         return new EventCountSnapshotTriggerDefinition(snapshotter, 5);
     }
 
-    @Bean
-    SnapshotFilter dwellingSnapshotFilter() {
-        // Only load snapshots matching the current aggregate revision; stale-revision
-        // snapshots are skipped and the aggregate is rebuilt from its events instead.
-        // The type must match the aggregate type identifier in the event store, which
-        // defaults to the aggregate's simple name (not the fully-qualified class name).
-        return RevisionSnapshotFilter.builder()
-                .type(Dwelling.class.getSimpleName())
-                .revision(Dwelling.REVISION)
-                .build();
-    }
+//    @Bean
+//    SnapshotFilter dwellingSnapshotFilter() {
+//        // Only load snapshots matching the current aggregate revision; stale-revision
+//        // snapshots are skipped and the aggregate is rebuilt from its events instead.
+//        // The type must match the aggregate type identifier in the event store, which
+//        // defaults to the aggregate's simple name (not the fully-qualified class name).
+//        return RevisionSnapshotFilter.builder()
+//                .type(Dwelling.class.getSimpleName())
+//                .revision(Dwelling.REVISION)
+//                .build();
+//    }
 
     @Bean
     public Module dwellingIdSerializationModule() {

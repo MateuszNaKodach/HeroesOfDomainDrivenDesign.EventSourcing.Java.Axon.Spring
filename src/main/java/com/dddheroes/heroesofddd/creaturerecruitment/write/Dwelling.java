@@ -26,8 +26,7 @@ import org.slf4j.LoggerFactory;
 import static org.axonframework.modelling.command.AggregateLifecycle.*;
 
 @Aggregate(
-        snapshotTriggerDefinition = "dwellingSnapshotTrigger",
-        snapshotFilter = "dwellingSnapshotFilter"
+        snapshotTriggerDefinition = "dwellingSnapshotTrigger"
 )
 @Revision(Dwelling.REVISION)
 public class Dwelling {
