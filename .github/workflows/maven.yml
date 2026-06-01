@@ -5,9 +5,9 @@ name: 🚀 Java CI with Maven
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "axon5/main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "axon5/main" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
