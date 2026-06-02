@@ -47,3 +47,31 @@ X-Player-Id: {{playerId}}
 GET http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}
 Content-Type: application/json
 
+
+###############################################################################
+# Maintenance: Event Transformation - fix events stored without a revision (#4625)
+#
+# Fills an empty payload revision (legacy Axon Framework 4 events) with a value, so the events read
+# cleanly under Axon Framework 5. Opens a dedicated Axon Server connection, replaces the affected
+# events and applies the transformation.
+#
+# Requires:
+#   - running with the 'axonserver' Spring profile (axon.axonserver.enabled=true)
+#   - application.maintenance.enabled=true (default in application.yaml)
+#   - Axon Server up (licensed; internal-hostname=localhost): docker compose up -d
+#
+# Back up the Axon Server event volume before running - it rewrites the store in place.
+# See docs/EVENT_REVISION_TRANSFORMATION.md.
+###############################################################################
+
+### Fill missing revision with the default "0.0.1" and apply
+POST http://localhost:{{serverPort}}/maintenance/event-store/transformations/fill-missing-revision
+Accept: application/json
+
+### Fill missing revision with a custom value, then compact to reclaim disk
+POST http://localhost:{{serverPort}}/maintenance/event-store/transformations/fill-missing-revision?revision=0.0.1&compact=true
+Accept: application/json
+
+### Verify: read an aggregate's event stream (replace {{dwellingId}} with an affected stream id)
+GET http://localhost:{{serverPort}}/maintenance/event-store/streams/{{dwellingId}}/events
+Accept: application/json
