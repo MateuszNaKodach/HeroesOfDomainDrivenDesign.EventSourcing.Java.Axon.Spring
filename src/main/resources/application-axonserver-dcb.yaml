@@ -1,0 +1,9 @@
+axon:
+  axonserver:
+    enabled: true
+    context: default
+application:
+  eventstore:
+    # dcb = Axon Server default (Dynamic Consistency Boundary) | aggregate-based = legacy aggregate engine.
+    # Only takes effect when axon.axonserver.enabled=true.
+    mode: dcb

@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Import(TestcontainersConfiguration.class)
-@ActiveProfiles("axonserver")
+@ActiveProfiles("axonserver-dcb")
 @SpringBootTest(properties = {
         "application.interceptors.paid-commands.enabled=true"
 })
