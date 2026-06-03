@@ -14,7 +14,6 @@ import org.axonframework.eventsourcing.annotation.EventTag;
 import org.axonframework.messaging.commandhandling.CommandMessage;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
-import org.axonframework.messaging.core.MessageType;
 import org.axonframework.messaging.core.Metadata;
 import org.axonframework.messaging.core.QualifiedName;
 import org.axonframework.messaging.core.conversion.MessageConverter;
@@ -230,7 +229,12 @@ class PaidCommandInterceptorTest {
 
             @Override
             public QualifiedName supportedCommand() {
-                return new MessageType(PaidCommandInterceptorTest.TestPaidCommand.class).qualifiedName();
+                // TestPaidCommand is a nested record: the @Command annotation resolves its message name from
+                // getPackageName() + getSimpleName() (without the enclosing class), while new MessageType(Class)
+                // uses Class.getName() (with the enclosing class and '$') - so the names would never match.
+                // Build the QualifiedName the same way the annotation-based resolver does.
+                return new QualifiedName(TestPaidCommand.class.getPackageName(),
+                                         TestPaidCommand.class.getSimpleName());
             }
         }
 
