@@ -2,7 +2,9 @@ package com.dddheroes.heroesofddd.shared.infrastructure;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.SnapshotCapableEventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.jpa.AggregateBasedJpaEventStorageEngine;
+import org.axonframework.eventsourcing.snapshot.store.SnapshotStore;
 import org.axonframework.messaging.core.unitofwork.transaction.jpa.JpaTransactionalExecutorProvider;
 import org.axonframework.messaging.eventhandling.conversion.EventConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,11 +25,19 @@ public class EventStoreConfiguration {
 
     @Bean
     public EventStorageEngine eventStorageEngine(EntityManagerFactory entityManagerFactory,
-                                                 EventConverter eventConverter) {
-        return new AggregateBasedJpaEventStorageEngine(
-                new JpaTransactionalExecutorProvider(entityManagerFactory),
-                eventConverter,
-                UnaryOperator.identity()
+                                                 EventConverter eventConverter,
+                                                 SnapshotStore snapshotStore) {
+        // The JPA engine has no native snapshot support. Overriding the EventStorageEngine as a Spring bean
+        // bypasses the SnapshotCapableEventStorageEngine decorator that AF5 would otherwise apply, so we wrap
+        // it explicitly here. Without this, sourcing a @Snapshotting entity (Snapshot strategy) fails with
+        // "Unsupported sourcing strategy: Snapshot[...]".
+        return new SnapshotCapableEventStorageEngine(
+                new AggregateBasedJpaEventStorageEngine(
+                        new JpaTransactionalExecutorProvider(entityManagerFactory),
+                        eventConverter,
+                        UnaryOperator.identity()
+                ),
+                snapshotStore
         );
     }
 }
