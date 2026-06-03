@@ -6,6 +6,8 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
 import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
+import org.axonframework.eventsourcing.snapshot.inmemory.InMemorySnapshotStore;
+import org.axonframework.eventsourcing.snapshot.store.SnapshotStore;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import org.axonframework.test.fixture.AxonTestFixture;
@@ -24,7 +26,14 @@ public class DwellingTest {
 
     @BeforeEach
     void setUp() {
-        fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class, Dwelling.class)));
+        fixture = AxonTestFixture.with(
+                EventSourcingConfigurer.create()
+                                       // Dwelling declares @Snapshotting, which requires a SnapshotStore component.
+                                       .componentRegistry(cr -> cr.registerComponent(
+                                               SnapshotStore.class, c -> new InMemorySnapshotStore()))
+                                       .registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class,
+                                                                                             Dwelling.class))
+        );
     }
 
     @AfterEach
