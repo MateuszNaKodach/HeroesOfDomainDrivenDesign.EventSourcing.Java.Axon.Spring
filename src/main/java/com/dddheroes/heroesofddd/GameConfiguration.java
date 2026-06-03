@@ -4,6 +4,7 @@ import com.dddheroes.heroesofddd.shared.application.GameMetaData;
 import io.axoniq.framework.axonserver.connector.api.AxonServerConnectionManager;
 import io.axoniq.framework.axonserver.connector.event.AggregateBasedAxonServerEventStorageEngine;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
+import org.axonframework.eventsourcing.eventstore.SnapshotCapableEventStorageEngine;
 import org.axonframework.eventsourcing.snapshot.inmemory.InMemorySnapshotStore;
 import org.axonframework.eventsourcing.snapshot.store.SnapshotStore;
 import org.axonframework.messaging.core.correlation.CorrelationDataProvider;
@@ -56,6 +57,21 @@ public class GameConfiguration {
     static class AxonServerEventStoreConfiguration {
 
         /**
+         * Snapshot store for the aggregate-based Axon Server path.
+         * <p>
+         * The connector's default {@link SnapshotStore} ({@code AxonServerSnapshotStore}) writes via Axon Server's
+         * DCB snapshot channel, which a classic/aggregate-based context does not provide (storing fails with
+         * "No snapshot updates store found for context"). So in {@code aggregate-based} mode we register a
+         * backend-neutral {@link InMemorySnapshotStore} instead — used both to store (entity) and load (engine
+         * wrapper) snapshots. Note: not persisted across restarts; swap for a persistent store if needed.
+         */
+        @ConditionalOnProperty(prefix = "application.eventstore", name = "mode", havingValue = "aggregate-based", matchIfMissing = true)
+        @Bean
+        public SnapshotStore snapshotStore() {
+            return new InMemorySnapshotStore();
+        }
+
+        /**
          * Overrides the default Axon Server event storage engine with the aggregate-based one.
          * <p>
          * When connecting to Axon Server, Axon's autoconfiguration provides a DCB-based
@@ -71,11 +87,19 @@ public class GameConfiguration {
         @Bean
         public EventStorageEngine storageEngine(
                 AxonServerConnectionManager connectionManager,
-                EventConverter eventConverter
+                EventConverter eventConverter,
+                SnapshotStore snapshotStore
         ) {
-            return new AggregateBasedAxonServerEventStorageEngine(
-                    connectionManager.getConnection(),
-                    eventConverter
+            // The aggregate-based engine has no native snapshot support. Overriding the EventStorageEngine as a Spring
+            // bean bypasses the SnapshotCapableEventStorageEngine decorator that AF5 would otherwise apply, so we wrap
+            // it explicitly here. Without this, sourcing a @Snapshotting entity (Snapshot strategy) reaches the raw
+            // engine and fails with "No start position is available".
+            return new SnapshotCapableEventStorageEngine(
+                    new AggregateBasedAxonServerEventStorageEngine(
+                            connectionManager.getConnection(),
+                            eventConverter
+                    ),
+                    snapshotStore
             );
         }
     }
