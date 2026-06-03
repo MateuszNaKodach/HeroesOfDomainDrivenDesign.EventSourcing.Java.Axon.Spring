@@ -16,10 +16,19 @@ public class TestcontainersConfiguration {
         return new PostgreSQLContainer<>("postgres:latest");
     }
 
-    @Profile("axonserver")
+    // Aggregate-based event store mode uses the classic (non-DCB) Axon Server context.
+    @Profile("axonserver-aggregate")
     @Bean
     @ServiceConnection
-    AxonServerContainer axonServerContainer() {
+    AxonServerContainer axonServerAggregateContainer() {
         return new AxonServerContainer("axoniq/axonserver:latest").withDevMode(true);
+    }
+
+    // DCB event store mode requires the Axon Server context to be DCB-enabled.
+    @Profile("axonserver-dcb")
+    @Bean
+    @ServiceConnection
+    AxonServerContainer axonServerDcbContainer() {
+        return new AxonServerContainer("axoniq/axonserver:latest").withDevMode(true).withDcbContext(true);
     }
 }
