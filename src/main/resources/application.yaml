@@ -2,7 +2,7 @@ server:
   port: 3773
 spring:
   application:
-    name: heroesofddd
+    name: heroesofddd-axon5
   profiles:
     group:
       observability-elastic: observability

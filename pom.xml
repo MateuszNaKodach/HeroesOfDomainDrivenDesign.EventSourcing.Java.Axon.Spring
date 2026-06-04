@@ -76,6 +76,58 @@
 			<artifactId>axoniq-spring-boot-starter</artifactId>
 			<version>${axon.version}</version>
 		</dependency>
+
+		<!-- AxoniqFramework distributed tracing (feature 3594).
+		     - axoniq-tracing-opentelemetry: OpenTelemetrySpanFactory + opentelemetry-api binding.
+		     - axoniq-tracing-{messaging,modelling,eventsourcing,distributed}: per-concern decorators,
+		       each ServiceLoader-discovered, that wrap the command/event/query buses, repositories,
+		       snapshot store, and the Axon Server connector legs. All tracing concern modules are
+		       pulled in so the full span set is available regardless of runtime configuration. The
+		       Spring Boot autoconfig that wires these lives in axoniq-spring-boot-autoconfigure,
+		       already on the classpath via the starter above. -->
+		<dependency>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-tracing-opentelemetry</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-tracing-messaging</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-tracing-modelling</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-tracing-eventsourcing</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.axoniq.framework</groupId>
+			<artifactId>axoniq-tracing-distributed</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
+
+		<!-- OpenTelemetry export pipeline. Spring Boot's actuator tracing autoconfiguration creates the
+		     io.opentelemetry.api.OpenTelemetry SDK bean (configured by the management.tracing.* /
+		     management.otlp.tracing.* properties in the 'observability' profiles) and exports spans over
+		     OTLP. AxoniqFramework's OpenTelemetryTracingAutoConfiguration consumes that same OpenTelemetry
+		     bean, so framework spans and HTTP server spans share one tracer/exporter. Versions are managed
+		     by the Spring Boot parent BOM, keeping opentelemetry-api/-sdk aligned across both stacks.
+		     Without the 'observability' profile, management.tracing.enabled=false → no OpenTelemetry bean →
+		     the factory falls back to a no-op GlobalOpenTelemetry and nothing is exported. -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.axonframework.extensions.spring</groupId>
 			<artifactId>axon-spring-boot-starter-test</artifactId>
@@ -114,7 +166,7 @@
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
 			<artifactId>axoniq-testcontainer</artifactId>
-			<version>5.1.1-SNAPSHOT</version>
+			<version>${axon.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
