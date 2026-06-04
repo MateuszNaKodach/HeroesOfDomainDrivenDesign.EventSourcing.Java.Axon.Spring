@@ -3,6 +3,10 @@ server:
 spring:
   application:
     name: heroesofddd
+  profiles:
+    group:
+      observability-elastic: observability
+      observability-jaeger: observability
   threads:
     virtual:
       enabled: true
@@ -70,6 +74,10 @@ application:
   interceptors:
     paid-commands:
       enabled: false
+
+management:
+  tracing:
+    enabled: false       # turned on by the 'observability' Spring profile
 
 springdoc:
   api-docs:
