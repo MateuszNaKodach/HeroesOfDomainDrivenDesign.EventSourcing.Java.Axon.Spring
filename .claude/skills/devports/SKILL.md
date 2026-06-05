@@ -36,6 +36,9 @@ Scripts live in this skill's `scripts/` directory. From a project root:
 DP=.claude/skills/devports/scripts   # adjust if the skill lives elsewhere
 ```
 
+> Humans running the scripts directly (no agent — e.g. from a Makefile or CI)
+> should read `README.md`, which documents the script-only workflow.
+
 ## Two modes — and how to choose
 
 devports has two distinct jobs. **Always start by detecting which one applies:**
