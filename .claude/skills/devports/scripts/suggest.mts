@@ -1,6 +1,7 @@
-import { readFileSync, readdirSync } from "node:fs"
-import { resolve, join } from "node:path"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { parseArgs } from "./lib/util.mts"
+import { discoverComposeFiles } from "./lib/scan.mts"
 
 // Usage: node suggest.mts [dir] [--json]
 // READ-ONLY. Scans compose files for static published ports and container_name
@@ -50,16 +51,6 @@ function suggestName(service: string, container: number, comment: string, multi:
 
 const PORT_ITEM =
   /^(\s*-\s*)(["']?)(?:(\d{1,3}(?:\.\d{1,3}){3}):)?(\d+):(\d+)((?:\/\w+)?)\2(\s*#.*)?$/
-
-function composeFiles(dir: string): string[] {
-  try {
-    return readdirSync(dir)
-      .filter((f) => /^(docker-)?compose.*\.ya?ml$/i.test(f))
-      .map((f) => join(dir, f))
-  } catch {
-    return []
-  }
-}
 
 function analyze(file: string): { ports: PortFinding[]; names: NameFinding[] } {
   const ports: PortFinding[] = []
@@ -126,7 +117,7 @@ function analyze(file: string): { ports: PortFinding[]; names: NameFinding[] } {
 
 const args = parseArgs(process.argv.slice(2), ["json"])
 const dir = resolve(String(args._[0] ?? process.cwd()))
-const files = composeFiles(dir)
+const files = discoverComposeFiles(dir)
 const all = files.map((f) => ({ file: f, ...analyze(f) }))
 
 if (args.flags.json) {
