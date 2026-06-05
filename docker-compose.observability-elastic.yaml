@@ -1,13 +1,12 @@
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.4.1
-    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
-      - "9200:9200"
+      - "${ELASTICSEARCH_HTTP_PORT:-9200}:9200"
     healthcheck:
       test: [ "CMD-SHELL", "curl -fsSL http://localhost:9200/_cluster/health | grep -E 'green|yellow'" ]
       interval: 10s
@@ -16,20 +15,18 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.4.1
-    container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
-      - "5601:5601"
+      - "${KIBANA_HTTP_PORT:-5601}:5601"
     depends_on:
       elasticsearch:
         condition: service_healthy
 
   apm-server:
     image: docker.elastic.co/apm/apm-server:9.4.1
-    container_name: apm-server
     ports:
-      - "8200:8200"
+      - "${APM_SERVER_HTTP_PORT:-8200}:8200"
     volumes:
       - ./apm-server.docker.yml:/usr/share/apm-server/apm-server.yml:ro
     depends_on:

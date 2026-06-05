@@ -1,5 +1,5 @@
 server:
-  port: 3773
+  port: ${APP_PORT:3773}
 spring:
   application:
     name: heroesofddd-axon5
@@ -18,7 +18,7 @@ spring:
         version: "1.0.0"
         instructions: "MCP server for Heroes of Might & Magic III domain built with DDD, Event Sourcing, and Axon Framework. Provides domain operations, game management tools, and educational DDD resources."
   datasource:
-    url: jdbc:postgresql://localhost:6446/heroes_of_ddd_development
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:6446}/heroes_of_ddd_development
     username: heroes_of_ddd_db_user
     password: heroes_of_ddd_db_password
     driver-class-name: org.postgresql.Driver

@@ -2,8 +2,8 @@ services:
   axonserver-n1:
     image: 'axoniq/axonserver:2026.0.0'
     ports:
-      - '8024:8024'  # HTTP port
-      - '8124:8124'  # gRPC port
+      - '${AXONSERVER_HTTP_PORT:-8024}:8024'  # HTTP port
+      - '${AXONSERVER_GRPC_PORT:-8124}:8124'  # gRPC port
     environment:
       axoniq_axonserver_standalone: true
       axoniq_axonserver_hostname: axon-server
@@ -24,4 +24,4 @@ services:
       POSTGRES_USER: heroes_of_ddd_db_user
       POSTGRES_PASSWORD: heroes_of_ddd_db_password
     ports:
-      - "6446:5432"
+      - "${POSTGRES_PORT:-6446}:5432"
