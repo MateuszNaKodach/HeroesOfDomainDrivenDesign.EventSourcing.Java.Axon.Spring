@@ -161,6 +161,8 @@ hardcode its port. Keep them env-driven:
 > env files. (VS Code REST Client can also read the `.env` via
 > `{{$dotenv APP_PORT}}`.)
 
-See `reference/app-config-examples.md` for per-ecosystem snippets and
+See `reference/app-config-examples.md` for per-ecosystem snippets,
 `reference/design.md` for the registry format, race-safety, and tuning
-(`--span`, `--http-env`).
+(`--span`, `--http-env`), and `reference/decisions.md` for why the skill is
+shaped the way it is (single skill, `APP_PORT`, hybrid allocation, env-file
+`.http` model, …).
