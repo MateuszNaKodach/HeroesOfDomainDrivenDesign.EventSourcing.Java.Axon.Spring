@@ -1,10 +1,9 @@
 services:
   jaeger:
     image: jaegertracing/jaeger:2.5.0
-    container_name: jaeger
     environment:
       - LOG_LEVEL=info
     ports:
-      - "16686:16686"   # Jaeger UI
-      - "4317:4317"     # OTLP gRPC
-      - "4318:4318"     # OTLP HTTP (used by the app)
+      - "${JAEGER_UI_PORT:-16686}:16686"          # Jaeger UI
+      - "${JAEGER_OTLP_GRPC_PORT:-4317}:4317"     # OTLP gRPC
+      - "${JAEGER_OTLP_HTTP_PORT:-4318}:4318"     # OTLP HTTP (used by the app)
