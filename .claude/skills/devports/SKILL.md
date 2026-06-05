@@ -68,6 +68,12 @@ remove`), `release --keep-env`.
    `COMPOSE_PROJECT_NAME` + every allocated port. Re-running is idempotent:
    the same directory keeps the same ports unless they conflict with another
    directory, in which case they self-heal.
+5. **Wire HTTP request files** — if any `*.http` / `*.rest` files exist under
+   the directory, write the allocated ports into `http-client.private.env.json`
+   (gitignored) under environment `dev` (override with `--http-env`). This
+   merges into any user-authored environments/keys and is removed again on
+   `release`. So `.http` requests that target the app — which is **not** in
+   compose — still hit this worktree's allocated port. See "HTTP request files".
 
 Keyed by **absolute directory path** — each git worktree is a distinct path, so
 each gets its own ports automatically.
@@ -121,5 +127,30 @@ Naming convention: `<SERVICE>[_<ROLE>]_PORT` — full service name, with a role
 suffix (`HTTP`, `GRPC`, `UI`, `OTLP_HTTP`, …) when a service exposes more than
 one port or the protocol adds clarity; role-less for single, unambiguous ports.
 
-See `reference/design.md` for the registry format, race-safety details, and
-tuning (`--span`).
+## HTTP request files (`.http` / `.rest`)
+
+The app usually runs on the **host**, not in compose — but `.http` files that
+call it still hardcode a port. devports keeps them in sync:
+
+- Reference the app port in requests with **`{{APP_PORT}}`** (the same env-var
+  name), e.g. `GET http://localhost:{{APP_PORT}}/health`. Do **not** hardcode a
+  port or an in-file `@serverPort = …`.
+- Commit an **`http-client.env.json`** with a default environment so the file
+  works out of the box:
+  ```json
+  { "dev": { "APP_PORT": "3773" } }
+  ```
+- On `allocate`, devports writes/merges this worktree's allocated ports into
+  **`http-client.private.env.json`** (gitignored) under the same environment.
+  The private file overrides the committed default, so selecting the `dev`
+  environment in the IDE points requests at this worktree's app port.
+- `release` removes only the keys devports added, preserving any tokens/secrets
+  or other environments you keep in the private file.
+
+> JetBrains HTTP Client and the VS Code REST Client both resolve `{{VAR}}` from
+> these env files. (VS Code REST Client can alternatively read the `.env`
+> directly via `{{$dotenv APP_PORT}}`.)
+
+See `reference/app-config-examples.md` for per-ecosystem snippets, and
+`reference/design.md` for the registry format, race-safety, and tuning
+(`--span`, `--http-env`).
