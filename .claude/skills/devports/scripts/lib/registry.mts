@@ -7,6 +7,8 @@ export interface DirEntry {
   updatedAt: string
   projectName: string
   ports: Record<string, number>
+  /** devports-managed HTTP Client private-env overrides, when .http files exist. */
+  http?: { env: string; keys: string[] }
 }
 
 export interface Registry {

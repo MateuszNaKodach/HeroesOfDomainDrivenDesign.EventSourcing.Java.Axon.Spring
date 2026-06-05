@@ -68,6 +68,15 @@ export function discoverComposeFiles(dir: string): string[] {
 }
 
 /**
+ * All HTTP request files (`*.http` / `*.rest`) anywhere under `dir`. The IDE's
+ * generated request log lives under `.idea/` (a hidden dir) and is skipped by
+ * the walk, so only authored request files are returned.
+ */
+export function discoverHttpFiles(dir: string): string[] {
+  return walkFiles(dir).filter((f) => /\.(http|rest)$/i.test(basename(f)))
+}
+
+/**
  * Files that may declare port env-var placeholders: every compose file plus any
  * generic config file (yaml / properties / toml / json / …). Generated/local
  * `.env*` files are excluded (they hold values, not placeholders, and are the

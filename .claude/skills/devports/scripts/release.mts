@@ -3,6 +3,7 @@ import { resolve, join } from "node:path"
 import { parseArgs } from "./lib/util.mts"
 import { loadRegistry, saveRegistry, withLock, type DirEntry } from "./lib/registry.mts"
 import { removeEnvBlock } from "./lib/env.mts"
+import { clearHttpEnv } from "./lib/httpenv.mts"
 
 // Usage: node release.mts [dir] [--prune] [--keep-env] [--env-file .env] [--json]
 //   --prune     also drop registry entries whose directory no longer exists
@@ -37,10 +38,16 @@ const freed = await withLock(async () => {
   return removed
 })
 
-const envRemoved = !args.flags["keep-env"] && freed[absDir] ? removeEnvBlock(envFile) : false
+let envRemoved = false
+let httpCleared = false
+if (!args.flags["keep-env"] && freed[absDir]) {
+  envRemoved = removeEnvBlock(envFile)
+  const http = freed[absDir].http
+  if (http) httpCleared = clearHttpEnv(absDir, http.env, http.keys)
+}
 
 if (args.flags.json) {
-  console.log(JSON.stringify({ freed, envRemoved }, null, 2))
+  console.log(JSON.stringify({ freed, envRemoved, httpCleared }, null, 2))
 } else {
   const dirs = Object.keys(freed)
   if (dirs.length === 0) {
@@ -52,5 +59,6 @@ if (args.flags.json) {
       console.log(`  freed: ${Object.entries(freed[d].ports).map(([k, v]) => `${k}=${v}`).join(", ")}`)
     }
     if (envRemoved) console.log(`  removed managed block from ${envFile}`)
+    if (httpCleared) console.log(`  cleared devports keys from http-client.private.env.json`)
   }
 }
