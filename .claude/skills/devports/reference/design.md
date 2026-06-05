@@ -84,9 +84,13 @@ NAME_PORT=...
 
 - Host-run processes do not auto-load `.env`; export it (`set -a && . ./.env &&
   set +a`) before launching them.
-- Port discovery covers compose files and Spring `application*.yaml`. For other
-  frameworks, ensure the app reads the same `*_PORT` env vars (the registry/.env
-  are framework-agnostic; only discovery is opinionated).
+- Port discovery is a recursive scan of compose files plus generic config files
+  (yaml/properties/toml/json/…) for `${*_PORT:default}` placeholders; hidden and
+  build/vendor dirs are skipped and files over 512 KB ignored. It is
+  framework-agnostic — Spring `application.yaml`/`.properties` is just one
+  example (see `reference/app-config-examples.md`). Code-based apps that read
+  `process.env` directly expose nothing to scan; declare those ports in a
+  compose file so discovery can find them, and have the app read the same names.
 - `suggest.mts` is best-effort line parsing for the common compose shapes; it is
   read-only and never rewrites — review and apply its proposals yourself.
 - The deterministic offset can theoretically place two directories' starting

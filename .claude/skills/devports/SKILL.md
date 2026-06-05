@@ -49,9 +49,14 @@ remove`), `release --keep-env`.
 
 ## How allocation works
 
-1. **Discover** — scan compose files (and Spring `application*.yaml`, if present)
-   for `${NAME_PORT:-default}` / `${NAME_PORT:default}` placeholders. The default
-   is the base port.
+1. **Discover** — **recursively** scan the directory for compose files and any
+   generic config file (yaml / properties / toml / json / …) containing
+   `${NAME_PORT:-default}` / `${NAME_PORT:default}` placeholders. The default is
+   the base port. Framework-agnostic: a Spring `application.yaml` /
+   `application.properties` is picked up like any other config file — see
+   `reference/app-config-examples.md` for per-ecosystem snippets. Hidden dirs
+   (`.git`, `.idea`, `.claude`, …) and build/vendor dirs (`node_modules`,
+   `target`, `build`, …) are skipped.
 2. **Hybrid pick per port** — start from a deterministic candidate
    (`base + hash(absDir)`), then **verify it's actually free** (binds a probe
    socket on `0.0.0.0`) and **not reserved by another directory**; if taken,
