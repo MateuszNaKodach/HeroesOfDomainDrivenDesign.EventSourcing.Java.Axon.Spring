@@ -3,7 +3,10 @@ import { resolve } from "node:path"
 import { parseArgs } from "./lib/util.mts"
 import { discoverComposeFiles } from "./lib/scan.mts"
 
-// Usage: node suggest.mts [dir] [--json]
+// Usage: node suggest.mts [dir] [--check] [--json]
+//   --check  exit 1 if the project NEEDS PREPARE (has static ports / container_name
+//            lines), exit 0 if already parameterized. The gate for the skill's
+//            prepare-vs-isolate decision.
 // READ-ONLY. Scans compose files for static published ports and container_name
 // lines, proposes ${SERVICE_ROLE_PORT:-default} variable names, and prints the
 // edits to apply. It never writes — the agent (or you) applies the changes so
@@ -115,13 +118,27 @@ function analyze(file: string): { ports: PortFinding[]; names: NameFinding[] } {
   return { ports, names }
 }
 
-const args = parseArgs(process.argv.slice(2), ["json"])
+const args = parseArgs(process.argv.slice(2), ["json", "check"])
 const dir = resolve(String(args._[0] ?? process.cwd()))
 const files = discoverComposeFiles(dir)
 const all = files.map((f) => ({ file: f, ...analyze(f) }))
+const staticPorts = all.reduce((n, a) => n + a.ports.length, 0)
+const fixedNames = all.reduce((n, a) => n + a.names.length, 0)
+const needsPrepare = staticPorts > 0 || fixedNames > 0
 
 if (args.flags.json) {
-  console.log(JSON.stringify(all, null, 2))
+  console.log(JSON.stringify({ needsPrepare, staticPorts, fixedNames, files: all }, null, 2))
+  process.exit(0)
+}
+
+if (args.flags.check) {
+  // Gate for the skill's prepare/isolate decision:
+  //   exit 1 = project NEEDS PREPARE, exit 0 = already prepared.
+  if (needsPrepare) {
+    console.log(`devports: NEEDS PREPARE — ${staticPorts} static port(s), ${fixedNames} fixed container_name(s)`)
+    process.exit(1)
+  }
+  console.log("devports: already prepared — no static ports or container_name lines found")
   process.exit(0)
 }
 
