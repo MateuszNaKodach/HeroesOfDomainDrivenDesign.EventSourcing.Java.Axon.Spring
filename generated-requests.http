@@ -1,12 +1,10 @@
-@serverPort = 3773
-
 ### BuildDwelling
 @gameId = scenario-1
 @playerId = player-1
 @dwellingId = dwelling-44
 
 ### BuildDwelling
-PUT http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}
+PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
 Content-Type: application/json
 X-Player-Id: {{playerId}}
 
@@ -19,7 +17,7 @@ X-Player-Id: {{playerId}}
 }
 
 ### IncreaseAvailableCreatures
-PUT http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}/available-creatures-increases
+PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}/available-creatures-increases
 Content-Type: application/json
 X-Player-Id: {{playerId}}
 
@@ -29,7 +27,7 @@ X-Player-Id: {{playerId}}
 }
 
 ### RecruitCreature
-PUT http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}/creature-recruitments
+PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}/creature-recruitments
 Content-Type: application/json
 X-Player-Id: {{playerId}}
 
@@ -44,6 +42,6 @@ X-Player-Id: {{playerId}}
 }
 
 ### Dwelling read model
-GET http://localhost:{{serverPort}}/games/{{gameId}}/dwellings/{{dwellingId}}
+GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
 Content-Type: application/json
 
