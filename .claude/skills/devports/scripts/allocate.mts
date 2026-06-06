@@ -73,6 +73,7 @@ if (args.flags.json) {
   if (result.http) {
     console.log(`  -> ${HTTP_PRIVATE_ENV} updated (env "${result.http.env}") for ${httpFiles.length} .http file(s)`)
   }
-  console.log(`\nCompose auto-loads .env. A host process (not in compose) needs them exported, e.g.:`)
-  console.log(`  set -a && . ${envFile} && set +a && ./mvnw spring-boot:run`)
+  console.log(`\nCompose auto-loads .env. A host process (not in compose) needs them exported:`)
+  console.log(`  set -a && . ${envFile} && set +a && <your app start command>`)
+  console.log(`  (e.g. Spring: ./mvnw spring-boot:run)`)
 }
