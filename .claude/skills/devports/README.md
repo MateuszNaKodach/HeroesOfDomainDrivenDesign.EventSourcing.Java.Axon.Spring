@@ -31,6 +31,7 @@ node $DP/status.mts                  # list reservations (current dir marked)
 node $DP/release.mts [dir]           # free this dir's ports, strip its .env
 node $DP/suggest.mts [dir]           # READ-ONLY: how to parameterize ports
 node $DP/suggest.mts --check         # exit 1 = needs prepare, exit 0 = ready
+node $DP/prepare.mts [dir] [--write] # apply compose parameterization (dry-run without --write)
 ```
 
 Flags: `allocate --dry-run`, `--http-env <name>` (default `dev`), `--json` (all
@@ -61,19 +62,25 @@ is only there to help the Claude Code agent; nothing in `allocate`/`release`/
 
 ### One-time PREPARE (no LLM)
 
-`suggest.mts` is read-only and prints the exact edits to make:
-
 ```bash
-node $DP/suggest.mts            # lists static ports → suggested ${VAR} names + container_name lines to drop
-node $DP/suggest.mts --check    # exit 1 until you've applied them
+node $DP/suggest.mts --check    # exit 1 until prepared
+node $DP/prepare.mts            # dry-run: print the planned compose edits
+node $DP/prepare.mts --write    # apply them to compose files (idempotent)
 ```
 
-Apply them by hand (mechanical): in compose use `${VAR:-default}`, in Spring
-config use `${VAR:default}`, drop `container_name:`, point `.http` files at
-`{{APP_PORT}}`. Commit once. (Applying these automatically is intentionally
-**not** scripted — robust rewriting of compose + Spring + `.http` is where silent
-corruption is easy, so a human/agent reviews the diff. See
-`reference/decisions.md`.)
+`prepare.mts --write` scripts the **compose** parameterization end to end: static
+ports → `${VAR:-default}`, `container_name:` removed, across all (recursive)
+compose files. No LLM, no manual editing.
+
+The **app-side** edits are left for you to apply by hand (they need judgement
+about which ports the app uses, and the Spring placeholder syntax differs):
+- Spring `application.yaml`/`.properties`: mirror shared `*_PORT` with
+  `${VAR:default}` (single colon).
+- `.http` files: use `{{APP_PORT}}`; commit an `http-client.env.json` default.
+
+Then `docker compose config` should still show the original ports and
+`node $DP/suggest.mts --check` should exit 0. (Why compose is scripted but
+app/`.http` aren't: see `reference/decisions.md`.)
 
 ### Everyday ISOLATE for a Spring Boot project (no LLM)
 

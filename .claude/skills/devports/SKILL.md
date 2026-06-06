@@ -62,22 +62,25 @@ skip straight to ISOLATE.
 
 Converts static ports into env-var placeholders so devports can drive them:
 
-1. **Analyze** (read-only): `node $DP/suggest.mts` prints proposed
-   `${SERVICE_ROLE_PORT:-default}` names and the `container_name:` lines to drop.
-2. **Apply the edits:**
-   - **Compose files:** replace static ports with `${VAR:-default}` (shell
-     syntax, with `:-`), and **remove `container_name:`** lines (globally unique
-     → they block concurrency; inter-container DNS still works via service names).
+1. **Analyze** (read-only): `node $DP/suggest.mts` (or `prepare.mts` with no flag,
+   a dry-run) prints proposed `${SERVICE_ROLE_PORT:-default}` names and the
+   `container_name:` lines to drop.
+2. **Apply the compose edits — scripted:** `node $DP/prepare.mts --write`
+   rewrites every (recursive) compose file: static ports → `${VAR:-default}`
+   (shell syntax) and **removes `container_name:`** lines (globally unique → they
+   block concurrency; inter-container DNS still works via service names).
+   Idempotent; re-running is a no-op.
+3. **Apply the app-side edits — by hand** (prepare does **not** touch these, since
+   they need judgement about which ports the app uses):
    - **Host app config** (e.g. Spring `application.yaml`/`.properties`): mirror
-     any port the app uses with the **same VAR name** but **Spring placeholder
-     syntax** `${VAR:default}` (single colon — `${VAR:-default}` would make the
-     default the literal `-default`).
+     each shared port with the **same VAR name** but **Spring placeholder syntax**
+     `${VAR:default}` (single colon — `${VAR:-default}` would make the default the
+     literal `-default`).
    - **`.http` request files:** reference the app port as `{{APP_PORT}}` (drop any
      hardcoded `@serverPort = …`), and commit an `http-client.env.json` default.
      See "HTTP request files".
-3. **Verify** defaults still resolve: `docker compose config` with no env set
-   should show the original ports. `node $DP/suggest.mts --check` should now
-   exit 0.
+4. **Verify** defaults still resolve: `docker compose config` with no env set
+   should show the original ports, and `node $DP/suggest.mts --check` exits 0.
 
 Naming convention: `<SERVICE>[_<ROLE>]_PORT` — full service name, with a role
 suffix (`HTTP`, `GRPC`, `UI`, `OTLP_HTTP`, …) when a service exposes more than
