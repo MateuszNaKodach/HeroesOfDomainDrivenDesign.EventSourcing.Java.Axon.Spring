@@ -14,7 +14,7 @@ JAEGER  := docker compose -f docker-compose.observability-jaeger.yaml
 ELASTIC := docker compose -f docker-compose.observability-elastic.yaml
 
 .DEFAULT_GOAL := help
-.PHONY: help prepare check allocate status up jaeger elastic run run-jaeger down release
+.PHONY: help prepare check setup allocate status up jaeger elastic run run-jaeger down release
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -28,7 +28,11 @@ prepare: ## Parameterize compose ports + drop container_name (idempotent). App/.
 check: ## Is this project prepared? (exit 1 = needs `make prepare`)
 	$(DP)/suggest.mts --check
 
-## ---- per worktree (never edits tracked files) ----
+## ---- per worktree ----
+
+setup: ## First-time: ensure compose is prepared (idempotent) + allocate ports -> .env
+	$(DP)/prepare.mts --write
+	$(DP)/allocate.mts
 
 allocate: ## Allocate free ports for this worktree -> .env (+ http private env)
 	$(DP)/allocate.mts
