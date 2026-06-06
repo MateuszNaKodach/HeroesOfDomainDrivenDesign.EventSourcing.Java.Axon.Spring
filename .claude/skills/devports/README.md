@@ -16,6 +16,33 @@ over the host's single network stack; the second `up` fails. devports gives each
 directory its own free, stable ports via a generated `.env`, tracked in a global
 registry so parallel worktrees never collide.
 
+## Quick start (Makefile)
+
+There are **two different cadences** — don't confuse them:
+
+```bash
+# ONCE per project (edits tracked files, you commit it — NOT per worktree):
+make prepare          # parameterize compose ports → ${VAR}, drop container_name
+
+# Per worktree (writes only the gitignored .env — starts nothing):
+make allocate         # pick free ports → write .env (+ http private env)
+```
+
+So on **each new worktree** you run **`make allocate`** — *not* `make prepare`.
+`prepare` already happened once and lives in the committed files; re-running it is
+a harmless no-op. If you prefer one command that's safe everywhere, `make setup`
+runs the (idempotent) prepare then allocate.
+
+| When | Command | Edits tracked files? | Starts services? |
+|------|---------|----------------------|------------------|
+| Once per project | `make prepare` | yes (commit it) | no |
+| Each worktree (env only) | `make allocate` (or `make setup`) | no | **no** |
+| Each worktree (env + run) | `make up` then `make run` | no | yes |
+
+`make allocate`/`setup` only **write the `.env`** — nothing is launched. Use
+`make up` / `make run` when you actually want Docker + the app up. `make down`
+stops everything and releases the ports. `make help` lists all targets.
+
 ## Requirements
 
 - **Node ≥ 23.6** (24+ recommended) — scripts are `.mts` and use Node's native
