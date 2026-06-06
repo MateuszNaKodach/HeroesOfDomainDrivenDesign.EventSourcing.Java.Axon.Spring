@@ -6,6 +6,22 @@ decision changes — and explain the "why" in the commit that changes it.
 
 ---
 
+## 9. PREPARE scripts compose rewriting (`prepare.mts --write`); app/.http stay manual
+**Date:** 2026-06-06
+**Decision:** `prepare.mts --write` mechanically rewrites compose files (static
+ports → `${VAR:-default}`, drop `container_name:`); host app config and `.http`
+files are reported, not auto-edited. Shared compose analysis lives in
+`lib/compose.mts`, used by both `suggest.mts` and `prepare.mts`.
+**Why:** Compose port rewriting is mechanical and line-local — safe to automate,
+idempotent, and verifiable (`docker compose config` keeps the original defaults).
+App config / `.http` editing needs judgement about *which* ports the app uses and
+uses different placeholder syntax (Spring single-colon), where silent corruption
+is easy — so it stays a reviewed step. This refines decision #6: the mechanical
+90% is now scripted; the judgement-heavy 10% is still human/agent-applied.
+**Rejected:** Auto-rewriting Spring/`.http` too (corruption risk, no clear
+which-port mapping); keeping compose manual (it's mechanical — no reason not to
+script it).
+
 ## 8. Prepare/Isolate as two modes in ONE skill, gated by `suggest --check`
 **Date:** 2026-06-05
 **Decision:** Keep a single `devports` skill. Expose two explicit modes — PREPARE
