@@ -32,6 +32,9 @@ spring:
 axon:
   axonserver:
     enabled: false
+    # Host gRPC port mirrors compose's ${AXONSERVER_GRPC_PORT:-8124} (devports). Spring
+    # placeholder syntax uses a single colon for the default. No-op while enabled=false.
+    servers: localhost:${AXONSERVER_GRPC_PORT:8124}
       #  eventhandling:
       #    processors:
     # (Optional) You can override processor settings here if needed

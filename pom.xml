@@ -50,6 +50,22 @@
 		</repository>
 	</repositories>
 
+	<dependencyManagement>
+		<dependencies>
+			<!-- AF5's axon-conversion uses Jackson 3 (tools.jackson 3.2.0), which references
+			     com.fasterxml.jackson.annotation.JsonApplyView — added in jackson-annotations 2.22.
+			     The Jackson 2.x databind (2.21.2) transitively pulls jackson-annotations 2.21, which
+			     lacks that class, so a Jackson 3 view-processing path fails at runtime with
+			     NoClassDefFoundError (and, via a UnitOfWork quirk, hangs PooledStreamingEventProcessor
+			     startup rather than failing fast). Pin 2.22 so both Jackson 2.x and 3.x agree. -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>2.22</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
