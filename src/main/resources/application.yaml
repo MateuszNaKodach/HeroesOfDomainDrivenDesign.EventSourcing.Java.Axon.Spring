@@ -1,5 +1,11 @@
 server:
   port: ${APP_PORT:3773}
+logging:
+  file:
+    name: /Users/mateusznowak/GitRepos/MateuszNaKodach/Heroes.Axon4to5.DCB/logs/heroes-axon5.log
+  level:
+    org.axonframework.messaging.tracing: INFO
+    io.axoniq.framework.tracing: INFO
 spring:
   application:
     name: heroesofddd-axon5
@@ -74,6 +80,7 @@ axon:
       # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
       # across async boundaries. Off by default in Axon (batch trace = no links).
       disable-batch-trace: true
+      distributed-in-same-trace: true
 #  update-check:
 #    disabled: true
 application:

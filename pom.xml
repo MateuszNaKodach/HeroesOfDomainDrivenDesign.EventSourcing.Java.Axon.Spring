@@ -93,37 +93,19 @@
 			<version>${axon.version}</version>
 		</dependency>
 
-		<!-- AxoniqFramework distributed tracing (feature 3594).
-		     - axoniq-tracing-opentelemetry: OpenTelemetrySpanFactory + opentelemetry-api binding.
-		     - axoniq-tracing-{messaging,modelling,eventsourcing,distributed}: per-concern decorators,
-		       each ServiceLoader-discovered, that wrap the command/event/query buses, repositories,
-		       snapshot store, and the Axon Server connector legs. All tracing concern modules are
-		       pulled in so the full span set is available regardless of runtime configuration. The
-		       Spring Boot autoconfig that wires these lives in axoniq-spring-boot-autoconfigure,
-		       already on the classpath via the starter above. -->
+		<!-- Distributed tracing (feature 3594).
+		     Tracing ships inside the framework modules themselves: the tracing API and the
+		     command/event/query bus decorators live in axon-messaging, repository/state-manager
+		     tracing in axon-modelling, event-store/snapshot-store tracing in axon-eventsourcing,
+		     and the Axon Server connector-leg tracing in axoniq-distributed-messaging — all already
+		     on the classpath via the starter above, each wired by ServiceLoader-discovered
+		     enhancers. The only extra dependency needed is the OpenTelemetry SpanFactory binding
+		     below; the Spring Boot autoconfig (OSS TracingAutoConfiguration + commercial
+		     DistributedTracing/OpenTelemetryTracing autoconfigurations) also comes with the
+		     starter. -->
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
 			<artifactId>axoniq-tracing-opentelemetry</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-messaging</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-modelling</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-eventsourcing</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-distributed</artifactId>
 			<version>${axon.version}</version>
 		</dependency>
 
