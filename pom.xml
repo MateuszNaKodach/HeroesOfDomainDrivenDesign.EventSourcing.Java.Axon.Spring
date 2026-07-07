@@ -130,28 +130,8 @@
 			<artifactId>opentelemetry-exporter-otlp</artifactId>
 		</dependency>
 
-		<!-- JDBC/JPA tracing: wraps the autoconfigured HikariCP DataSource in a proxy that emits a
-		     Micrometer Observation per JDBC connection/query. These flow through the same
-		     micrometer-tracing-bridge-otel → OTLP pipeline as the Axon and HTTP spans, so every SQL
-		     statement (Axon JPA event store + read-model projections) becomes a child span carrying
-		     the SQL text (and bind parameters). Gated to the observability profile via
-		     jdbc.datasource-proxy.enabled (see application(-observability).yaml). -->
-		<dependency>
-			<groupId>net.ttddyy.observation</groupId>
-			<artifactId>datasource-micrometer-spring-boot</artifactId>
-			<version>${datasource-micrometer.version}</version>
-		</dependency>
-
-		<!-- gRPC tracing for the Axon Server connector channel. Provides GrpcTelemetry, whose
-		     ClientInterceptor is registered on the connection channel via a ManagedChannelCustomizer
-		     bean (see GrpcTracingConfiguration). Built from the same OpenTelemetry SDK bean as the
-		     Axon/HTTP/JDBC spans, so gRPC client spans flow through the existing OTLP pipeline.
-		     Only relevant under an axonserver profile (Axon Server is disabled by default). -->
-		<dependency>
-			<groupId>io.opentelemetry.instrumentation</groupId>
-			<artifactId>opentelemetry-grpc-1.6</artifactId>
-			<version>${opentelemetry-instrumentation.version}</version>
-		</dependency>
+		<!-- NOTE: the JDBC/JPA and gRPC tracing dependencies are opt-in build-time toggles;
+		     they live in the 'tracing-database' / 'tracing-grpc' profiles below, not here. -->
 
 		<dependency>
 			<groupId>org.axonframework.extensions.spring</groupId>
@@ -887,6 +867,63 @@
 					</plugin>
 				</plugins>
 			</build>
+		</profile>
+
+		<!--
+		  Opt-in, build-time tracing toggles. Each profile adds ONLY its own instrumentation JAR to
+		  the artifact; a default build (no flags) carries neither, so normal runs stay lean. These
+		  are BUILD-TIME gates (JAR present in the artifact); the JARs still do nothing until the
+		  matching RUNTIME gate is on too - the 'observability' Spring profile plus, for JDBC,
+		  jdbc.datasource-proxy.enabled=true (see application(-observability).yaml).
+
+		  Enable per feature, independently:
+		    ./mvnw ... -Dtracing.database.enabled=true    (JDBC/JPA spans)
+		    ./mvnw ... -Dtracing.grpc.enabled=true         (Axon Server gRPC spans)
+		-->
+		<profile>
+			<id>tracing-database</id>
+			<activation>
+				<property>
+					<name>tracing.database.enabled</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<dependencies>
+				<!-- JDBC/JPA tracing: wraps the autoconfigured HikariCP DataSource in a proxy that emits a
+				     Micrometer Observation per JDBC connection/query. These flow through the same
+				     micrometer-tracing-bridge-otel → OTLP pipeline as the Axon and HTTP spans, so every SQL
+				     statement (Axon JPA event store + read-model projections) becomes a child span carrying
+				     the SQL text (and bind parameters). Runtime gate: jdbc.datasource-proxy.enabled
+				     (see application(-observability).yaml). -->
+				<dependency>
+					<groupId>net.ttddyy.observation</groupId>
+					<artifactId>datasource-micrometer-spring-boot</artifactId>
+					<version>${datasource-micrometer.version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>tracing-grpc</id>
+			<activation>
+				<property>
+					<name>tracing.grpc.enabled</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<dependencies>
+				<!-- gRPC tracing for the Axon Server connector channel. Provides GrpcTelemetry, whose
+				     ClientInterceptor is registered on the connection channel via a ManagedChannelCustomizer
+				     bean (see GrpcTracingConfiguration). Built from the same OpenTelemetry SDK bean as the
+				     Axon/HTTP/JDBC spans, so gRPC client spans flow through the existing OTLP pipeline.
+				     GrpcTracingConfiguration loads GrpcTelemetry reflectively and is @ConditionalOnClass on
+				     it, so the app still compiles and runs when this JAR is absent. Only relevant under an
+				     axonserver profile (Axon Server is disabled by default). -->
+				<dependency>
+					<groupId>io.opentelemetry.instrumentation</groupId>
+					<artifactId>opentelemetry-grpc-1.6</artifactId>
+					<version>${opentelemetry-instrumentation.version}</version>
+				</dependency>
+			</dependencies>
 		</profile>
 	</profiles>
 

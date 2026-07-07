@@ -35,8 +35,8 @@ The two profiles are **alternatives** — pick the backend you want for a given 
 | [`axon-tracing-opentelemetry`](https://docs.axoniq.io/axon-framework-reference/4.13/monitoring/tracing/) | Instruments command/event/query handlers, aggregates, repositories, event store |
 | [`micrometer-tracing-bridge-otel`](https://docs.spring.io/spring-boot/reference/actuator/tracing.html) | Spring Boot's official bridge from Micrometer Observation to OpenTelemetry |
 | [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the chosen backend |
-| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters |
-| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile) |
+| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters. **Opt-in build-time dep** — add with `-Dtracing.database.enabled=true` |
+| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile). **Opt-in build-time dep** — add with `-Dtracing.grpc.enabled=true` |
 | [Elastic APM 9.x](https://www.elastic.co/observability/application-performance-monitoring) | Receives OTLP, stores in Elasticsearch, visualizes in Kibana |
 | [Jaeger 2.x](https://www.jaegertracing.io/) | Receives OTLP directly, in-memory storage, lightweight UI |
 
@@ -45,6 +45,13 @@ Activation surface:
 - Profile **`observability-elastic`** — base + Elastic APM endpoint
 - Profile **`observability-jaeger`** — base + Jaeger endpoint
 - Profile groups in `application.yaml` make the two child profiles automatically include the base.
+
+Build-time toggles (independent of the runtime profiles above):
+- The **JDBC** and **gRPC** instrumentation JARs are **opt-in at build time** and excluded from a default build.
+  Add them per feature via Maven properties, which activate the `tracing-database` / `tracing-grpc` profiles in `pom.xml`:
+  `-Dtracing.database.enabled=true` (JDBC/JPA spans) and `-Dtracing.grpc.enabled=true` (Axon Server gRPC spans).
+- This is a *build-time* gate stacked on top of the *runtime* gates: the JAR must be present **and** the
+  `observability` profile (plus `jdbc.datasource-proxy.enabled` / `axon.axonserver.enabled`) active before spans appear.
 
 ## Run with Elastic APM
 
@@ -236,7 +243,9 @@ domain or infrastructure code changes — so all pooled SQL is captured automati
 Gating: the proxy is **disabled by default** (`jdbc.datasource-proxy.enabled: false` in
 `application.yaml`) and turned on only by the `observability` profile
 (`application-observability.yaml`), matching the rest of the tracing setup — normal runs are
-unaffected.
+unaffected. In addition, the `datasource-micrometer-spring-boot` JAR is an **opt-in build-time
+dependency**: build with `-Dtracing.database.enabled=true` (the `tracing-database` Maven profile)
+to include it; without it the JAR is absent and the `jdbc.datasource-proxy.*` keys are ignored.
 
 > ⚠️ Bind-parameter values can expose data. This is intentional here (local/dev tracing, off by
 > default). Before enabling in any shared environment, revisit `include-parameter-values`.
@@ -257,6 +266,11 @@ on the connector channel through Axon 5's `ManagedChannelCustomizer` hook (see
 `rpc.service`, `rpc.method`, `rpc.grpc.status_code`) and flow through the same OTLP pipeline as the
 Axon/HTTP/JDBC spans. It is built from the shared `OpenTelemetry` SDK bean, so no extra export
 wiring is needed.
+
+The `opentelemetry-grpc-1.6` JAR is an **opt-in build-time dependency**: build with
+`-Dtracing.grpc.enabled=true` (the `tracing-grpc` Maven profile) to include it. Without it,
+`GrpcTracingConfiguration` (which loads `GrpcTelemetry` reflectively and is `@ConditionalOnClass` on
+it) is skipped, and the app compiles and runs unchanged.
 
 > ℹ️ Axon Server traffic is dominated by **long-lived bidirectional streams** (command / query /
 > event / control channels). gRPC client instrumentation opens **one span per RPC**, so a streaming

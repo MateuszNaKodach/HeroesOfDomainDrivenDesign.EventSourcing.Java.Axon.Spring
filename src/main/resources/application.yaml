@@ -100,6 +100,9 @@ management:
 
 # JDBC/SQL tracing (datasource-micrometer). Off by default so normal runs are unaffected;
 # turned on by the 'observability' profile (see application-observability.yaml).
+# NOTE: this property only has any effect when the app is built with -Dtracing.database.enabled=true
+# (the 'tracing-database' Maven profile) — otherwise the datasource-micrometer JAR is not on the classpath
+# and this key is simply ignored. See docs/OBSERVABILITY.md.
 jdbc:
   datasource-proxy:
     enabled: false
