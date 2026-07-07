@@ -1,9 +1,25 @@
-### BuildDwelling
+# Creature-recruitment: query-type showcase
+#
+# Run top-to-bottom against a running app (`./mvnw spring-boot:run`, needs `docker compose up`).
+# Uses the "dev" env from http-client.env.json (APP_PORT=3773).
+#
+# Demonstrates the four Axon Framework 5 query dispatch styles:
+#   - single point-to-point ...... GET /dwellings/{id}          (queryGateway.query)
+#   - multi-result ............... GET /dwellings/list           (queryGateway.queryMany)
+#   - streaming .................. GET /dwellings/stream         (queryGateway.streamingQuery, SSE)
+#   - subscription (live) ........ GET /dwellings/{id}/watch     (queryGateway.subscriptionQuery, SSE)
+
 @gameId = scenario-1
 @playerId = player-1
 @dwellingId = dwelling-44
+@dwellingId2 = dwelling-77
+@armyId = army-1
 
-### BuildDwelling
+### ─────────────────────────────────────────────────────────────
+### 1. Setup — build two dwellings (write side)
+### ─────────────────────────────────────────────────────────────
+
+### BuildDwelling #1 (angel)
 PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
 Content-Type: application/json
 X-Player-Id: {{playerId}}
@@ -16,7 +32,61 @@ X-Player-Id: {{playerId}}
   }
 }
 
-### IncreaseAvailableCreatures
+### BuildDwelling #2 (pegasus)
+PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId2}}
+Content-Type: application/json
+X-Player-Id: {{playerId}}
+
+{
+  "creatureId": "pegasus",
+  "costPerTroop": {
+    "gold": 1000
+  }
+}
+
+### ─────────────────────────────────────────────────────────────
+### 2. Single point-to-point query — queryGateway.query
+### ─────────────────────────────────────────────────────────────
+
+### GetDwellingById
+GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
+Accept: application/json
+
+### ─────────────────────────────────────────────────────────────
+### 3. Multi-result query — queryGateway.queryMany
+###    Returns a JSON array of every dwelling in the game.
+### ─────────────────────────────────────────────────────────────
+
+### ListDwellings
+GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/list
+Accept: application/json
+
+### ─────────────────────────────────────────────────────────────
+### 4. Streaming query — queryGateway.streamingQuery (Server-Sent Events)
+###    Emits one SSE event per dwelling, then completes.
+### ─────────────────────────────────────────────────────────────
+
+### StreamDwellings
+GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/stream
+Accept: text/event-stream
+
+### ─────────────────────────────────────────────────────────────
+### 5. Subscription query — queryGateway.subscriptionQuery (live SSE)
+###
+###    HOW TO SEE IT IN ACTION:
+###    a) Send "WatchDwelling" below — it stays OPEN and immediately streams the
+###       dwelling's CURRENT state as the first SSE event.
+###    b) With that request still running, send the two write requests underneath
+###       (increase available creatures, then recruit). Each one pushes a fresh
+###       SSE event into the open watch stream — availableCreatures 0 -> 5 -> 2.
+###    c) Stop the WatchDwelling request to close the subscription.
+### ─────────────────────────────────────────────────────────────
+
+### WatchDwelling (leave running, then fire the two writes below)
+GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}/watch
+Accept: text/event-stream
+
+### IncreaseAvailableCreatures  -> watch stream emits availableCreatures = 5
 PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}/available-creatures-increases
 Content-Type: application/json
 X-Player-Id: {{playerId}}
@@ -26,22 +96,17 @@ X-Player-Id: {{playerId}}
   "increaseBy": 5
 }
 
-### RecruitCreature
+### RecruitCreature  -> watch stream emits availableCreatures = 2
 PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}/creature-recruitments
 Content-Type: application/json
 X-Player-Id: {{playerId}}
 
 {
   "creatureId": "angel",
-  "armyId": "army-1",
+  "armyId": "{{armyId}}",
   "quantity": 3,
   "expectedCost": {
     "gold": 9000,
     "gems": 3
   }
 }
-
-### Dwelling read model
-GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
-Content-Type: application/json
-
