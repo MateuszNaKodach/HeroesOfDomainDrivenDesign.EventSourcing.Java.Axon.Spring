@@ -163,6 +163,20 @@ class JaegerTracingIntegrationTest {
             "result-set"   // result-set traversal
     ));
 
+    /**
+     * gRPC client spans for the Axon Server connector (scope {@code io.opentelemetry.grpc-1.6}), named
+     * {@code <rpc.service>/<rpc.method>}. Only the <b>unary</b> RPCs of the recruit flow are pinned here —
+     * they complete and export within the run. Axon Server's long-lived bidirectional streams (command/query/
+     * event/control channels) open one span that lasts the whole connection, so they do not end during the
+     * test and are intentionally not asserted.
+     */
+    private static final Set<String> EXPECTED_GRPC_SPANS = new TreeSet<>(List.of(
+            "io.axoniq.axonserver.grpc.command.CommandService/Dispatch",     // command sent to Axon Server
+            "io.axoniq.axonserver.grpc.query.QueryService/Query",            // GetDwellingById query
+            "io.axoniq.axonserver.grpc.event.EventStore/AppendEvent",        // events appended to the store
+            "io.axoniq.axonserver.grpc.event.EventStore/ListAggregateEvents" // aggregate loading
+    ));
+
     /** Operation-name prefixes owned by Axon's framework SpanFactories — used to police for new/renamed spans. */
     private static final List<String> AXON_FRAMEWORK_PREFIXES = List.of(
             "CommandBus.", "EventBus.", "QueryBus.", "Repository.",
@@ -274,6 +288,12 @@ class JaegerTracingIntegrationTest {
                     .as("all documented JPA/JDBC spans must be present")
                     .containsAll(EXPECTED_JPA_SPANS);
 
+            // gRPC client spans (Axon Server connector) — assert presence of the unary RPCs. Count varies
+            // (snapshots, token calls, retries, long-lived streams), so not policed exhaustively.
+            assertThat(operations)
+                    .as("all documented gRPC (Axon Server) spans must be present")
+                    .containsAll(EXPECTED_GRPC_SPANS);
+
             // ---------- 2) Attributes — exact key sets (regression signal for attribute add/remove) ----------
             // Command dispatch span (local): INTERNAL kind, carries the W3C traceparent it propagates downstream.
             var dispatchRecruit = findSpan(spans, "CommandBus.dispatchCommand(RecruitCreature)");
@@ -362,6 +382,15 @@ class JaegerTracingIntegrationTest {
             assertThat(querySpan.tags())
                     .as("query span must carry the executed SQL on the jdbc.query[0] tag")
                     .containsKey("jdbc.query[0]");
+
+            // gRPC client span (Axon Server connector): standard OTel RPC attributes, scope grpc-1.6.
+            var grpcDispatch = findSpan(spans, "io.axoniq.axonserver.grpc.command.CommandService/Dispatch");
+            assertTag(grpcDispatch, "otel.scope.name", "io.opentelemetry.grpc-1.6");
+            assertTag(grpcDispatch, "span.kind", "client");
+            assertTag(grpcDispatch, "rpc.system", "grpc");
+            assertTag(grpcDispatch, "rpc.service", "io.axoniq.axonserver.grpc.command.CommandService");
+            assertTag(grpcDispatch, "rpc.method", "Dispatch");
+            assertTag(grpcDispatch, "rpc.grpc.status_code", "0");   // OK
 
             // ---------- 4) Causation + W3C context propagation (regression signal for broken correlation) ----------
             // The recruit event's correlationId/traceId point back to the originating command's message id.

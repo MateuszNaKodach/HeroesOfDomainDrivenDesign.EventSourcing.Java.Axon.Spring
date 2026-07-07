@@ -30,6 +30,13 @@ parameter values are captured (`jdbc.datasource-proxy.include-parameter-values: 
 > This mirrors the configuration used on the Axon 5 side (`axon5/tracing-v1`), so the JDBC tracing behaviour
 > is directly comparable across the migration.
 
+gRPC tracing (Axon Server connector) is provided by **`io.opentelemetry.instrumentation:opentelemetry-grpc-1.6`**
+(`2.15.0-alpha`, matching the `opentelemetry-api` 1.49.0 managed by the Spring Boot 3.5 BOM). A gRPC
+`ClientInterceptor` is registered on the Axon Server channel via Axon 4's `ManagedChannelCustomizer`
+(`GrpcTracingConfiguration`), gated to the `observability` profile **and** `axon.axonserver.enabled=true`. Also
+mirrors the Axon 5 side (the only difference is the `ManagedChannelCustomizer` package:
+`org.axonframework.axonserver.connector` on Axon 4 vs `io.axoniq.framework...` on Axon 5).
+
 Profiles: `observability, observability-jaeger, axonserver`. Sampling `1.0`, OTLP transport HTTP,
 service name `heroesofddd`.
 
@@ -118,6 +125,26 @@ Wrapped by `TracingHandlerEnhancerDefinition` as `<DeclaringClass>.<method>(<Par
 >
 > ⚠️ Bind-parameter values can expose data. Intentional here (local/dev tracing, off by default). Revisit
 > `include-parameter-values` before enabling in any shared environment.
+
+### gRPC spans — Axon Server connector (scope `io.opentelemetry.grpc-1.6`) (`EXPECTED_GRPC_SPANS`)
+
+An OpenTelemetry gRPC `ClientInterceptor` (`opentelemetry-grpc-1.6`) is registered on the Axon Server
+connection channel via Axon 4's `ManagedChannelCustomizer` hook (see `GrpcTracingConfiguration`), gated to the
+`observability` profile **and** `axon.axonserver.enabled=true`. Spans are named `<rpc.service>/<rpc.method>`:
+
+- `io.axoniq.axonserver.grpc.command.CommandService/Dispatch` — command sent to Axon Server
+- `io.axoniq.axonserver.grpc.query.QueryService/Query` — `GetDwellingById`
+- `io.axoniq.axonserver.grpc.event.EventStore/AppendEvent` — events appended
+- `io.axoniq.axonserver.grpc.event.EventStore/ListAggregateEvents` — aggregate loading
+
+Attributes on each: `rpc.system=grpc`, `rpc.service`, `rpc.method`, `rpc.grpc.status_code` (`0` = OK),
+`span.kind=client`, plus `server.address`/`server.port`, `network.peer.*`.
+
+> Asserted by **presence** only (the `Dispatch` span's attributes are checked exactly). Axon Server traffic is
+> dominated by **long-lived bidirectional streams** (command/query/event/control channels); gRPC opens one span
+> per RPC, so a streaming call yields a *single span lasting the whole connection* — it does not end during the
+> test and is therefore not asserted. Only the **unary** RPCs above end and export. Per-message tracing is
+> already covered by the framework's distributed tracing (`axon-tracing-opentelemetry`).
 
 ## Span attributes (tags)
 
