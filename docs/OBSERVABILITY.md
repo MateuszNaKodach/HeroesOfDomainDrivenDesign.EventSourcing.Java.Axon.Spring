@@ -16,7 +16,8 @@ The app can emit distributed traces to either **Elastic APM** or **Jaeger** via 
 8. [Same traces in Jaeger](#same-traces-in-jaeger)
 9. [Useful filters](#useful-filters)
 10. [JDBC / SQL spans](#jdbc--sql-spans)
-11. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
+11. [gRPC spans (Axon Server connector)](#grpc-spans-axon-server-connector)
+12. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
 
 ## Backends — pick one
 
@@ -35,6 +36,7 @@ The two profiles are **alternatives** — pick the backend you want for a given 
 | [`micrometer-tracing-bridge-otel`](https://docs.spring.io/spring-boot/reference/actuator/tracing.html) | Spring Boot's official bridge from Micrometer Observation to OpenTelemetry |
 | [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the chosen backend |
 | [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters |
+| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile) |
 | [Elastic APM 9.x](https://www.elastic.co/observability/application-performance-monitoring) | Receives OTLP, stores in Elasticsearch, visualizes in Kibana |
 | [Jaeger 2.x](https://www.jaegertracing.io/) | Receives OTLP directly, in-memory storage, lightweight UI |
 
@@ -238,6 +240,31 @@ unaffected.
 
 > ⚠️ Bind-parameter values can expose data. This is intentional here (local/dev tracing, off by
 > default). Before enabling in any shared environment, revisit `include-parameter-values`.
+
+## gRPC spans (Axon Server connector)
+
+The only gRPC in this app is the connection to **Axon Server** (via `axonserver-connector-java`),
+which is **disabled by default** — the app runs on the JPA event store. gRPC spans therefore only
+appear when you run under an Axon Server profile *and* the `observability` profile, e.g.:
+
+```bash
+SPRING_PROFILES_ACTIVE=observability-jaeger,axonserver-dcb ./mvnw spring-boot:run
+```
+
+Instrumentation is an OpenTelemetry gRPC `ClientInterceptor` (`opentelemetry-grpc-1.6`) registered
+on the connector channel through Axon 5's `ManagedChannelCustomizer` hook (see
+`GrpcTracingConfiguration`). Spans carry the standard gRPC attributes (`rpc.system=grpc`,
+`rpc.service`, `rpc.method`, `rpc.grpc.status_code`) and flow through the same OTLP pipeline as the
+Axon/HTTP/JDBC spans. It is built from the shared `OpenTelemetry` SDK bean, so no extra export
+wiring is needed.
+
+> ℹ️ Axon Server traffic is dominated by **long-lived bidirectional streams** (command / query /
+> event / control channels). gRPC client instrumentation opens **one span per RPC**, so a streaming
+> call produces a *single span that lasts the whole stream lifetime* (often the app's lifetime) —
+> not one span per message. These spans are most useful for connection/stream lifecycle and error
+> visibility; **per-message** command/event/query tracing is already provided by the framework's
+> distributed tracing (`axoniq-distributed-messaging`). Expect a few very long-duration gRPC spans
+> in the trace list — that is normal for streaming RPCs.
 
 ## Why Axon splits work across multiple traces
 
