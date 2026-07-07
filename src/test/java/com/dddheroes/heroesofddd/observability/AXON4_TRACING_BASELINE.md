@@ -19,6 +19,17 @@ renamed/added/removed attributes, broken context propagation) into a concrete, r
 | PostgreSQL | `postgres:latest` (Testcontainers) | JPA read-model store + token store |
 | Jaeger | `jaegertracing/jaeger:2.5.0` (Testcontainers) | OTLP/HTTP backend (4318) + query API (16686) |
 
+JDBC/JPA tracing is provided by **`net.ttddyy.observation:datasource-micrometer-spring-boot`** (`1.4.1`, the
+Spring Boot 3.x line; 2.x targets Spring Boot 4), which instruments the `DataSource` through the Micrometer
+Observation API so database spans flow through the same Micrometer → OpenTelemetry → OTLP pipeline (no
+OpenTelemetry agent needed). The proxy is **gated by `jdbc.datasource-proxy.enabled`**: `false` in the base
+`application.yaml` and `true` in `application-observability.yaml`, so it isn't even created in the default
+runtime and turns on only under the `observability` profile — matching the rest of the tracing setup. Bind
+parameter values are captured (`jdbc.datasource-proxy.include-parameter-values: true`).
+
+> This mirrors the configuration used on the Axon 5 side (`axon5/tracing-v1`), so the JDBC tracing behaviour
+> is directly comparable across the migration.
+
 Profiles: `observability, observability-jaeger, axonserver`. Sampling `1.0`, OTLP transport HTTP,
 service name `heroesofddd`.
 
@@ -93,6 +104,20 @@ Wrapped by `TracingHandlerEnhancerDefinition` as `<DeclaringClass>.<method>(<Par
 - `http put /games/{gameId}/dwellings/{dwellingId}/available-creatures-increases`
 - `http put /games/{gameId}/dwellings/{dwellingId}/creature-recruitments`
 - `http get /games/{gameId}/dwellings/{dwellingId}`
+
+### JPA/JDBC spans (datasource-micrometer, scope `org.springframework.boot`) (`EXPECTED_JPA_SPANS`)
+- `connection` — JDBC connection acquisition
+- `query` — SQL statement execution; SQL text on the `jdbc.query[0]` tag
+- `result-set` — result-set traversal
+
+> Asserted by **presence** only — the number of DB spans and the exact SQL vary per run, so they are not
+> policed exhaustively. Query-span attributes checked: `span.kind=client`,
+> `jdbc.datasource.driver=org.postgresql.Driver`, and a non-empty `jdbc.query[0]` (the SQL). Other tags seen:
+> `jdbc.datasource.name`, `jdbc.datasource.pool` (e.g. `HikariPool-1`), `peer.service`. Bind-parameter values
+> **are** captured (`jdbc.datasource-proxy.include-parameter-values: true`).
+>
+> ⚠️ Bind-parameter values can expose data. Intentional here (local/dev tracing, off by default). Revisit
+> `include-parameter-values` before enabling in any shared environment.
 
 ## Span attributes (tags)
 

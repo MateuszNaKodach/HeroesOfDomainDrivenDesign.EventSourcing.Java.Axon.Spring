@@ -152,6 +152,17 @@ class JaegerTracingIntegrationTest {
             "http get /games/{gameId}/dwellings/{dwellingId}"
     ));
 
+    /**
+     * JDBC/JPA spans from {@code datasource-micrometer}. The instrumented DataSource emits these as children
+     * of whichever Axon handler span is doing the DB work (token store, JPA read model). They share the
+     * {@code org.springframework.boot} instrumentation scope with the HTTP spans.
+     */
+    private static final Set<String> EXPECTED_JPA_SPANS = new TreeSet<>(List.of(
+            "connection",  // JDBC connection acquisition
+            "query",       // SQL statement execution (SQL text on the jdbc.query[0] tag)
+            "result-set"   // result-set traversal
+    ));
+
     /** Operation-name prefixes owned by Axon's framework SpanFactories — used to police for new/renamed spans. */
     private static final List<String> AXON_FRAMEWORK_PREFIXES = List.of(
             "CommandBus.", "EventBus.", "QueryBus.", "Repository.",
@@ -257,6 +268,12 @@ class JaegerTracingIntegrationTest {
                     .as("all documented HTTP server spans must be present")
                     .containsAll(EXPECTED_HTTP_SERVER_SPANS);
 
+            // JPA/JDBC spans (datasource-micrometer) — assert presence. Their count/SQL varies per run, so
+            // this side is not policed exhaustively either.
+            assertThat(operations)
+                    .as("all documented JPA/JDBC spans must be present")
+                    .containsAll(EXPECTED_JPA_SPANS);
+
             // ---------- 2) Attributes — exact key sets (regression signal for attribute add/remove) ----------
             // Command dispatch span (local): INTERNAL kind, carries the W3C traceparent it propagates downstream.
             var dispatchRecruit = findSpan(spans, "CommandBus.dispatchCommand(RecruitCreature)");
@@ -337,6 +354,14 @@ class JaegerTracingIntegrationTest {
             assertTag(httpPut, "status", "200");
             assertTag(httpPut, "outcome", "SUCCESS");
             assertTag(httpPut, "uri", "/games/{gameId}/dwellings/{dwellingId}");
+
+            // JPA/JDBC query span (datasource-micrometer): CLIENT kind, PostgreSQL driver, SQL text present.
+            var querySpan = findSpan(spans, "query");
+            assertTag(querySpan, "span.kind", "client");
+            assertTag(querySpan, "jdbc.datasource.driver", "org.postgresql.Driver");
+            assertThat(querySpan.tags())
+                    .as("query span must carry the executed SQL on the jdbc.query[0] tag")
+                    .containsKey("jdbc.query[0]");
 
             // ---------- 4) Causation + W3C context propagation (regression signal for broken correlation) ----------
             // The recruit event's correlationId/traceId point back to the originating command's message id.

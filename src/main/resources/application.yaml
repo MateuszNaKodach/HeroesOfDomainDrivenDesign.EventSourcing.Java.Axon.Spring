@@ -76,12 +76,19 @@ axon:
       # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
       # across async boundaries. Off by default in Axon (batch trace = no links).
       disable-batch-trace: true
+      distributed-in-same-trace: true
 #  update-check:
 #    disabled: true
 
 management:
   tracing:
     enabled: false       # turned on by the 'observability' Spring profile
+
+# JDBC/SQL tracing (datasource-micrometer). Off by default so normal runs are unaffected;
+# turned on by the 'observability' profile (see application-observability.yaml).
+jdbc:
+  datasource-proxy:
+    enabled: false
 application:
   maintenance:
     enabled: true
