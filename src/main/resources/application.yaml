@@ -98,6 +98,12 @@ management:
   tracing:
     enabled: false       # turned on by the 'observability' Spring profile
 
+# JDBC/SQL tracing (datasource-micrometer). Off by default so normal runs are unaffected;
+# turned on by the 'observability' profile (see application-observability.yaml).
+jdbc:
+  datasource-proxy:
+    enabled: false
+
 springdoc:
   api-docs:
     path: /api-docs

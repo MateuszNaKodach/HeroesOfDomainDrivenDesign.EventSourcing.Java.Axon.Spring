@@ -31,6 +31,7 @@
 		<axon.version>5.2.0-SNAPSHOT</axon.version>
 		<axon5.version>5.2.0-SNAPSHOT</axon5.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
+		<datasource-micrometer.version>1.4.1</datasource-micrometer.version>
 		<java.version>23</java.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
 		<spring-doc.version>2.8.17</spring-doc.version>
@@ -124,6 +125,18 @@
 		<dependency>
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-exporter-otlp</artifactId>
+		</dependency>
+
+		<!-- JDBC/JPA tracing: wraps the autoconfigured HikariCP DataSource in a proxy that emits a
+		     Micrometer Observation per JDBC connection/query. These flow through the same
+		     micrometer-tracing-bridge-otel → OTLP pipeline as the Axon and HTTP spans, so every SQL
+		     statement (Axon JPA event store + read-model projections) becomes a child span carrying
+		     the SQL text (and bind parameters). Gated to the observability profile via
+		     jdbc.datasource-proxy.enabled (see application(-observability).yaml). -->
+		<dependency>
+			<groupId>net.ttddyy.observation</groupId>
+			<artifactId>datasource-micrometer-spring-boot</artifactId>
+			<version>${datasource-micrometer.version}</version>
 		</dependency>
 
 		<dependency>

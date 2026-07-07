@@ -15,7 +15,8 @@ The app can emit distributed traces to either **Elastic APM** or **Jaeger** via 
 7. [Exploring traces in Kibana — guided tour](#exploring-traces-in-kibana--guided-tour)
 8. [Same traces in Jaeger](#same-traces-in-jaeger)
 9. [Useful filters](#useful-filters)
-10. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
+10. [JDBC / SQL spans](#jdbc--sql-spans)
+11. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
 
 ## Backends — pick one
 
@@ -33,6 +34,7 @@ The two profiles are **alternatives** — pick the backend you want for a given 
 | [`axon-tracing-opentelemetry`](https://docs.axoniq.io/axon-framework-reference/4.13/monitoring/tracing/) | Instruments command/event/query handlers, aggregates, repositories, event store |
 | [`micrometer-tracing-bridge-otel`](https://docs.spring.io/spring-boot/reference/actuator/tracing.html) | Spring Boot's official bridge from Micrometer Observation to OpenTelemetry |
 | [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the chosen backend |
+| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters |
 | [Elastic APM 9.x](https://www.elastic.co/observability/application-performance-monitoring) | Receives OTLP, stores in Elasticsearch, visualizes in Kibana |
 | [Jaeger 2.x](https://www.jaegertracing.io/) | Receives OTLP directly, in-memory storage, lightweight UI |
 
@@ -211,6 +213,31 @@ In the Jaeger UI search form, the **Tags** field accepts space-separated `key=va
 | Combine | `axon.metadata.gameId=scenario-1 axon.metadata.playerId=player-1` |
 
 (Operation-level filtering — e.g. "only `Dwelling.decide` spans" — is done via the **Operation** dropdown, not the Tags field.)
+
+## JDBC / SQL spans
+
+Under the `observability` profile the app also instruments the JDBC layer via
+[`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer).
+It wraps the autoconfigured HikariCP `DataSource` in a proxy that emits a Micrometer Observation
+per JDBC connection and query, so **every SQL statement becomes its own child span** nested under
+the Axon span that triggered it:
+
+- Axon **JPA event store** reads/appends and snapshot access → SQL spans under the event-store /
+  aggregate-load spans.
+- **Read-model projections** (`DwellingReadModel`, `BuiltDwellingReadModel`) → INSERT/UPDATE/SELECT
+  spans under the projection event-handler spans.
+
+Each query span carries the SQL text; `jdbc.datasource-proxy.include-parameter-values: true` also
+attaches the bind-parameter values. This is instrumented purely at the `DataSource` layer — no
+domain or infrastructure code changes — so all pooled SQL is captured automatically.
+
+Gating: the proxy is **disabled by default** (`jdbc.datasource-proxy.enabled: false` in
+`application.yaml`) and turned on only by the `observability` profile
+(`application-observability.yaml`), matching the rest of the tracing setup — normal runs are
+unaffected.
+
+> ⚠️ Bind-parameter values can expose data. This is intentional here (local/dev tracing, off by
+> default). Before enabling in any shared environment, revisit `include-parameter-values`.
 
 ## Why Axon splits work across multiple traces
 
