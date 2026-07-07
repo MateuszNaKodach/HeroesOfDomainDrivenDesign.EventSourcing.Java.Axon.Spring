@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @EventSourced(tagKey = "Dwelling", idType = DwellingId.class)
-@Snapshotting(afterEvents = 5)
+@Snapshotting(afterEvents = 3)
 public class Dwelling {
 
     private static final Logger logger = LoggerFactory.getLogger(Dwelling.class);
