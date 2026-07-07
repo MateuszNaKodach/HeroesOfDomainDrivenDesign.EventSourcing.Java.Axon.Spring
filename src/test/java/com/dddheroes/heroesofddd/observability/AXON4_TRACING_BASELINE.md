@@ -37,6 +37,20 @@ gRPC tracing (Axon Server connector) is provided by **`io.opentelemetry.instrume
 mirrors the Axon 5 side (the only difference is the `ManagedChannelCustomizer` package:
 `org.axonframework.axonserver.connector` on Axon 4 vs `io.axoniq.framework...` on Axon 5).
 
+> **Build-time toggles.** The JDBC and gRPC instrumentation JARs are **opt-in at build time** and are excluded
+> from a default build. Enable them independently via Maven properties, which activate the `tracing-database` /
+> `tracing-grpc` profiles in `pom.xml`:
+> - `-Dtracing.database.enabled=true` — adds `datasource-micrometer-spring-boot` (JDBC/JPA spans)
+> - `-Dtracing.grpc.enabled=true` — adds `opentelemetry-grpc-1.6` (Axon Server gRPC spans)
+>
+> These are a separate *build-time* gate on top of the *runtime* gates above: the JAR must be present **and**
+> the `observability` profile (plus `jdbc.datasource-proxy.enabled` / `axon.axonserver.enabled`) active before
+> spans appear. `GrpcTracingConfiguration` loads `GrpcTelemetry` reflectively and is `@ConditionalOnClass` on
+> it, so the app compiles and runs unchanged when the gRPC JAR is absent. Because the default build omits both
+> JARs, this golden-master **skips** the JPA and gRPC span assertions unless the matching JAR is on the
+> classpath — run `./mvnw verify -Dtracing.database.enabled=true -Dtracing.grpc.enabled=true` to exercise the
+> full baseline.
+
 Profiles: `observability, observability-jaeger, axonserver`. Sampling `1.0`, OTLP transport HTTP,
 service name `heroesofddd`.
 

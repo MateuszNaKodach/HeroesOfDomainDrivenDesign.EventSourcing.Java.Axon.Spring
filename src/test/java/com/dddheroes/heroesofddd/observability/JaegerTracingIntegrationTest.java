@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.util.ClassUtils;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -177,6 +178,20 @@ class JaegerTracingIntegrationTest {
             "io.axoniq.axonserver.grpc.event.EventStore/ListAggregateEvents" // aggregate loading
     ));
 
+    /**
+     * JDBC/JPA and gRPC tracing are opt-in BUILD-TIME toggles (Maven {@code tracing-database} /
+     * {@code tracing-grpc} profiles, enabled with {@code -Dtracing.database.enabled=true} /
+     * {@code -Dtracing.grpc.enabled=true}). When a feature's instrumentation JAR is not built in, it cannot
+     * produce spans, so the corresponding baseline assertions below are skipped rather than failing. Detect
+     * each JAR by a marker class on the runtime classpath. Build with both flags to exercise the full baseline.
+     */
+    private static final boolean JDBC_TRACING_PRESENT = ClassUtils.isPresent(
+            "net.ttddyy.observation.boot.autoconfigure.DataSourceObservationAutoConfiguration",
+            JaegerTracingIntegrationTest.class.getClassLoader());
+    private static final boolean GRPC_TRACING_PRESENT = ClassUtils.isPresent(
+            "io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry",
+            JaegerTracingIntegrationTest.class.getClassLoader());
+
     /** Operation-name prefixes owned by Axon's framework SpanFactories — used to police for new/renamed spans. */
     private static final List<String> AXON_FRAMEWORK_PREFIXES = List.of(
             "CommandBus.", "EventBus.", "QueryBus.", "Repository.",
@@ -283,16 +298,28 @@ class JaegerTracingIntegrationTest {
                     .containsAll(EXPECTED_HTTP_SERVER_SPANS);
 
             // JPA/JDBC spans (datasource-micrometer) — assert presence. Their count/SQL varies per run, so
-            // this side is not policed exhaustively either.
-            assertThat(operations)
-                    .as("all documented JPA/JDBC spans must be present")
-                    .containsAll(EXPECTED_JPA_SPANS);
+            // this side is not policed exhaustively either. Only when the opt-in JDBC tracing JAR is built in
+            // (-Dtracing.database.enabled=true); otherwise no such spans are produced (see *_TRACING_PRESENT).
+            if (JDBC_TRACING_PRESENT) {
+                assertThat(operations)
+                        .as("all documented JPA/JDBC spans must be present")
+                        .containsAll(EXPECTED_JPA_SPANS);
+            } else {
+                System.out.println("[baseline] JDBC/JPA tracing JAR not on classpath — skipping JPA span assertions "
+                                   + "(build with -Dtracing.database.enabled=true to exercise them).");
+            }
 
             // gRPC client spans (Axon Server connector) — assert presence of the unary RPCs. Count varies
-            // (snapshots, token calls, retries, long-lived streams), so not policed exhaustively.
-            assertThat(operations)
-                    .as("all documented gRPC (Axon Server) spans must be present")
-                    .containsAll(EXPECTED_GRPC_SPANS);
+            // (snapshots, token calls, retries, long-lived streams), so not policed exhaustively. Only when the
+            // opt-in gRPC tracing JAR is built in (-Dtracing.grpc.enabled=true).
+            if (GRPC_TRACING_PRESENT) {
+                assertThat(operations)
+                        .as("all documented gRPC (Axon Server) spans must be present")
+                        .containsAll(EXPECTED_GRPC_SPANS);
+            } else {
+                System.out.println("[baseline] gRPC tracing JAR not on classpath — skipping gRPC span assertions "
+                                   + "(build with -Dtracing.grpc.enabled=true to exercise them).");
+            }
 
             // ---------- 2) Attributes — exact key sets (regression signal for attribute add/remove) ----------
             // Command dispatch span (local): INTERNAL kind, carries the W3C traceparent it propagates downstream.
@@ -376,21 +403,27 @@ class JaegerTracingIntegrationTest {
             assertTag(httpPut, "uri", "/games/{gameId}/dwellings/{dwellingId}");
 
             // JPA/JDBC query span (datasource-micrometer): CLIENT kind, PostgreSQL driver, SQL text present.
-            var querySpan = findSpan(spans, "query");
-            assertTag(querySpan, "span.kind", "client");
-            assertTag(querySpan, "jdbc.datasource.driver", "org.postgresql.Driver");
-            assertThat(querySpan.tags())
-                    .as("query span must carry the executed SQL on the jdbc.query[0] tag")
-                    .containsKey("jdbc.query[0]");
+            // Only asserted when the opt-in JDBC tracing JAR is built in (see JDBC_TRACING_PRESENT).
+            if (JDBC_TRACING_PRESENT) {
+                var querySpan = findSpan(spans, "query");
+                assertTag(querySpan, "span.kind", "client");
+                assertTag(querySpan, "jdbc.datasource.driver", "org.postgresql.Driver");
+                assertThat(querySpan.tags())
+                        .as("query span must carry the executed SQL on the jdbc.query[0] tag")
+                        .containsKey("jdbc.query[0]");
+            }
 
             // gRPC client span (Axon Server connector): standard OTel RPC attributes, scope grpc-1.6.
-            var grpcDispatch = findSpan(spans, "io.axoniq.axonserver.grpc.command.CommandService/Dispatch");
-            assertTag(grpcDispatch, "otel.scope.name", "io.opentelemetry.grpc-1.6");
-            assertTag(grpcDispatch, "span.kind", "client");
-            assertTag(grpcDispatch, "rpc.system", "grpc");
-            assertTag(grpcDispatch, "rpc.service", "io.axoniq.axonserver.grpc.command.CommandService");
-            assertTag(grpcDispatch, "rpc.method", "Dispatch");
-            assertTag(grpcDispatch, "rpc.grpc.status_code", "0");   // OK
+            // Only asserted when the opt-in gRPC tracing JAR is built in (see GRPC_TRACING_PRESENT).
+            if (GRPC_TRACING_PRESENT) {
+                var grpcDispatch = findSpan(spans, "io.axoniq.axonserver.grpc.command.CommandService/Dispatch");
+                assertTag(grpcDispatch, "otel.scope.name", "io.opentelemetry.grpc-1.6");
+                assertTag(grpcDispatch, "span.kind", "client");
+                assertTag(grpcDispatch, "rpc.system", "grpc");
+                assertTag(grpcDispatch, "rpc.service", "io.axoniq.axonserver.grpc.command.CommandService");
+                assertTag(grpcDispatch, "rpc.method", "Dispatch");
+                assertTag(grpcDispatch, "rpc.grpc.status_code", "0");   // OK
+            }
 
             // ---------- 4) Causation + W3C context propagation (regression signal for broken correlation) ----------
             // The recruit event's correlationId/traceId point back to the originating command's message id.
