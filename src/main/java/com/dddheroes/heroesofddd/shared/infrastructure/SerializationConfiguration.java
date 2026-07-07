@@ -10,6 +10,9 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.axonframework.serialization.Serializer;
+import org.axonframework.serialization.json.JacksonSerializer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +20,28 @@ import java.io.IOException;
 
 @Configuration
 public class SerializationConfiguration {
+
+    /**
+     * Message (command/query) serializer with Jackson default typing enabled, so generic-collection
+     * responses — e.g. a query dispatched with
+     * {@code ResponseTypes.multipleInstancesOf(DwellingReadModel.class)} — carry element type
+     * information across the (serializing) Axon Server query bus. Without it such a response
+     * deserializes into an untyped {@code ArrayList} and fails response-type conversion
+     * ("not convertible to a List of the expected response type").
+     * <p>
+     * Scoped to messages only: it copies the Spring {@link ObjectMapper} (keeping the value-object
+     * modules below) so the {@code events} serializer and REST JSON keep the plain mapper — the
+     * event-store format and HTTP responses are unaffected. Value objects (GameId, DwellingId, ...)
+     * are final records, so {@code NON_FINAL} default typing leaves their custom scalar form intact.
+     */
+    @Bean
+    @Qualifier("messageSerializer")
+    public Serializer messageSerializer(ObjectMapper objectMapper) {
+        return JacksonSerializer.builder()
+                                .objectMapper(objectMapper.copy())
+                                .defaultTyping()
+                                .build();
+    }
 
     @Bean
     public Module gameIdSerializationModule() {
