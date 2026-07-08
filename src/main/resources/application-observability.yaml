@@ -9,6 +9,10 @@ management:
 
 # JDBC/SQL tracing: wrap the HikariCP DataSource so every SQL statement (Axon JPA event store
 # + read-model projections) becomes a child span under the Axon/HTTP spans.
+# Parentless background JDBC observations (pooled event-processor token-store claims, pool warm-up)
+# are filtered out by JdbcBackgroundConnectionTracingFilterConfiguration's ObservationPredicate,
+# not by dropping the CONNECTION observation type, so in-request connection/query/result-set spans
+# still nest correctly.
 jdbc:
   datasource-proxy:
     enabled: true
