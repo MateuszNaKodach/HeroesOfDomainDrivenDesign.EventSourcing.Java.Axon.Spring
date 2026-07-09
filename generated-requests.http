@@ -11,13 +11,13 @@
 
 @gameId = scenario-1
 @playerId = player-1
-@dwellingId = dwelling-44
-@dwellingId2 = dwelling-77
+@dwellingId = dwelling-101
+@dwellingId2 = dwelling-102
 @armyId = army-1
 
-### ─────────────────────────────────────────────────────────────
-### 1. Setup — build two dwellings (write side)
-### ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# 1. Setup — build two dwellings (write side)
+# ─────────────────────────────────────────────────────────────
 
 ### BuildDwelling #1 (angel)
 PUT http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
@@ -44,43 +44,43 @@ X-Player-Id: {{playerId}}
   }
 }
 
-### ─────────────────────────────────────────────────────────────
-### 2. Single point-to-point query — queryGateway.query
-### ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# 2. Single point-to-point query — queryGateway.query
+# ─────────────────────────────────────────────────────────────
 
 ### GetDwellingById
 GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}
 Accept: application/json
 
-### ─────────────────────────────────────────────────────────────
-### 3. Multi-result query — queryGateway.queryMany
-###    Returns a JSON array of every dwelling in the game.
-### ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# 3. Multi-result query — queryGateway.queryMany
+#    Returns a JSON array of every dwelling in the game.
+# ─────────────────────────────────────────────────────────────
 
 ### ListDwellings
 GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/list
 Accept: application/json
 
-### ─────────────────────────────────────────────────────────────
-### 4. Streaming query — queryGateway.streamingQuery (Server-Sent Events)
-###    Emits one SSE event per dwelling, then completes.
-### ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# 4. Streaming query — queryGateway.streamingQuery (Server-Sent Events)
+#    Emits one SSE event per dwelling, then completes.
+# ─────────────────────────────────────────────────────────────
 
 ### StreamDwellings
 GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/stream
 Accept: text/event-stream
 
-### ─────────────────────────────────────────────────────────────
-### 5. Subscription query — queryGateway.subscriptionQuery (live SSE)
-###
-###    HOW TO SEE IT IN ACTION:
-###    a) Send "WatchDwelling" below — it stays OPEN and immediately streams the
-###       dwelling's CURRENT state as the first SSE event.
-###    b) With that request still running, send the two write requests underneath
-###       (increase available creatures, then recruit). Each one pushes a fresh
-###       SSE event into the open watch stream — availableCreatures 0 -> 5 -> 2.
-###    c) Stop the WatchDwelling request to close the subscription.
-### ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────
+# 5. Subscription query — queryGateway.subscriptionQuery (live SSE)
+#
+#    HOW TO SEE IT IN ACTION:
+#    a) Send "WatchDwelling" below — it stays OPEN and immediately streams the
+#       dwelling's CURRENT state as the first SSE event.
+#    b) With that request still running, send the two write requests underneath
+#       (increase available creatures, then recruit). Each one pushes a fresh
+#       SSE event into the open watch stream — availableCreatures 0 -> 5 -> 2.
+#    c) Stop the WatchDwelling request to close the subscription.
+# ─────────────────────────────────────────────────────────────
 
 ### WatchDwelling (leave running, then fire the two writes below)
 GET http://localhost:{{APP_PORT}}/games/{{gameId}}/dwellings/{{dwellingId}}/watch

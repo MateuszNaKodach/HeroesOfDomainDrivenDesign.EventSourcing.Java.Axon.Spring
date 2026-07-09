@@ -1,7 +1,6 @@
 package com.dddheroes.heroesofddd;
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
-import io.axoniq.framework.springboot.autoconfig.OpenTelemetryTracingAutoConfiguration;
 import org.axonframework.messaging.core.correlation.CorrelationDataProvider;
 import org.axonframework.messaging.core.correlation.MessageOriginProvider;
 import org.axonframework.messaging.core.correlation.SimpleCorrelationDataProvider;
