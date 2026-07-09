@@ -14,7 +14,7 @@ import java.util.Objects;
 @Entity
 @Table(
         name = "read_model_dwelling",
-        indexes = @Index(name = "idx_game_id", columnList = "gameId")
+        indexes = @Index(name = "idx_dwelling_game_id", columnList = "gameId")
 )
 public class DwellingReadModel {
 
