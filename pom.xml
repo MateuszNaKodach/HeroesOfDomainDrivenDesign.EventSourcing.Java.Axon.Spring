@@ -109,7 +109,7 @@
 		     starter. -->
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-opentelemetry</artifactId>
+			<artifactId>axoniq-tracing-micrometer</artifactId>
 			<version>${axon.version}</version>
 		</dependency>
 
