@@ -75,10 +75,10 @@ axon:
     # All Axon attribute providers stay at their defaults (true)
     show-event-sourcing-handlers: false
     event-processor:
-      # Disable the StreamingEventProcessor.batch root span. Each event handler becomes
-      # its own root trace with an OpenTelemetry LINK back to the publish-event span —
-      # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
-      # across async boundaries. Off by default in Axon (batch trace = no links).
+      # Keep asynchronous event handlers in the publisher trace and suppress the
+      # StreamingEventProcessor.batch span. Set distributed-in-same-trace to false
+      # to separate consumers from publishers; with batch tracing enabled they become
+      # batch children with publisher links, and without it they become linked roots.
       disable-batch-trace: true
       distributed-in-same-trace: true
 #  update-check:
