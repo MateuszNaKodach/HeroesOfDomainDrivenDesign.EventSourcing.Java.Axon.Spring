@@ -1,22 +1,16 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Map;
 import java.util.Objects;
 
-@Entity
-@Table(
-        name = "read_model_dwelling",
-        indexes = @Index(name = "idx_read_model_dwelling_game_id", columnList = "gameId")
-)
-public class DwellingReadModel {
+@Table("read_model_dwelling")
+public class DwellingReadModel implements Persistable<String> {
 
     private String gameId;
 
@@ -25,11 +19,15 @@ public class DwellingReadModel {
 
     private String creatureId;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
     private Map<String, Integer> costPerTroop;
 
     private Integer availableCreatures;
+
+    // R2DBC has no merge/upsert semantics: save() on an entity with an assigned id issues an UPDATE
+    // unless the entity says it is new. Instances built by the projector are new; instances
+    // materialized from the database (no-arg constructor) are not.
+    @Transient
+    private boolean isNew = false;
 
     public DwellingReadModel(
             String gameId,
@@ -43,6 +41,7 @@ public class DwellingReadModel {
         this.creatureId = creatureId;
         this.costPerTroop = costPerTroop;
         this.availableCreatures = availableCreatures;
+        this.isNew = true;
     }
 
     DwellingReadModel withAvailableCreatures(Integer availableCreatures) {
@@ -75,8 +74,20 @@ public class DwellingReadModel {
         return availableCreatures;
     }
 
+    @JsonIgnore
+    @Override
+    public String getId() {
+        return dwellingId;
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
     protected DwellingReadModel() {
-        // Required by JPA
+        // Required by Spring Data for materializing database rows
     }
 
     @Override
