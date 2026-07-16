@@ -1,7 +1,7 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read.watchdwelling;
 
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
-import org.axonframework.messaging.queryhandling.gateway.QueryGateway;
+import org.axonframework.extension.reactor.messaging.queryhandling.gateway.ReactorQueryGateway;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,15 +12,16 @@ import reactor.core.publisher.Flux;
 /**
  * Exposes the subscription query as Server-Sent Events: emits the dwelling's current state, then a new
  * event every time its available creatures change or creatures are recruited — until the client
- * disconnects. Spring MVC adapts the returned reactive {@link Flux} to SSE (Project Reactor on classpath).
+ * disconnects. {@code ReactorQueryGateway.subscriptionQuery} returns a single {@link Flux} that
+ * combines the initial result with the updates emitted by the projector.
  */
 @RestController
 @RequestMapping("games/{gameId}")
 class WatchDwellingRestApi {
 
-    private final QueryGateway queryGateway;
+    private final ReactorQueryGateway queryGateway;
 
-    WatchDwellingRestApi(QueryGateway queryGateway) {
+    WatchDwellingRestApi(ReactorQueryGateway queryGateway) {
         this.queryGateway = queryGateway;
     }
 
@@ -31,6 +32,6 @@ class WatchDwellingRestApi {
     ) {
         var query = WatchDwelling.query(gameId, dwellingId);
 
-        return Flux.from(queryGateway.subscriptionQuery(query, DwellingReadModel.class));
+        return queryGateway.subscriptionQuery(query, DwellingReadModel.class);
     }
 }
