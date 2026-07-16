@@ -1,17 +1,17 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.write.builddwelling;
 
 import com.dddheroes.heroesofddd.shared.application.GameMetaData;
+import com.dddheroes.heroesofddd.shared.application.ReactiveGameCommandGateway;
 import com.dddheroes.heroesofddd.shared.restapi.Headers;
-import org.axonframework.messaging.commandhandling.gateway.CommandGateway;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("games/{gameId}")
@@ -21,14 +21,14 @@ class BuildDwellingRestApi {
 
     }
 
-    private final CommandGateway commandGateway;
+    private final ReactiveGameCommandGateway commandGateway;
 
-    BuildDwellingRestApi(CommandGateway commandGateway) {
+    BuildDwellingRestApi(ReactiveGameCommandGateway commandGateway) {
         this.commandGateway = commandGateway;
     }
 
     @PutMapping("/dwellings/{dwellingId}")
-    CompletableFuture<Void> putDwellings(
+    Mono<Void> putDwellings(
             @RequestHeader(Headers.PLAYER_ID) String playerId,
             @PathVariable String gameId,
             @PathVariable String dwellingId,
@@ -39,7 +39,6 @@ class BuildDwellingRestApi {
                 requestBody.creatureId(),
                 requestBody.costPerTroop()
         );
-        return commandGateway.send(command, GameMetaData.with(gameId, playerId))
-                             .resultAs(Void.class);
+        return commandGateway.send(command, GameMetaData.with(gameId, playerId));
     }
 }
