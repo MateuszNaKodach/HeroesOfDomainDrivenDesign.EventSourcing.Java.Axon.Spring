@@ -13,8 +13,7 @@ import org.axonframework.messaging.core.sequencing.MetadataSequencingPolicy;
 import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.eventhandling.replay.annotation.DisallowReplay;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.CompletableFuture;
+import reactor.core.publisher.Mono;
 
 @Namespace("Automation_WhenWeekStartedThenProclaimWeekSymbol_Processor")
 @SequencingPolicy(type = MetadataSequencingPolicy.class, parameters = GameMetaData.GAME_ID_KEY)
@@ -32,7 +31,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
     }
 
     @EventHandler
-    CompletableFuture<?> react(
+    Mono<Void> react(
             DayStarted event,
             @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId,
             @MetadataValue(GameMetaData.PLAYER_ID_KEY) String playerId,
@@ -40,7 +39,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
     ) {
         var isWeekStarted = event.day() == FIRST_DAY_OF_THE_WEEK;
         if (!isWeekStarted) {
-            return CompletableFuture.completedFuture(null);
+            return Mono.empty();
         }
         var weekSymbol = weekSymbolCalculator.apply(MonthWeek.of(event.month(), event.week()));
         var command = ProclaimWeekSymbol.command(
@@ -50,6 +49,7 @@ class WhenWeekStartedThenProclaimWeekSymbolProcessor {
                 weekSymbol.weekOf().raw(),
                 weekSymbol.growth()
         );
-        return commandDispatcher.send(command, GameMetaData.with(gameId, playerId)).getResultMessage();
+        return Mono.fromFuture(
+                () -> commandDispatcher.send(command, GameMetaData.with(gameId, playerId)).resultAs(Void.class));
     }
 }
