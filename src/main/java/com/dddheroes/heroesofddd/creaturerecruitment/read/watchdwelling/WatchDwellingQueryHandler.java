@@ -4,6 +4,7 @@ import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 /**
  * Subscription query example — the initial-result handler.
@@ -23,7 +24,7 @@ class WatchDwellingQueryHandler {
     }
 
     @QueryHandler
-    DwellingReadModel handle(WatchDwelling query) {
-        return dwellingReadModelRepository.findById(query.dwellingId().raw()).orElse(null);
+    Mono<DwellingReadModel> handle(WatchDwelling query) {
+        return dwellingReadModelRepository.findById(query.dwellingId().raw());
     }
 }
