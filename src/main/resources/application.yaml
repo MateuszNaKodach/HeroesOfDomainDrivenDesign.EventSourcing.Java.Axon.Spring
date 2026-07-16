@@ -13,9 +13,6 @@ spring:
     group:
       observability-elastic: observability
       observability-jaeger: observability
-  threads:
-    virtual:
-      enabled: true
   ai:
     mcp:
       server:
