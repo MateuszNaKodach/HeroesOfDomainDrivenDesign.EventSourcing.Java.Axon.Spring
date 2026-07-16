@@ -9,10 +9,9 @@ import reactor.core.publisher.Flux;
 /**
  * Streaming query example.
  * <p>
- * The handler returns a reactive {@link Flux}. Callers dispatch this with
- * {@code queryGateway.streamingQuery(query, DwellingReadModel.class)}, which returns a
- * {@link org.reactivestreams.Publisher} that emits results lazily once subscribed to. This
- * suits large result sets that should not be materialized into a single list.
+ * The handler returns a reactive {@link Flux} backed directly by the R2DBC repository, so rows are
+ * emitted lazily as the database produces them — nothing is materialized into a list up front.
+ * Callers dispatch this with {@code queryGateway.streamingQuery(query, DwellingReadModel.class)}.
  */
 @Component
 class StreamDwellingsQueryHandler {
@@ -25,6 +24,6 @@ class StreamDwellingsQueryHandler {
 
     @QueryHandler
     Flux<DwellingReadModel> handle(StreamDwellings query) {
-        return Flux.fromIterable(dwellingReadModelRepository.findAllByGameId(query.gameId().raw()));
+        return dwellingReadModelRepository.findAllByGameId(query.gameId().raw());
     }
 }

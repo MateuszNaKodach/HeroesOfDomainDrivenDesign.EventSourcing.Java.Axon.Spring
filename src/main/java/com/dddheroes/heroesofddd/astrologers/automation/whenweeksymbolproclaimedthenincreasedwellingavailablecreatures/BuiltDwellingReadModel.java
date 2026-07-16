@@ -1,18 +1,14 @@
 package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Objects;
 
-@Entity
-@Table(
-        name = "read_model_built_dwelling",
-        indexes = @Index(name = "idx_read_model_built_dwelling_game_id", columnList = "gameId")
-)
-public class BuiltDwellingReadModel {
+@Table("read_model_built_dwelling")
+public class BuiltDwellingReadModel implements Persistable<String> {
 
     private String gameId;
 
@@ -21,10 +17,17 @@ public class BuiltDwellingReadModel {
 
     private String creatureId;
 
+    // R2DBC has no merge/upsert semantics: save() on an entity with an assigned id issues an UPDATE
+    // unless the entity says it is new. Instances built by the automation are new; instances
+    // materialized from the database (no-arg constructor) are not.
+    @Transient
+    private boolean isNew = false;
+
     public BuiltDwellingReadModel(String gameId, String dwellingId, String creatureId) {
         this.gameId = gameId;
         this.dwellingId = dwellingId;
         this.creatureId = creatureId;
+        this.isNew = true;
     }
 
     public String getGameId() {
@@ -39,8 +42,18 @@ public class BuiltDwellingReadModel {
         return creatureId;
     }
 
+    @Override
+    public String getId() {
+        return dwellingId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
+
     protected BuiltDwellingReadModel() {
-        // Required by JPA
+        // Required by Spring Data for materializing database rows
     }
 
     @Override

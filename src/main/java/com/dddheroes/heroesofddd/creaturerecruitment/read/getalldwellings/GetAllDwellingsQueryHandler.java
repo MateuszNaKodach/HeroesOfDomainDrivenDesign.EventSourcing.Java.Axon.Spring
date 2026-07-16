@@ -11,6 +11,7 @@ import org.axonframework.messaging.core.sequencing.MetadataSequencingPolicy;
 import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Stream;
@@ -28,16 +29,18 @@ class GetAllDwellingsQueryHandler {
     }
 
     @QueryHandler
-    GetAllDwellings.Result handle(GetAllDwellings query) {
+    Mono<GetAllDwellings.Result> handle(GetAllDwellings query) {
         var gameId = query.gameId().raw();
-        var dwellings = dwellingReadModelRepository.findAllByGameId(gameId);
-        var result = Stream.concat(
-                        dwellings.stream(),
-                        cache.stream().filter(it -> it.getGameId().equals(gameId))
-                ) // todo: check ordering
-                .distinct()
-                .toList();
-        return new GetAllDwellings.Result(result);
+        return dwellingReadModelRepository.findAllByGameId(gameId)
+                                          .collectList()
+                                          .map(dwellings -> Stream.concat(
+                                                                    dwellings.stream(),
+                                                                    cache.stream()
+                                                                         .filter(it -> it.getGameId().equals(gameId))
+                                                            ) // todo: check ordering
+                                                            .distinct()
+                                                            .toList())
+                                          .map(GetAllDwellings.Result::new);
     }
 
     @EventHandler
@@ -57,20 +60,3 @@ class GetAllDwellingsQueryHandler {
         }
     }
 }
-
-// without cache
-//@Component
-//class GetAllDwellingsQueryHandler {
-//
-//    private final DwellingReadModelRepository dwellingReadModelRepository;
-//
-//    GetAllDwellingsQueryHandler(DwellingReadModelRepository dwellingReadModelRepository) {
-//        this.dwellingReadModelRepository = dwellingReadModelRepository;
-//    }
-//
-//    @QueryHandler
-//    GetAllDwellings.Result handle(GetAllDwellings query) {
-//        var dwellings = dwellingReadModelRepository.findAll();
-//        return new GetAllDwellings.Result(dwellings);
-//    }
-//}
