@@ -28,8 +28,8 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.7</assertj.version>
-		<axon.version>5.2.0-SNAPSHOT</axon.version>
-		<axon5.version>5.2.0-SNAPSHOT</axon5.version>
+		<axon.version>5.3.0-SNAPSHOT</axon.version>
+		<axon5.version>5.3.0-SNAPSHOT</axon5.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<datasource-micrometer.version>1.4.1</datasource-micrometer.version>
 		<java.version>23</java.version>
