@@ -105,6 +105,14 @@
 			<artifactId>axoniq-spring-boot-starter</artifactId>
 			<version>${axon.version}</version>
 		</dependency>
+		<!-- Native Mono/Flux gateways (ReactorCommandGateway/ReactorQueryGateway/ReactorEventGateway),
+		     auto-configured by ReactorAutoConfiguration (shipped with the OSS autoconfigure module that
+		     the starter above already pulls in). -->
+		<dependency>
+			<groupId>org.axonframework.extensions.reactor</groupId>
+			<artifactId>axon-reactor</artifactId>
+			<version>${axon.version}</version>
+		</dependency>
 
 		<!-- Distributed tracing (feature 3594).
 		     Tracing ships inside the framework modules themselves: the tracing API and the
