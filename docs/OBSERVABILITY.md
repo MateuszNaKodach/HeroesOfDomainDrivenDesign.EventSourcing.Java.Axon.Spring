@@ -16,8 +16,9 @@ The app can emit distributed traces to either **Elastic APM** or **Jaeger** via 
 8. [Same traces in Jaeger](#same-traces-in-jaeger)
 9. [Useful filters](#useful-filters)
 10. [JDBC / SQL spans](#jdbc--sql-spans)
-11. [gRPC spans (Axon Server connector)](#grpc-spans-axon-server-connector)
-12. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
+11. [R2DBC / SQL spans](#r2dbc--sql-spans)
+12. [gRPC spans (Axon Server connector)](#grpc-spans-axon-server-connector)
+13. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
 
 ## Backends — pick one
 
@@ -35,8 +36,9 @@ The two profiles are **alternatives** — pick the backend you want for a given 
 | [`axon-tracing-opentelemetry`](https://docs.axoniq.io/axon-framework-reference/4.13/monitoring/tracing/) | Instruments command/event/query handlers, aggregates, repositories, event store |
 | [`micrometer-tracing-bridge-otel`](https://docs.spring.io/spring-boot/reference/actuator/tracing.html) | Spring Boot's official bridge from Micrometer Observation to OpenTelemetry |
 | [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the chosen backend |
-| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters. **Opt-in build-time dep** — add with `-Dtracing.database.enabled=true` |
-| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile). **Opt-in build-time dep** — add with `-Dtracing.grpc.enabled=true` |
+| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters. Runtime gate: `jdbc.datasource-proxy.enabled` |
+| [`r2dbc-proxy`](https://github.com/r2dbc/r2dbc-proxy) | Activates Spring Boot's own `R2dbcObservationAutoConfiguration`, which wraps the reactive `ConnectionFactory` so each read-model query becomes a Micrometer Observation → child span. The parent is resolved from the Reactor Context captured at subscription. Runtime gate: `management.observations.enable.r2dbc` |
+| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile) |
 | [Elastic APM 9.x](https://www.elastic.co/observability/application-performance-monitoring) | Receives OTLP, stores in Elasticsearch, visualizes in Kibana |
 | [Jaeger 2.x](https://www.jaegertracing.io/) | Receives OTLP directly, in-memory storage, lightweight UI |
 
@@ -46,12 +48,10 @@ Activation surface:
 - Profile **`observability-jaeger`** — base + Jaeger endpoint
 - Profile groups in `application.yaml` make the two child profiles automatically include the base.
 
-Build-time toggles (independent of the runtime profiles above):
-- The **JDBC** and **gRPC** instrumentation JARs are **opt-in at build time** and excluded from a default build.
-  Add them per feature via Maven properties, which activate the `tracing-database` / `tracing-grpc` profiles in `pom.xml`:
-  `-Dtracing.database.enabled=true` (JDBC/JPA spans) and `-Dtracing.grpc.enabled=true` (Axon Server gRPC spans).
-- This is a *build-time* gate stacked on top of the *runtime* gates: the JAR must be present **and** the
-  `observability` profile (plus `jdbc.datasource-proxy.enabled` / `axon.axonserver.enabled`) active before spans appear.
+Instrumentation JARs (JDBC, R2DBC, gRPC) are always on the classpath; each feature is gated at **runtime** only:
+the `observability` profile plus the feature's enabled property (`jdbc.datasource-proxy.enabled`,
+`management.observations.enable.r2dbc`, or `axon.axonserver.enabled`) must be active before spans appear.
+Normal runs (no observability profile) carry no per-query observations.
 
 ## Run with Elastic APM
 
@@ -243,12 +243,33 @@ domain or infrastructure code changes — so all pooled SQL is captured automati
 Gating: the proxy is **disabled by default** (`jdbc.datasource-proxy.enabled: false` in
 `application.yaml`) and turned on only by the `observability` profile
 (`application-observability.yaml`), matching the rest of the tracing setup — normal runs are
-unaffected. In addition, the `datasource-micrometer-spring-boot` JAR is an **opt-in build-time
-dependency**: build with `-Dtracing.database.enabled=true` (the `tracing-database` Maven profile)
-to include it; without it the JAR is absent and the `jdbc.datasource-proxy.*` keys are ignored.
+unaffected.
 
 > ⚠️ Bind-parameter values can expose data. This is intentional here (local/dev tracing, off by
 > default). Before enabling in any shared environment, revisit `include-parameter-values`.
+
+## R2DBC / SQL spans
+
+The reactive read models use Spring Data R2DBC, so JDBC instrumentation does not see their queries. R2DBC
+tracing rides on Spring Boot's own [`R2dbcObservationAutoConfiguration`](https://docs.spring.io/spring-boot/api/java/org/springframework/boot/actuate/autoconfigure/r2dbc/R2dbcObservationAutoConfiguration.html),
+activated by [`r2dbc-proxy`](https://github.com/r2dbc/r2dbc-proxy) on the classpath: it wraps the reactive
+`ConnectionFactory` with `ObservationProxyExecutionListener`, so each query becomes a Micrometer Observation
+(`r2dbc.query...`) flowing through the same `micrometer-tracing-bridge-otel` → OTLP pipeline as everything else.
+
+```bash
+SPRING_PROFILES_ACTIVE=observability-jaeger ./mvnw spring-boot:run
+```
+
+Every reactive SELECT, INSERT, and UPDATE issued by the read-model repositories becomes a database-client
+span under the WebFlux request or Axon projection/query-handler span that initiated it. Crucially, the
+listener resolves the parent from the **Reactor Context captured at subscription** (not from a thread-local
+read at query time), so queries whose I/O completes on the Postgres driver's shared Netty event-loop threads
+still nest correctly — the raw-OpenTelemetry `R2dbcTelemetry` wrapper used previously read
+`Context.current()` on those threads and produced orphaned root spans instead.
+
+Gating: `management.observations.enable.r2dbc` is `false` by default (`application.yaml`) and turned on by
+the `observability` profile, which also sets `management.observations.r2dbc.include-parameter-values: true`
+(same caveat as the JDBC bind-parameter values above). Normal runs therefore remain unchanged.
 
 ## gRPC spans (Axon Server connector)
 
@@ -267,10 +288,6 @@ on the connector channel through Axon 5's `ManagedChannelCustomizer` hook (see
 Axon/HTTP/JDBC spans. It is built from the shared `OpenTelemetry` SDK bean, so no extra export
 wiring is needed.
 
-The `opentelemetry-grpc-1.6` JAR is an **opt-in build-time dependency**: build with
-`-Dtracing.grpc.enabled=true` (the `tracing-grpc` Maven profile) to include it. Without it,
-`GrpcTracingConfiguration` (which loads `GrpcTelemetry` reflectively and is `@ConditionalOnClass` on
-it) is skipped, and the app compiles and runs unchanged.
 
 > ℹ️ Axon Server traffic is dominated by **long-lived bidirectional streams** (command / query /
 > event / control channels). gRPC client instrumentation opens **one span per RPC**, so a streaming

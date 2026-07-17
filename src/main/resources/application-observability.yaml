@@ -6,6 +6,15 @@ management:
   otlp:
     tracing:
       transport: http
+  observations:
+    enable:
+      # R2DBC/SQL tracing: Spring Boot's R2dbcObservationAutoConfiguration (activated by r2dbc-proxy
+      # on the classpath) wraps the reactive ConnectionFactory, so every read-model query becomes a
+      # Micrometer Observation → child span. The parent is resolved from the Reactor Context captured
+      # at subscription, so it nests under the Axon handler/HTTP span.
+      r2dbc: true
+    r2dbc:
+      include-parameter-values: true   # bind parameter values in span attributes
 
 # Restore ThreadLocals (the current Micrometer observation/span) from the Reactor Context around
 # operator execution — Boot's default is 'limited', which never installs
