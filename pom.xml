@@ -36,6 +36,7 @@
 		<!-- Aligned to the opentelemetry-api version managed by the Spring Boot 3.5 BOM (1.49.0):
 		     instrumentation 2.15.0-alpha ships opentelemetry-api 1.49.0. Bump both together. -->
 		<opentelemetry-instrumentation.version>2.15.0-alpha</opentelemetry-instrumentation.version>
+		<r2dbc-proxy.version>1.1.6.RELEASE</r2dbc-proxy.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
 		<spring-doc.version>2.8.17</spring-doc.version>
 	</properties>
@@ -147,8 +148,39 @@
 			<artifactId>opentelemetry-exporter-otlp</artifactId>
 		</dependency>
 
-		<!-- NOTE: the JDBC/JPA and gRPC tracing dependencies are opt-in build-time toggles;
-		     they live in the 'tracing-database' / 'tracing-grpc' profiles below, not here. -->
+		<!-- JDBC/JPA tracing: wraps the autoconfigured HikariCP DataSource in a proxy that emits a
+		     Micrometer Observation per JDBC connection/query. These flow through the same
+		     micrometer-tracing-bridge-otel → OTLP pipeline as the Axon and HTTP spans, so every SQL
+		     statement (Axon JPA event store + read-model projections) becomes a child span carrying
+		     the SQL text (and bind parameters). Runtime gate: jdbc.datasource-proxy.enabled
+		     (see application(-observability).yaml). -->
+		<dependency>
+			<groupId>net.ttddyy.observation</groupId>
+			<artifactId>datasource-micrometer-spring-boot</artifactId>
+			<version>${datasource-micrometer.version}</version>
+		</dependency>
+		<!-- R2DBC tracing: r2dbc-proxy on the classpath activates Spring Boot's own
+		     R2dbcObservationAutoConfiguration, which wraps the reactive ConnectionFactory with
+		     r2dbc-proxy's ObservationProxyExecutionListener. Each reactive SQL execution becomes a
+		     Micrometer Observation ("r2dbc.query...") that resolves its parent from the Reactor
+		     Context captured at subscription, and flows through the same
+		     micrometer-tracing-bridge-otel → OTLP pipeline as everything else. Runtime gate:
+		     management.observations.enable.r2dbc (see application(-observability).yaml). -->
+		<dependency>
+			<groupId>io.r2dbc</groupId>
+			<artifactId>r2dbc-proxy</artifactId>
+			<version>${r2dbc-proxy.version}</version>
+		</dependency>
+		<!-- gRPC tracing for the Axon Server connector channel. Provides GrpcTelemetry, whose
+		     ClientInterceptor is registered on the connection channel via a ManagedChannelCustomizer
+		     bean (see GrpcTracingConfiguration). Built from the same OpenTelemetry SDK bean as the
+		     Axon/HTTP/JDBC spans, so gRPC client spans flow through the existing OTLP pipeline.
+		     Only relevant under an axonserver profile (Axon Server is disabled by default). -->
+		<dependency>
+			<groupId>io.opentelemetry.instrumentation</groupId>
+			<artifactId>opentelemetry-grpc-1.6</artifactId>
+			<version>${opentelemetry-instrumentation.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.axonframework.extensions.spring</groupId>
@@ -278,62 +310,6 @@
 					</plugin>
 				</plugins>
 			</build>
-		</profile>
-		<!--
-		  Opt-in, build-time tracing toggles. Each profile adds ONLY its own instrumentation JAR to
-		  the artifact; a default build (no flags) carries neither, so normal runs stay lean. These
-		  are BUILD-TIME gates (JAR present in the artifact); the JARs still do nothing until the
-		  matching RUNTIME gate is on too - the 'observability' Spring profile plus, for JDBC,
-		  jdbc.datasource-proxy.enabled=true (see application(-observability).yaml).
-
-		  Enable per feature, independently:
-		    ./mvnw ... -Dtracing.database.enabled=true    (JDBC/JPA spans)
-		    ./mvnw ... -Dtracing.grpc.enabled=true         (Axon Server gRPC spans)
-		-->
-		<profile>
-			<id>tracing-database</id>
-			<activation>
-				<property>
-					<name>tracing.database.enabled</name>
-					<value>true</value>
-				</property>
-			</activation>
-			<dependencies>
-				<!-- JDBC/JPA tracing: wraps the autoconfigured HikariCP DataSource in a proxy that emits a
-				     Micrometer Observation per JDBC connection/query. These flow through the same
-				     micrometer-tracing-bridge-otel → OTLP pipeline as the Axon and HTTP spans, so every SQL
-				     statement (Axon JPA event store + read-model projections) becomes a child span carrying
-				     the SQL text (and bind parameters). Runtime gate: jdbc.datasource-proxy.enabled
-				     (see application(-observability).yaml). -->
-				<dependency>
-					<groupId>net.ttddyy.observation</groupId>
-					<artifactId>datasource-micrometer-spring-boot</artifactId>
-					<version>${datasource-micrometer.version}</version>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>tracing-grpc</id>
-			<activation>
-				<property>
-					<name>tracing.grpc.enabled</name>
-					<value>true</value>
-				</property>
-			</activation>
-			<dependencies>
-				<!-- gRPC tracing for the Axon Server connector channel. Provides GrpcTelemetry, whose
-				     ClientInterceptor is registered on the connection channel via a ManagedChannelCustomizer
-				     bean (see GrpcTracingConfiguration). Built from the same OpenTelemetry SDK bean as the
-				     Axon/HTTP/JDBC spans, so gRPC client spans flow through the existing OTLP pipeline.
-				     GrpcTracingConfiguration loads GrpcTelemetry reflectively and is @ConditionalOnClass on
-				     it, so the app still compiles and runs when this JAR is absent. Only relevant under an
-				     axonserver profile (Axon Server is disabled by default). -->
-				<dependency>
-					<groupId>io.opentelemetry.instrumentation</groupId>
-					<artifactId>opentelemetry-grpc-1.6</artifactId>
-					<version>${opentelemetry-instrumentation.version}</version>
-				</dependency>
-			</dependencies>
 		</profile>
 	</profiles>
 

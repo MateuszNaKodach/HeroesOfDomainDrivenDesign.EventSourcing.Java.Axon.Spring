@@ -11,8 +11,8 @@
 
 @gameId = scenario-1
 @playerId = player-1
-@dwellingId = dwelling-101
-@dwellingId2 = dwelling-102
+@dwellingId = dwelling-0201
+@dwellingId2 = dwelling-0202
 @armyId = army-1
 
 # ─────────────────────────────────────────────────────────────
