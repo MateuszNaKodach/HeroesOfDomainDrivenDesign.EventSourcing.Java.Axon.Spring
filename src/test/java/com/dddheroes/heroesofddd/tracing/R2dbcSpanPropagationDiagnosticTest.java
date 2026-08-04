@@ -3,7 +3,6 @@ package com.dddheroes.heroesofddd.tracing;
 import com.dddheroes.heroesofddd.TestcontainersConfiguration;
 import com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.BuiltDwellingReadModel;
 import com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures.BuiltDwellingReadModelRepository;
-import io.axoniq.framework.tracing.micrometer.MicrometerObservationBridge;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
@@ -39,12 +38,13 @@ import static org.awaitility.Awaitility.await;
  * Diagnostic test for the Observation-based R2DBC tracing path (Spring Boot's
  * {@code R2dbcObservationAutoConfiguration} + {@code r2dbc-proxy}): verifies that a real Postgres query executed
  * through the app's actual {@code ConnectionFactory} nests under the trace context carried in the <b>Reactor
- * Context</b>, exactly the way it is carried during an Axon reactive event handler:
- * <ul>
- *   <li>{@link ObservationThreadLocalAccessor#KEY} → the framework's {@link MicrometerObservationBridge} carrier
- *   Observation (deliberately without a span of its own), and</li>
- *   <li>{@link ObservationAwareSpanThreadLocalAccessor#KEY} → the Axon handler span.</li>
- * </ul>
+ * Context</b>, exactly the way it is carried during an Axon reactive handler <em>without</em> any framework-side
+ * Observation carrier: the only tracing value in the context is the handler span under
+ * {@link ObservationAwareSpanThreadLocalAccessor#KEY} (what Axon's {@code MonoUtils}/{@code FluxUtils}
+ * {@code contextCapture()} snapshots when a span is thread-local-current and no Observation is open). Reactor's
+ * automatic context propagation restores that span around the R2DBC pipeline's operators, and the query observation
+ * -- finding no parent Observation -- parents its span on the restored current trace context.
+ * <p>
  * The {@code findById().switchIfEmpty(save()).then()} shape matters: the {@code save()} subscription happens on the
  * Postgres driver's Netty event-loop thread (where thread-local state is least reliable), which is where orphaned
  * spans were observed with the previous raw-OpenTelemetry instrumentation.
@@ -85,13 +85,11 @@ class R2dbcSpanPropagationDiagnosticTest {
 
     @Test
     void r2dbcQueryNestsUnderTheSpanCarriedInTheReactorContextLikeAnAxonHandler() {
-        // given the exact Reactor Context shape an Axon reactive handler runs with: the framework's carrier
-        // Observation (holding the handler span) plus the handler span itself
+        // given the exact Reactor Context shape an Axon reactive handler runs with (no Observation carrier): just
+        // the handler span, as captured by contextCapture() from the span-scoped handler window
         Span parentSpan = tracer.nextSpan().name("Test.parent").start();
-        Observation carrier = MicrometerObservationBridge.createScopeCarrier(observationRegistry, parentSpan);
         try {
-            runRepositoryPipeline(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, carrier)
-                                            .put(ObservationAwareSpanThreadLocalAccessor.KEY, parentSpan));
+            runRepositoryPipeline(ctx -> ctx.put(ObservationAwareSpanThreadLocalAccessor.KEY, parentSpan));
         } finally {
             parentSpan.end();
         }

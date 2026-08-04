@@ -18,7 +18,8 @@ The app can emit distributed traces to either **Elastic APM** or **Jaeger** via 
 10. [JDBC / SQL spans](#jdbc--sql-spans)
 11. [R2DBC / SQL spans](#r2dbc--sql-spans)
 12. [gRPC spans (Axon Server connector)](#grpc-spans-axon-server-connector)
-13. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
+13. [Reading reactive traces — causality vs. containment](#reading-reactive-traces--causality-vs-containment)
+14. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
 
 ## Backends — pick one
 
@@ -296,6 +297,55 @@ wiring is needed.
 > visibility; **per-message** command/event/query tracing is already provided by the framework's
 > distributed tracing (`axoniq-distributed-messaging`). Expect a few very long-duration gRPC spans
 > in the trace list — that is normal for streaming RPCs.
+
+## Reading reactive traces — causality vs. containment
+
+With reactive handlers, you will regularly see a child span that **starts after its parent span has already
+ended**. Example — `GET /games/{gameId}/dwellings/{dwellingId}` (times in µs within the trace):
+
+```
+QueryBus.query GetDwellingById            952285 ───────────────────────────► 1002228
+  QueryBus.handleQuery GetDwellingById      957217 ──────► 978619
+    GetDwellingByIdQueryHandler.handle        958123 ──────► 978651
+      query  (R2DBC SELECT)                                       989743 ──► 999502   ← after its parent!
+```
+
+This is correct, not a bug. A parent-child link in OpenTelemetry records **causality** ("this SELECT was
+caused by this handler invocation"), not temporal containment. A reactive handler like
+
+```java
+@QueryHandler
+Mono<DwellingReadModel> handle(GetDwellingById query) {
+    return dwellingReadModelRepository.findById(query.dwellingId().raw());
+}
+```
+
+only *builds* the pipeline and returns immediately; the actual database round trip completes asynchronously
+on the R2DBC driver's threads, after the handler-side spans have closed. The gap in the waterfall is real
+information: *the handler was not blocked; the I/O happened asynchronously, caused by it.*
+
+How to read each span:
+
+| Span | Measures | Use it for |
+|---|---|---|
+| `QueryBus.query …` (dispatch) | Dispatch until the **result stream terminates** — contains all async work | End-to-end query latency |
+| `QueryBus.handleQuery …` | The handling UnitOfWork window | Framework handling overhead |
+| `SomeQueryHandler.handle(…)` | The synchronous handler invocation | Your handler's own (pipeline-building) time |
+| `QueryBus.respond …` | Production and delivery of a normal query's finite response stream after handling returned | The post-handler response tail, even without database instrumentation |
+| `QueryBus.initialResponse …` | Production of only a subscription query's finite initial result | Initial subscription answer latency without keeping a span open for updates |
+| `query` (R2DBC) | The actual SQL round trip | Database latency |
+
+For a subscription query, `QueryBus.subscriptionQuery …` covers setup only. Its combined result then consists of a
+finite initial result followed by a potentially unbounded update stream. `QueryBus.initialResponse …` ends when that
+initial-result stream terminates; it deliberately does **not** include later updates or the lifetime of the SSE
+connection.
+
+The events side looks different on purpose: a projector's `EventProcessor.process` / `…Processor.on(…)` span
+stays open until the handler's result `Mono`/`Flux` terminates, because there the framework itself drains the
+stream — drain time *is* processing time. For queries the **caller** drains the result (potentially slowly —
+think an SSE client on `/dwellings/stream`), so stretching handler spans until the drain would make handler
+latency depend on consumer behavior and would keep spans of long-lived streaming queries open indefinitely.
+That is why the dispatch span, not the handler span, is the one that covers the full duration.
 
 ## Why Axon splits work across multiple traces
 
