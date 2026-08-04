@@ -100,9 +100,10 @@ node $DP/release.mts [dir] [--prune] # free this dir's ports, strip its .env
 ```
 
 `dir` defaults to the current directory. Flags: `allocate --dry-run`,
-`--http-env <name>` (default `dev`), `--json` (all scripts), `release --prune`
-(also drop registry entries whose directory no longer exists — good after
-`git worktree remove`), `release --keep-env`.
+`allocate --reallocate` (see step 3 below), `--http-env <name>` (default `dev`),
+`--json` (all scripts), `release --prune` (also drop registry entries whose
+directory no longer exists — good after `git worktree remove`),
+`release --keep-env`.
 
 ### How allocation works
 
@@ -111,15 +112,29 @@ node $DP/release.mts [dir] [--prune] # free this dir's ports, strip its .env
    `${NAME_PORT:default}` placeholders; the default is the base port.
    Framework-agnostic (a Spring `application.yaml` is just one example —
    see `reference/app-config-examples.md`). Hidden and build/vendor dirs skipped.
-2. **Hybrid pick per port** — start from a deterministic candidate
-   (`base + hash(absDir)`), verify it's **actually free** (binds a probe socket)
-   and **not reserved by another directory**; if taken, probe upward.
-3. **Pin + register** — record `dir -> {projectName, ports}` in the global
+2. **Keep what's already published** — a directory's ports come from its registry
+   entry, or, when it has none, from an existing managed `.env` block, which is
+   **adopted** (ports + `COMPOSE_PROJECT_NAME`) and registered. So the first run in
+   a worktree whose gitignored `.env` was copied in (Conductor "files to copy", a
+   manual `cp`) does not move ports out from under a running stack, and it writes
+   the `.http` env that was never written before.
+3. **Report an adopted block that isn't ours** — adopted ports are kept even if
+   another entry reserves them; `allocate` then names the overlapping directory and
+   any `COMPOSE_PROJECT_NAME` mismatch. Both checkouts sharing ports cannot run at
+   once, so for real isolation:
+   `docker compose down --remove-orphans && node $DP/allocate.mts --reallocate`
+   (`--reallocate` ignores the registry entry *and* the `.env` block, picking every
+   port fresh).
+4. **Hybrid pick per port** (everything not carried over) — start from a
+   deterministic candidate (`base + hash(absDir)`), verify it's **actually free**
+   (binds a probe socket) and **not reserved by another directory**; if taken,
+   probe upward.
+5. **Pin + register** — record `dir -> {projectName, ports}` in the global
    registry (`$XDG_CONFIG_HOME/devports/registry.json`, or `$DEVPORTS_REGISTRY`),
    behind an atomic lock so parallel runs don't race.
-4. **Write `.env`** — managed block with `COMPOSE_PROJECT_NAME` + every port.
+6. **Write `.env`** — managed block with `COMPOSE_PROJECT_NAME` + every port.
    Idempotent: a directory keeps its ports across runs, self-healing on conflict.
-5. **Wire `.http` files** — if any exist, write the ports into
+7. **Wire `.http` files** — if any exist, write the ports into
    `http-client.private.env.json` (gitignored), merging into user-authored
    environments; removed again on `release`.
 

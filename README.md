@@ -16,27 +16,6 @@ I'm focused on domain modeling on the backend, but I'm going to implement UI lik
 
 ![Heroes3_CreatureRecruitment_ExampleGif](https://github.com/user-attachments/assets/0e503a1e-e5d2-4e4a-9150-1a224e603be8)
 
-## 🚀 How to run the project locally?
-
-0. Install Java 23 on your machine
-1. `./mvnw install -DskipTests`
-2. `docker compose up`
-3. `./mvnw spring-boot:run` or `./mvnw test`
-
-## 🌐 Interacting with the Application
-
-You can interact with the system in two ways:
-
-### REST API
-Access the REST API documentation at: [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html)
-
-### Model Context Protocol (MCP) Server
-The application exposes a Model Context Protocol Server that allows AI assistants to interact directly with the domain. You can add it to Claude Code with:
-
-```bash
-claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
-```
-
 ## 🧱 Modules
 
 Modules (mostly designed using Bounded Context heuristic) are designed and documented on EventModeling below.
@@ -164,6 +143,32 @@ void givenDwellingWith2Creatures_WhenRecruit2Creatures_ThenRecruited() {
 }
 ```
 
+## 🚀 How to run the project locally?
+
+0. Install Java 23 on your machine
+1. `./mvnw install -DskipTests`
+2. `docker compose up`
+3. `./mvnw spring-boot:run` or `./mvnw test`
+
+## 🌐 Interacting with the Application
+
+You can interact with the system in two ways:
+
+### REST API
+Access the REST API documentation at: [http://localhost:3773/swagger-ui/index.html](http://localhost:3773/swagger-ui/index.html)
+
+### Model Context Protocol (MCP) Server
+The application exposes a Model Context Protocol Server that allows AI assistants to interact directly with the domain. You can add it to Claude Code with:
+
+```bash
+claude mcp add --transport sse HeroesOfDDD http://localhost:3773/sse
+```
+
+## 📊 Observability (distributed tracing)
+
+The app can emit distributed traces to **Elastic APM** or **Jaeger** via OpenTelemetry (off by default, activated by `observability-elastic` or `observability-jaeger` Spring profile and a matching Docker Compose overlay).
+
+👉 See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the run instructions and a guided tour with screenshots.
 
 -------
 

@@ -5,6 +5,7 @@ import com.dddheroes.heroesofddd.armies.events.CreatureRemovedFromArmy;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Amount;
 import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
 import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
+import org.axonframework.messaging.commandhandling.configuration.CommandHandlingModule;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.test.fixture.AxonTestFixture;
@@ -19,7 +20,12 @@ public class ArmyTest {
 
     @BeforeEach
     void setUp() {
-        fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(ArmyId.class, Army.class)));
+        fixture = AxonTestFixture.with(EventSourcingConfigurer.create()
+                .registerEntity(EventSourcedEntityModule.autodetected(ArmyId.class, Army.class))
+                .registerCommandHandlingModule(() -> CommandHandlingModule.named("army-test")
+                        .commandHandlers(handlers -> handlers.autodetectedCommandHandlingComponent(
+                                configuration -> new ArmyCommandHandler()))
+                        .build()));
     }
 
     @AfterEach

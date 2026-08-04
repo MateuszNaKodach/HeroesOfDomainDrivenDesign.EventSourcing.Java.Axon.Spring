@@ -6,6 +6,30 @@ decision changes — and explain the "why" in the commit that changes it.
 
 ---
 
+## 10. `allocate` adopts an existing `.env` block instead of reassigning
+**Date:** 2026-07-30
+**Decision:** When a directory has no registry entry but its `.env` already holds
+a managed block, adopt that block's ports (and its `COMPOSE_PROJECT_NAME`) as the
+allocation, register them, and write the HTTP private env from them. Adopted ports
+are kept even when another registry entry reserves them; the overlap is reported
+loudly instead. `--reallocate` discards both the registry entry and the on-disk
+block to pick everything fresh.
+**Why:** Two situations produce a block with no registry entry, and silently
+handing out different ports is wrong in both. (1) The registry was lost or reset,
+while a stack is running on the published ports - reassigning orphans it. (2) A
+tool copied a sibling worktree's gitignored files in (Conductor's "files to copy",
+a manual `cp`), which is how a worktree ends up sharing another checkout's ports
+*and* project name while never being registered at all: `allocate` was never run
+there, so no `http-client.private.env.json` was ever written and the ports were
+invisible to collision checks. Adopting makes the first run in such a worktree
+idempotent and self-registering; the port-overlap and project-name-mismatch
+warnings make the copied-in case visible, with `--reallocate` as the one-line fix.
+**Rejected:** Silently reallocating on adoption (breaks a running stack, the
+common case for a lost registry); refusing to run until the block is deleted
+(pushes manual work onto the user for something detectable); auto-reallocating
+when the block looks foreign (guesses at intent, and tears down a stack the user
+may be mid-session on - the warning plus an explicit flag is honest and reversible).
+
 ## 9. PREPARE scripts compose rewriting (`prepare.mts --write`); app/.http stay manual
 **Date:** 2026-06-06
 **Decision:** `prepare.mts --write` mechanically rewrites compose files (static

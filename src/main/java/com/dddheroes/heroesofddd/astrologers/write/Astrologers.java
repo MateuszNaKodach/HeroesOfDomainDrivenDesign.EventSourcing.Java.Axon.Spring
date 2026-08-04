@@ -8,6 +8,9 @@ import org.axonframework.extension.spring.stereotype.EventSourced;
 import com.dddheroes.heroesofddd.astrologers.events.WeekSymbolProclaimed;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.eventhandling.gateway.EventAppender;
+import org.axonframework.modelling.annotation.InjectEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 @EventSourced(tagKey = "Astrologers", idType = AstrologersId.class)
 class Astrologers {
@@ -15,9 +18,12 @@ class Astrologers {
     private AstrologersId astrologersId;
     private MonthWeek week;
 
-    @CommandHandler
-    void decide(ProclaimWeekSymbol command, EventAppender eventAppender) {
-        new OnlyOneSymbolPerWeek(command, week).verify();
+    static void decide(
+            ProclaimWeekSymbol command,
+            @Nullable Astrologers astrologers,
+            EventAppender eventAppender
+    ) {
+        new OnlyOneSymbolPerWeek(command, astrologers == null ? null : astrologers.week).verify();
 
         eventAppender.append(WeekSymbolProclaimed.event(
                 command.astrologersId(),
@@ -35,5 +41,14 @@ class Astrologers {
     @EntityCreator
     Astrologers() {
         // required by Axon
+    }
+}
+
+@Component
+class AstrologersCommandHandler {
+
+    @CommandHandler
+    void decide(ProclaimWeekSymbol command, @InjectEntity @Nullable Astrologers astrologers, EventAppender eventAppender) {
+        Astrologers.decide(command, astrologers, eventAppender);
     }
 }

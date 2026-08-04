@@ -1,5 +1,11 @@
 server:
   port: ${APP_PORT:3773}
+logging:
+  file:
+    name: /Users/mateusznowak/GitRepos/MateuszNaKodach/Heroes.Axon4to5.DCB/logs/heroes-axon5.log
+  level:
+    org.axonframework.messaging.tracing: INFO
+    io.axoniq.framework.tracing: INFO
 spring:
   application:
     name: heroesofddd-axon5
@@ -32,6 +38,9 @@ spring:
 axon:
   axonserver:
     enabled: false
+    # Host gRPC port mirrors compose's ${AXONSERVER_GRPC_PORT:-8124} (devports). Spring
+    # placeholder syntax uses a single colon for the default. No-op while enabled=false.
+    servers: localhost:${AXONSERVER_GRPC_PORT:8124}
       #  eventhandling:
       #    processors:
     # (Optional) You can override processor settings here if needed
@@ -62,6 +71,16 @@ axon:
         batch-size: 5
       Read_GetAllDwellings_QueryCache:
         mode: subscribing
+  tracing:
+    # All Axon attribute providers stay at their defaults (true)
+    show-event-sourcing-handlers: false
+    event-processor:
+      # Disable the StreamingEventProcessor.batch root span. Each event handler becomes
+      # its own root trace with an OpenTelemetry LINK back to the publish-event span —
+      # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
+      # across async boundaries. Off by default in Axon (batch trace = no links).
+      disable-batch-trace: true
+      distributed-in-same-trace: true
 #  update-check:
 #    disabled: true
 application:
@@ -78,6 +97,15 @@ application:
 management:
   tracing:
     enabled: false       # turned on by the 'observability' Spring profile
+
+# JDBC/SQL tracing (datasource-micrometer). Off by default so normal runs are unaffected;
+# turned on by the 'observability' profile (see application-observability.yaml).
+# NOTE: this property only has any effect when the app is built with -Dtracing.database.enabled=true
+# (the 'tracing-database' Maven profile) — otherwise the datasource-micrometer JAR is not on the classpath
+# and this key is simply ignored. See docs/OBSERVABILITY.md.
+jdbc:
+  datasource-proxy:
+    enabled: false
 
 springdoc:
   api-docs:

@@ -11,6 +11,9 @@ import org.axonframework.eventsourcing.annotation.reflection.EntityCreator;
 import org.axonframework.extension.spring.stereotype.EventSourced;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.eventhandling.gateway.EventAppender;
+import org.axonframework.modelling.annotation.InjectEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 @EventSourced(tagKey = "Calendar", idType = CalendarId.class)
 class Calendar {
@@ -20,10 +23,17 @@ class Calendar {
     private Week currentWeek;
     private Day currentDay;
 
-    @CommandHandler
-        // performance downside in comparison to constructor
-    void decide(StartDay command, EventAppender eventAppender) {
-        new CannotSkipDays(command, currentMonth, currentWeek, currentDay).verify();
+    static void decide(
+            StartDay command,
+            @Nullable Calendar calendar,
+            EventAppender eventAppender
+    ) {
+        new CannotSkipDays(
+                command,
+                calendar == null ? null : calendar.currentMonth,
+                calendar == null ? null : calendar.currentWeek,
+                calendar == null ? null : calendar.currentDay
+        ).verify();
 
         eventAppender.append(DayStarted.event(
                 command.calendarId(),
@@ -41,9 +51,17 @@ class Calendar {
         currentDay = new Day(event.day());
     }
 
-    @CommandHandler
-    void decide(FinishDay command, EventAppender eventAppender) {
-        new CanOnlyFinishCurrentDay(command, currentMonth, currentWeek, currentDay).verify();
+    static void decide(
+            FinishDay command,
+            @Nullable Calendar calendar,
+            EventAppender eventAppender
+    ) {
+        new CanOnlyFinishCurrentDay(
+                command,
+                calendar == null ? null : calendar.currentMonth,
+                calendar == null ? null : calendar.currentWeek,
+                calendar == null ? null : calendar.currentDay
+        ).verify();
 
         eventAppender.append(DayFinished.event(
                 command.calendarId(),
@@ -56,5 +74,19 @@ class Calendar {
     @EntityCreator
     Calendar() {
         // required by Axon
+    }
+}
+
+@Component
+class CalendarCommandHandler {
+
+    @CommandHandler
+    void decide(StartDay command, @InjectEntity @Nullable Calendar calendar, EventAppender eventAppender) {
+        Calendar.decide(command, calendar, eventAppender);
+    }
+
+    @CommandHandler
+    void decide(FinishDay command, @InjectEntity @Nullable Calendar calendar, EventAppender eventAppender) {
+        Calendar.decide(command, calendar, eventAppender);
     }
 }

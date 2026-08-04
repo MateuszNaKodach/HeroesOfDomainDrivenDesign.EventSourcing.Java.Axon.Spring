@@ -28,10 +28,14 @@
 	</scm>
 	<properties>
 		<assertj.version>3.27.7</assertj.version>
-		<axon.version>5.2.0-SNAPSHOT</axon.version>
-		<axon5.version>5.2.0-SNAPSHOT</axon5.version>
+		<axon.version>5.3.0-SNAPSHOT</axon.version>
+		<axon5.version>5.3.0-SNAPSHOT</axon5.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
+		<datasource-micrometer.version>1.4.1</datasource-micrometer.version>
 		<java.version>23</java.version>
+		<!-- Aligned to the opentelemetry-api version managed by the Spring Boot 3.5 BOM (1.49.0):
+		     instrumentation 2.15.0-alpha ships opentelemetry-api 1.49.0. Bump both together. -->
+		<opentelemetry-instrumentation.version>2.15.0-alpha</opentelemetry-instrumentation.version>
 		<spring-ai.version>1.0.1</spring-ai.version>
 		<spring-doc.version>2.8.17</spring-doc.version>
 	</properties>
@@ -49,6 +53,22 @@
 			</releases>
 		</repository>
 	</repositories>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- AF5's axon-conversion uses Jackson 3 (tools.jackson 3.2.0), which references
+			     com.fasterxml.jackson.annotation.JsonApplyView — added in jackson-annotations 2.22.
+			     The Jackson 2.x databind (2.21.2) transitively pulls jackson-annotations 2.21, which
+			     lacks that class, so a Jackson 3 view-processing path fails at runtime with
+			     NoClassDefFoundError (and, via a UnitOfWork quirk, hangs PooledStreamingEventProcessor
+			     startup rather than failing fast). Pin 2.22 so both Jackson 2.x and 3.x agree. -->
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-annotations</artifactId>
+				<version>2.22</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
@@ -77,37 +97,19 @@
 			<version>${axon.version}</version>
 		</dependency>
 
-		<!-- AxoniqFramework distributed tracing (feature 3594).
-		     - axoniq-tracing-opentelemetry: OpenTelemetrySpanFactory + opentelemetry-api binding.
-		     - axoniq-tracing-{messaging,modelling,eventsourcing,distributed}: per-concern decorators,
-		       each ServiceLoader-discovered, that wrap the command/event/query buses, repositories,
-		       snapshot store, and the Axon Server connector legs. All tracing concern modules are
-		       pulled in so the full span set is available regardless of runtime configuration. The
-		       Spring Boot autoconfig that wires these lives in axoniq-spring-boot-autoconfigure,
-		       already on the classpath via the starter above. -->
+		<!-- Distributed tracing (feature 3594).
+		     Tracing ships inside the framework modules themselves: the tracing API and the
+		     command/event/query bus decorators live in axon-messaging, repository/state-manager
+		     tracing in axon-modelling, event-store/snapshot-store tracing in axon-eventsourcing,
+		     and the Axon Server connector-leg tracing in axoniq-distributed-messaging — all already
+		     on the classpath via the starter above, each wired by ServiceLoader-discovered
+		     enhancers. The only extra dependency needed is the OpenTelemetry SpanFactory binding
+		     below; the Spring Boot autoconfig (OSS TracingAutoConfiguration + commercial
+		     DistributedTracing/OpenTelemetryTracing autoconfigurations) also comes with the
+		     starter. -->
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-opentelemetry</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-messaging</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-modelling</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-eventsourcing</artifactId>
-			<version>${axon.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.axoniq.framework</groupId>
-			<artifactId>axoniq-tracing-distributed</artifactId>
+			<artifactId>axoniq-tracing-micrometer</artifactId>
 			<version>${axon.version}</version>
 		</dependency>
 
@@ -127,6 +129,9 @@
 			<groupId>io.opentelemetry</groupId>
 			<artifactId>opentelemetry-exporter-otlp</artifactId>
 		</dependency>
+
+		<!-- NOTE: the JDBC/JPA and gRPC tracing dependencies are opt-in build-time toggles;
+		     they live in the 'tracing-database' / 'tracing-grpc' profiles below, not here. -->
 
 		<dependency>
 			<groupId>org.axonframework.extensions.spring</groupId>
@@ -251,617 +256,61 @@
 				</plugins>
 			</build>
 		</profile>
+		<!--
+		  Opt-in, build-time tracing toggles. Each profile adds ONLY its own instrumentation JAR to
+		  the artifact; a default build (no flags) carries neither, so normal runs stay lean. These
+		  are BUILD-TIME gates (JAR present in the artifact); the JARs still do nothing until the
+		  matching RUNTIME gate is on too - the 'observability' Spring profile plus, for JDBC,
+		  jdbc.datasource-proxy.enabled=true (see application(-observability).yaml).
+
+		  Enable per feature, independently:
+		    ./mvnw ... -Dtracing.database.enabled=true    (JDBC/JPA spans)
+		    ./mvnw ... -Dtracing.grpc.enabled=true         (Axon Server gRPC spans)
+		-->
 		<profile>
-			<id>migration-event-store-EventStoreConfiguration</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/shared/infrastructure/EventStoreConfiguration.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>**/__none__</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
+			<id>tracing-database</id>
+			<activation>
+				<property>
+					<name>tracing.database.enabled</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<dependencies>
+				<!-- JDBC/JPA tracing: wraps the autoconfigured HikariCP DataSource in a proxy that emits a
+				     Micrometer Observation per JDBC connection/query. These flow through the same
+				     micrometer-tracing-bridge-otel → OTLP pipeline as the Axon and HTTP spans, so every SQL
+				     statement (Axon JPA event store + read-model projections) becomes a child span carrying
+				     the SQL text (and bind parameters). Runtime gate: jdbc.datasource-proxy.enabled
+				     (see application(-observability).yaml). -->
+				<dependency>
+					<groupId>net.ttddyy.observation</groupId>
+					<artifactId>datasource-micrometer-spring-boot</artifactId>
+					<version>${datasource-micrometer.version}</version>
+				</dependency>
+			</dependencies>
 		</profile>
 		<profile>
-			<id>migration-aggregate-ResourcesPool</id>
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-annotations</artifactId>
-						<version>2.21</version>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPool.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPoolId.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPoolCommand.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/write/deposit/DepositResources.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/write/withdraw/WithdrawResources.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/write/withdraw/CannotWithdrawMoreThanDepositedResources.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/events/ResourcesPoolEvent.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/events/ResourcesDeposited.java</include>
-								<include>com/dddheroes/heroesofddd/resourcespool/events/ResourcesWithdrawn.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>com/dddheroes/heroesofddd/resourcespool/write/ResourcesPoolTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/resourcespool/write/deposit/DepositResourcesTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/resourcespool/write/withdraw/WithdrawResourcesTest.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-aggregate-Dwelling</id>
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-annotations</artifactId>
-						<version>2.21</version>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/Dwelling.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingId.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingCommand.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwelling.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/OnlyNotBuiltBuildingCanBeBuild.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/OnlyBuiltDwellingCanHaveAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreature.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreaturesNotExceedAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCostCannotDifferThanExpectedCost.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/AvailableCreaturesChanged.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/CreatureRecruited.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingIdTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreatureTest.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-aggregate-Calendar</id>
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-annotations</artifactId>
-						<version>2.21</version>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/calendar/write/Calendar.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/CalendarId.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/CalendarCommand.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/Day.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/Month.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/Week.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/startday/StartDay.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/startday/CannotSkipDays.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/finishday/FinishDay.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/write/finishday/CanOnlyFinishCurrentDay.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/events/CalendarEvent.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/events/DayStarted.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/events/DayFinished.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>com/dddheroes/heroesofddd/calendar/write/CalendarTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/calendar/write/startday/StartDayTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/calendar/write/finishday/FinishDayTest.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-aggregate-Astrologers</id>
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-annotations</artifactId>
-						<version>2.21</version>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/astrologers/write/Astrologers.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/AstrologersId.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/AstrologersCommand.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/MonthWeek.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/WeekSymbol.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbol.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/OnlyOneSymbolPerWeek.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/events/AstrologersEvent.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/events/WeekSymbolProclaimed.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>com/dddheroes/heroesofddd/astrologers/write/AstrologersTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbolTest.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-aggregate-Army</id>
-			<dependencyManagement>
-				<dependencies>
-					<!-- Jackson 3 (used by AF5 axon-conversion) requires jackson-annotations 2.21+.
-					     Spring Boot 3.5.x pins 2.19.x via its BOM, which breaks AxonTestFixture. -->
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-annotations</artifactId>
-						<version>2.21</version>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/armies/write/Army.java</include>
-								<include>com/dddheroes/heroesofddd/armies/write/ArmyCommand.java</include>
-								<include>com/dddheroes/heroesofddd/armies/write/addcreature/AddCreatureToArmy.java</include>
-								<include>com/dddheroes/heroesofddd/armies/write/addcreature/CanHaveMax7CreatureStacksInArmy.java</include>
-								<include>com/dddheroes/heroesofddd/armies/write/removecreature/RemoveCreatureFromArmy.java</include>
-								<include>com/dddheroes/heroesofddd/armies/write/removecreature/CanRemoveOnlyPresentCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/armies/events/ArmyEvent.java</include>
-								<include>com/dddheroes/heroesofddd/armies/events/CreatureAddedToArmy.java</include>
-								<include>com/dddheroes/heroesofddd/armies/events/CreatureRemovedFromArmy.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>com/dddheroes/heroesofddd/armies/write/ArmyTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/armies/write/addcreature/AddCreatureToArmyTest.java</testInclude>
-								<testInclude>com/dddheroes/heroesofddd/armies/write/removecreature/RemoveCreatureFromArmyTest.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-event-processor-DwellingReadModelProjector</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelProjector.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelRepository.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/AvailableCreaturesChanged.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/CreatureRecruited.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-							</includes>
-							<!-- Pure projector: no scoped test class exists (E2E `GetDwellingByIdTest` deferred to stabilization). -->
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-event-processor-WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreatures</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/BuiltDwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweeksymbolproclaimedthenincreasedwellingavailablecreatures/BuiltDwellingReadModelRepository.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/events/AstrologersEvent.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/events/WeekSymbolProclaimed.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-							</includes>
-							<!-- E2E `@SpringBootTest` test deferred to stabilization. -->
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-event-processor-WhenWeekStartedThenProclaimWeekSymbol</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WhenWeekStartedThenProclaimWeekSymbolProcessor.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/automation/whenweekstartedthenproclaimweeksymbol/WeekSymbolCalculator.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/MonthWeek.java</include>
-								<include>com/dddheroes/heroesofddd/astrologers/write/proclaimweeksymbol/ProclaimWeekSymbol.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/events/CalendarEvent.java</include>
-								<include>com/dddheroes/heroesofddd/calendar/events/DayStarted.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-							</includes>
-							<!-- E2E `@SpringBootTest` test deferred to stabilization (uses AF4 EventGateway/CommandGateway shapes). -->
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-event-processor-WhenCreatureRecruitedThenAddToArmy</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/automation/WhenCreatureRecruitedThenAddToArmyProcessor.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/CreatureRecruited.java</include>
-								<include>com/dddheroes/heroesofddd/armies/write/addcreature/AddCreatureToArmy.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-							</includes>
-							<!-- Existing E2E test (`@SpringBootTest`) is broken in ways that exceed the
-							     per-processor recipe scope: uses `eventGateway.publish(DomainEventMessage)`,
-							     `GenericDomainEventMessage`, and `verify(commandGateway).sendAndWait(...)`
-							     against the AF4 gateway shape. Test rewrite deferred to stabilization. -->
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-command-gateway-RecruitCreatureMcp</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreatureMcp.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreature.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/PlayerId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-command-gateway-RecruitCreatureRestApi</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreatureRestApi.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/recruitcreature/RecruitCreature.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-								<include>com/dddheroes/heroesofddd/shared/restapi/Headers.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/PlayerId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-command-gateway-IncreaseAvailableCreaturesMcp</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesMcp.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/PlayerId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-command-gateway-IncreaseAvailableCreaturesRestApi</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreaturesRestApi.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/changeavailablecreatures/IncreaseAvailableCreatures.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-								<include>com/dddheroes/heroesofddd/shared/restapi/Headers.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/PlayerId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-command-gateway-BuildDwellingMcp</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingMcp.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwelling.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/PlayerId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-command-gateway-BuildDwellingRestApi</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwellingRestApi.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/builddwelling/BuildDwelling.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-								<include>com/dddheroes/heroesofddd/shared/restapi/Headers.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/PlayerId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-read-config-StreamProcessorsOperations</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/maintenance/write/resetprocessor/StreamProcessorsOperations.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-query-handler-GetAllDwellingsQueryHandler</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellings.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelRepository.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-query-handler-GetDwellingByIdQueryHandler</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdQueryHandler.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingById.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelRepository.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-query-gateway-GetDwellingByIdRestApi</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingByIdRestApi.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getdwellingbyid/GetDwellingById.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/write/DwellingId.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-query-gateway-GetAllDwellingsMcp</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsMcp.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellings.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/shared/domain/identifiers/GameId.java</include>
-							</includes>
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<profile>
-			<id>migration-event-processor-GetAllDwellingsQueryHandler</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<configuration>
-							<includes>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellingsQueryHandler.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/getalldwellings/GetAllDwellings.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModel.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/read/DwellingReadModelRepository.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingEvent.java</include>
-								<include>com/dddheroes/heroesofddd/creaturerecruitment/events/DwellingBuilt.java</include>
-								<include>com/dddheroes/heroesofddd/shared/application/GameMetaData.java</include>
-							</includes>
-							<!-- Dual-natured class — only the @EventHandler shape is migrated by the event-processor recipe.
-							     @QueryHandler shape is surfaced for query-handler recipe (Phase 6).
-							     Functional verification (E2E `GetAllDwellingsTest`) deferred to stabilization. -->
-							<testIncludes>
-								<testInclude>__no_scoped_test__/None.java</testInclude>
-							</testIncludes>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
+			<id>tracing-grpc</id>
+			<activation>
+				<property>
+					<name>tracing.grpc.enabled</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<dependencies>
+				<!-- gRPC tracing for the Axon Server connector channel. Provides GrpcTelemetry, whose
+				     ClientInterceptor is registered on the connection channel via a ManagedChannelCustomizer
+				     bean (see GrpcTracingConfiguration). Built from the same OpenTelemetry SDK bean as the
+				     Axon/HTTP/JDBC spans, so gRPC client spans flow through the existing OTLP pipeline.
+				     GrpcTracingConfiguration loads GrpcTelemetry reflectively and is @ConditionalOnClass on
+				     it, so the app still compiles and runs when this JAR is absent. Only relevant under an
+				     axonserver profile (Axon Server is disabled by default). -->
+				<dependency>
+					<groupId>io.opentelemetry.instrumentation</groupId>
+					<artifactId>opentelemetry-grpc-1.6</artifactId>
+					<version>${opentelemetry-instrumentation.version}</version>
+				</dependency>
+			</dependencies>
 		</profile>
 	</profiles>
 

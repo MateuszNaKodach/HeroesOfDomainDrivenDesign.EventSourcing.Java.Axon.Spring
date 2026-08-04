@@ -8,6 +8,7 @@ import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
 import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
 import org.axonframework.eventsourcing.snapshot.inmemory.InMemorySnapshotStore;
 import org.axonframework.eventsourcing.snapshot.store.SnapshotStore;
+import org.axonframework.messaging.commandhandling.configuration.CommandHandlingModule;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import org.axonframework.test.fixture.AxonTestFixture;
@@ -33,6 +34,10 @@ public class DwellingTest {
                                                SnapshotStore.class, c -> new InMemorySnapshotStore()))
                                        .registerEntity(EventSourcedEntityModule.autodetected(DwellingId.class,
                                                                                              Dwelling.class))
+                                       .registerCommandHandlingModule(() -> CommandHandlingModule.named("dwelling-test")
+                                               .commandHandlers(handlers -> handlers.autodetectedCommandHandlingComponent(
+                                                       configuration -> new DwellingCommandHandler()))
+                                               .build())
         );
     }
 
