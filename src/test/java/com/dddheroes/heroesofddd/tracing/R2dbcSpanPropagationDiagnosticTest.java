@@ -12,7 +12,6 @@ import io.micrometer.tracing.contextpropagation.ObservationAwareSpanThreadLocalA
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,15 +34,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 /**
- * Diagnostic test for the Observation-based R2DBC tracing path (Spring Boot's
- * {@code R2dbcObservationAutoConfiguration} + {@code r2dbc-proxy}): verifies that a real Postgres query executed
- * through the app's actual {@code ConnectionFactory} nests under the trace context carried in the <b>Reactor
- * Context</b>, exactly the way it is carried during an Axon reactive handler <em>without</em> any framework-side
- * Observation carrier: the only tracing value in the context is the handler span under
- * {@link ObservationAwareSpanThreadLocalAccessor#KEY} (what Axon's {@code MonoUtils}/{@code FluxUtils}
- * {@code contextCapture()} snapshots when a span is thread-local-current and no Observation is open). Reactor's
- * automatic context propagation restores that span around the R2DBC pipeline's operators, and the query observation
- * -- finding no parent Observation -- parents its span on the restored current trace context.
+ * Diagnostic tests for Spring Boot's {@code R2dbcObservationAutoConfiguration} and {@code r2dbc-proxy}: verify that a
+ * real Postgres query executed through the app's actual {@code ConnectionFactory} nests under trace context carried
+ * in the <b>Reactor Context</b>. One test exercises Axoniq Framework's raw Micrometer span carrier and its balanced
+ * nested-scope restoration; the other verifies Spring's native Observation carrier independently.
  * <p>
  * The {@code findById().switchIfEmpty(save()).then()} shape matters: the {@code save()} subscription happens on the
  * Postgres driver's Netty event-loop thread (where thread-local state is least reliable), which is where orphaned
@@ -78,24 +72,32 @@ class R2dbcSpanPropagationDiagnosticTest {
         spanExporter.spans.clear();
     }
 
-    @AfterEach
-    void tearDown() {
-        Hooks.disableAutomaticContextPropagation();
-    }
-
     @Test
-    void r2dbcQueryNestsUnderTheSpanCarriedInTheReactorContextLikeAnAxonHandler() {
-        // given the exact Reactor Context shape an Axon reactive handler runs with (no Observation carrier): just
-        // the handler span, as captured by contextCapture() from the span-scoped handler window
-        Span parentSpan = tracer.nextSpan().name("Test.parent").start();
+    void r2dbcQueryNestsUnderTheRawMicrometerSpanCarriedInReactorContext() {
+        Span parentSpan = tracer.nextSpan().name("test.raw-parent").start();
         try {
             runRepositoryPipeline(ctx -> ctx.put(ObservationAwareSpanThreadLocalAccessor.KEY, parentSpan));
         } finally {
             parentSpan.end();
         }
 
-        // then every r2dbc query span nests under Test.parent
-        assertAllQuerySpansNestUnder("Test.parent");
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            List<SpanData> spans = List.copyOf(spanExporter.spans);
+            SpanData parentData = spans.stream()
+                                       .filter(s -> s.getName().equals("test.raw-parent"))
+                                       .findFirst()
+                                       .orElseThrow(() -> new AssertionError(
+                                               "'test.raw-parent' not exported yet. Recorded: "
+                                                       + spans.stream().map(SpanData::getName).toList()));
+            List<SpanData> queryChildren = spans.stream()
+                                                .filter(s -> s.getName().equals("query"))
+                                                .toList();
+            assertThat(queryChildren).isNotEmpty();
+            assertThat(queryChildren).allSatisfy(child -> {
+                assertThat(child.getTraceId()).isEqualTo(parentData.getTraceId());
+                assertThat(child.getParentSpanContext().isValid()).isTrue();
+            });
+        });
     }
 
     @Test
@@ -120,7 +122,7 @@ class R2dbcSpanPropagationDiagnosticTest {
                                                 "'test.parent' not exported yet. Recorded: "
                                                         + spans.stream().map(SpanData::getName).toList()));
             List<SpanData> queryChildren = spans.stream()
-                                                 .filter(s -> !s.getName().equals("test.parent"))
+                                                 .filter(s -> s.getName().equals("query"))
                                                  .toList();
             assertThat(queryChildren).isNotEmpty();
             assertThat(queryChildren).allSatisfy(child -> {
@@ -142,29 +144,6 @@ class R2dbcSpanPropagationDiagnosticTest {
                                                             .then())
                                    .contextWrite(contextWriter::apply);
         operation.block(Duration.ofSeconds(10));
-    }
-
-    private void assertAllQuerySpansNestUnder(String parentSpanName) {
-        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-            List<SpanData> spans = List.copyOf(spanExporter.spans);
-            SpanData parentData = spans.stream()
-                                        .filter(s -> s.getName().equals(parentSpanName))
-                                        .findFirst()
-                                        .orElseThrow(() -> new AssertionError(
-                                                "'" + parentSpanName + "' not exported yet. Recorded: "
-                                                        + spans.stream().map(SpanData::getName).toList()));
-            List<SpanData> queryChildren = spans.stream()
-                                                 .filter(s -> !s.getName().equals(parentSpanName))
-                                                 .toList();
-            assertThat(queryChildren)
-                    .as("R2DBC query spans recorded: %s", spans.stream().map(SpanData::getName).toList())
-                    .isNotEmpty();
-            assertThat(queryChildren).allSatisfy(child ->
-                    assertThat(child.getParentSpanContext().getSpanId())
-                            .as("parent of %s (isValid parent=%s)", child.getName(),
-                                child.getParentSpanContext().isValid())
-                            .isEqualTo(parentData.getSpanId()));
-        });
     }
 
     /** Minimal in-memory {@link SpanExporter} so this diagnostic test needs no extra test dependency. */

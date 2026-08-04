@@ -41,9 +41,9 @@ import static org.awaitility.Awaitility.await;
  * <p>
  * Asserts the exact property that used to break in production traces: every R2DBC {@code query} span must join the
  * event handler's trace with a valid parent -- never appear as an orphaned root in its own trace. This exercises the
- * full propagation chain: Axon's span-scoped drain window → {@code MicrometerObservationBridge} carrier (holding the
- * handler span) captured into the Reactor Context → Spring Boot's {@code r2dbc-proxy} observation resolving its
- * parent from that context.
+ * full propagation chain: Axon's span-scoped drain window → raw Micrometer span captured into the Reactor Context →
+ * Axoniq Framework's balanced span accessor restoring it across nested reactive scopes → Spring Boot's
+ * {@code r2dbc-proxy} observation resolving its parent from that context.
  */
 @Import({TestcontainersConfiguration.class, R2dbcTracingEndToEndTest.InMemorySpanExporterConfiguration.class})
 @SpringBootTest(properties = {
