@@ -106,6 +106,10 @@ service name `heroesofddd`.
 - `StreamingEventProcessor.process(DwellingBuilt | AvailableCreaturesChanged | CreatureRecruited)` — pooled/streaming processors
 - `EventProcessor.process(DwellingBuilt)` — the subscribing `Read_GetAllDwellings_QueryCache` processor
 
+**Query update emitter** (publishing updates from the dwelling read-model projection)
+- `QueryUpdateEmitter.emitQueryUpdateMessage(DwellingReadModel)`
+- `QueryUpdateEmitter.scheduleQueryUpdateMessage(DwellingReadModel)`
+
 ### `@MessageHandler` invocation spans (`EXPECTED_HANDLER_SPANS`)
 
 Wrapped by `TracingHandlerEnhancerDefinition` as `<DeclaringClass>.<method>(<ParamSimpleTypes>)`:

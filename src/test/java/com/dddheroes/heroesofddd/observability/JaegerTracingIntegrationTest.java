@@ -122,7 +122,10 @@ class JaegerTracingIntegrationTest {
             "StreamingEventProcessor.process(DwellingBuilt)",
             "StreamingEventProcessor.process(AvailableCreaturesChanged)",
             "StreamingEventProcessor.process(CreatureRecruited)",
-            "EventProcessor.process(DwellingBuilt)"
+            "EventProcessor.process(DwellingBuilt)",
+            // -- QueryUpdateEmitter: the read-model projection publishes and schedules updates --
+            "QueryUpdateEmitter.emitQueryUpdateMessage(DwellingReadModel)",
+            "QueryUpdateEmitter.scheduleQueryUpdateMessage(DwellingReadModel)"
     ));
 
     /**
