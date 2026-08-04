@@ -14,6 +14,9 @@ import com.dddheroes.heroesofddd.shared.domain.identifiers.ArmyId;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.eventhandling.gateway.EventAppender;
+import org.axonframework.modelling.annotation.InjectEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +28,15 @@ class Army {
     private ArmyId armyId;
     private final Map<CreatureId, Amount> creatureStacks = new HashMap<>();
 
-    @CommandHandler // performance downside in comparison to constructor
-    void decide(AddCreatureToArmy command, EventAppender eventAppender) {
-        new CanHaveMax7CreatureStacksInArmy(command.creatureId(), creatureStacks).verify();
+    static void decide(
+            AddCreatureToArmy command,
+            @Nullable Army army,
+            EventAppender eventAppender
+    ) {
+        new CanHaveMax7CreatureStacksInArmy(
+                command.creatureId(),
+                army == null ? Map.of() : army.creatureStacks
+        ).verify();
 
         eventAppender.append(CreatureAddedToArmy.event(
                 command.armyId(),
@@ -42,9 +51,16 @@ class Army {
         creatureStacks.merge(new CreatureId(event.creatureId()), new Amount(event.quantity()), Amount::plus);
     }
 
-    @CommandHandler
-    void decide(RemoveCreatureFromArmy command, EventAppender eventAppender) {
-        new CanRemoveOnlyPresentCreatures(command.creatureId(), command.quantity(), creatureStacks).verify();
+    static void decide(
+            RemoveCreatureFromArmy command,
+            @Nullable Army army,
+            EventAppender eventAppender
+    ) {
+        new CanRemoveOnlyPresentCreatures(
+                command.creatureId(),
+                command.quantity(),
+                army == null ? Map.of() : army.creatureStacks
+        ).verify();
 
         eventAppender.append(CreatureRemovedFromArmy.event(
                 command.armyId(),
@@ -72,5 +88,19 @@ class Army {
     @EntityCreator
     Army() {
         // required by Axon
+    }
+}
+
+@Component
+class ArmyCommandHandler {
+
+    @CommandHandler
+    void decide(AddCreatureToArmy command, @InjectEntity @Nullable Army army, EventAppender eventAppender) {
+        Army.decide(command, army, eventAppender);
+    }
+
+    @CommandHandler
+    void decide(RemoveCreatureFromArmy command, @InjectEntity @Nullable Army army, EventAppender eventAppender) {
+        Army.decide(command, army, eventAppender);
     }
 }

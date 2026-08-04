@@ -7,6 +7,7 @@ import com.dddheroes.heroesofddd.shared.domain.valueobjects.ResourceType;
 import com.dddheroes.heroesofddd.shared.domain.valueobjects.Resources;
 import org.axonframework.eventsourcing.configuration.EventSourcedEntityModule;
 import org.axonframework.eventsourcing.configuration.EventSourcingConfigurer;
+import org.axonframework.messaging.commandhandling.configuration.CommandHandlingModule;
 import org.axonframework.test.fixture.AxonTestFixture;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,12 @@ public class ResourcesPoolTest {
 
     @BeforeEach
     void setUp() {
-        fixture = AxonTestFixture.with(EventSourcingConfigurer.create().registerEntity(EventSourcedEntityModule.autodetected(ResourcesPoolId.class, ResourcesPool.class)));
+        fixture = AxonTestFixture.with(EventSourcingConfigurer.create()
+                .registerEntity(EventSourcedEntityModule.autodetected(ResourcesPoolId.class, ResourcesPool.class))
+                .registerCommandHandlingModule(() -> CommandHandlingModule.named("resources-pool-test")
+                        .commandHandlers(handlers -> handlers.autodetectedCommandHandlingComponent(
+                                configuration -> new ResourcesPoolCommandHandler()))
+                        .build()));
     }
 
     @AfterEach

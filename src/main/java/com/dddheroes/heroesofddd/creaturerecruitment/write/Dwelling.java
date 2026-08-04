@@ -19,8 +19,11 @@ import org.axonframework.extension.spring.stereotype.EventSourced;
 import com.dddheroes.heroesofddd.shared.domain.identifiers.CreatureId;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.eventhandling.gateway.EventAppender;
+import org.axonframework.modelling.annotation.InjectEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 @EventSourced(tagKey = "Dwelling", idType = DwellingId.class)
 @Snapshotting(afterEvents = 3)
@@ -33,9 +36,12 @@ public class Dwelling {
     public Resources costPerTroop;
     public Amount availableCreatures;
 
-    @CommandHandler // performance downside in comparison to constructor
-    void decide(BuildDwelling command, EventAppender eventAppender) {
-        new OnlyNotBuiltBuildingCanBeBuild(dwellingId).verify();
+    static void decide(
+            BuildDwelling command,
+            @Nullable Dwelling dwelling,
+            EventAppender eventAppender
+    ) {
+        new OnlyNotBuiltBuildingCanBeBuild(dwelling == null ? null : dwelling.dwellingId).verify();
 
         eventAppender.append(DwellingBuilt.event(
                 command.dwellingId(),
@@ -53,15 +59,18 @@ public class Dwelling {
         this.availableCreatures = Amount.zero();
     }
 
-    @CommandHandler
-    void decide(IncreaseAvailableCreatures command, EventAppender eventAppender) {
-        new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
+    static void decide(
+            IncreaseAvailableCreatures command,
+            @Nullable Dwelling dwelling,
+            EventAppender eventAppender
+    ) {
+        new OnlyBuiltDwellingCanHaveAvailableCreatures(dwelling == null ? null : dwelling.dwellingId).verify();
         // todo: check creatureId for the dwelling!
 
         eventAppender.append(AvailableCreaturesChanged.event(
                 command.dwellingId(),
                 command.creatureId(),
-                availableCreatures.plus(command.increaseBy())
+                dwelling.availableCreatures.plus(command.increaseBy())
         ));
     }
 
@@ -72,21 +81,21 @@ public class Dwelling {
         this.availableCreatures = new Amount(event.changedTo());
     }
 
-    @CommandHandler
-    void decide(RecruitCreature command, EventAppender eventAppender) {
-        // AF5: with @EntityCreator no-arg, the framework materialises an empty Dwelling
-        // before this handler runs. Guard against the not-yet-built case explicitly so we
-        // surface the domain rule instead of NPE-ing on null state.
-        new OnlyBuiltDwellingCanHaveAvailableCreatures(dwellingId).verify();
+    static void decide(
+            RecruitCreature command,
+            @Nullable Dwelling dwelling,
+            EventAppender eventAppender
+    ) {
+        new OnlyBuiltDwellingCanHaveAvailableCreatures(dwelling == null ? null : dwelling.dwellingId).verify();
 
         new RecruitCreaturesNotExceedAvailableCreatures(
-                creatureId,
-                availableCreatures,
+                dwelling.creatureId,
+                dwelling.availableCreatures,
                 command.creatureId(),
                 command.quantity()
         ).verify();
 
-        var recruitCost = costPerTroop.multiply(command.quantity());
+        var recruitCost = dwelling.costPerTroop.multiply(command.quantity());
         new RecruitCostCannotDifferThanExpectedCost(
                 recruitCost,
                 command.expectedCost()
@@ -116,4 +125,23 @@ public class Dwelling {
     }
 
 
+}
+
+@Component
+class DwellingCommandHandler {
+
+    @CommandHandler
+    void decide(BuildDwelling command, @InjectEntity @Nullable Dwelling dwelling, EventAppender eventAppender) {
+        Dwelling.decide(command, dwelling, eventAppender);
+    }
+
+    @CommandHandler
+    void decide(IncreaseAvailableCreatures command, @InjectEntity @Nullable Dwelling dwelling, EventAppender eventAppender) {
+        Dwelling.decide(command, dwelling, eventAppender);
+    }
+
+    @CommandHandler
+    void decide(RecruitCreature command, @InjectEntity @Nullable Dwelling dwelling, EventAppender eventAppender) {
+        Dwelling.decide(command, dwelling, eventAppender);
+    }
 }

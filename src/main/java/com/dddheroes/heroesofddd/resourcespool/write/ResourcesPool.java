@@ -11,6 +11,9 @@ import org.axonframework.eventsourcing.annotation.reflection.EntityCreator;
 import org.axonframework.extension.spring.stereotype.EventSourced;
 import org.axonframework.messaging.commandhandling.annotation.CommandHandler;
 import org.axonframework.messaging.eventhandling.gateway.EventAppender;
+import org.axonframework.modelling.annotation.InjectEntity;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 @EventSourced(tagKey = "ResourcesPool", idType = ResourcesPoolId.class)
 public class ResourcesPool {
@@ -18,8 +21,11 @@ public class ResourcesPool {
     private ResourcesPoolId resourcesPoolId;
     private Resources balance = Resources.empty();
 
-    @CommandHandler
-    void decide(DepositResources command, EventAppender eventAppender) {
+    static void decide(
+            DepositResources command,
+            @Nullable ResourcesPool resourcesPool,
+            EventAppender eventAppender
+    ) {
         eventAppender.append(ResourcesDeposited.event(command.resourcesPoolId(), command.resources()));
     }
 
@@ -29,10 +35,13 @@ public class ResourcesPool {
         this.balance = balance.plus(Resources.fromRaw(event.resources()));
     }
 
-    @CommandHandler
-    public void decide(WithdrawResources command, EventAppender eventAppender) {
+    public static void decide(
+            WithdrawResources command,
+            @Nullable ResourcesPool resourcesPool,
+            EventAppender eventAppender
+    ) {
         new CannotWithdrawMoreThanDepositedResources(
-                balance,
+                resourcesPool == null ? Resources.empty() : resourcesPool.balance,
                 command.resources()
         ).verify();
         eventAppender.append(ResourcesWithdrawn.event(command.resourcesPoolId(), command.resources()));
@@ -51,5 +60,19 @@ public class ResourcesPool {
 
     public ResourcesPool(ResourcesPoolId resourcesPoolId) {
         this.resourcesPoolId = resourcesPoolId;
+    }
+}
+
+@Component
+class ResourcesPoolCommandHandler {
+
+    @CommandHandler
+    void decide(DepositResources command, @InjectEntity @Nullable ResourcesPool resourcesPool, EventAppender eventAppender) {
+        ResourcesPool.decide(command, resourcesPool, eventAppender);
+    }
+
+    @CommandHandler
+    void decide(WithdrawResources command, @InjectEntity @Nullable ResourcesPool resourcesPool, EventAppender eventAppender) {
+        ResourcesPool.decide(command, resourcesPool, eventAppender);
     }
 }
