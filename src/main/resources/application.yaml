@@ -13,9 +13,6 @@ spring:
     group:
       observability-elastic: observability
       observability-jaeger: observability
-  threads:
-    virtual:
-      enabled: true
   ai:
     mcp:
       server:
@@ -23,6 +20,9 @@ spring:
         name: "Heroes of Might & Magic III - DDD/Event Sourcing Server"
         version: "1.0.0"
         instructions: "MCP server for Heroes of Might & Magic III domain built with DDD, Event Sourcing, and Axon Framework. Provides domain operations, game management tools, and educational DDD resources."
+  # JDBC/JPA stays for the Axon-owned tables (event store, token store, DLQ) — Hibernate ddl-auto
+  # keeps maintaining those. The read models are accessed reactively via R2DBC against the same
+  # database; their tables are managed by Flyway (runs on the JDBC datasource).
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT:6446}/heroes_of_ddd_development
     username: heroes_of_ddd_db_user
@@ -35,6 +35,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  r2dbc:
+    url: r2dbc:postgresql://localhost:${POSTGRES_PORT:6446}/heroes_of_ddd_development
+    username: heroes_of_ddd_db_user
+    password: heroes_of_ddd_db_password
+  flyway:
+    baseline-on-migrate: true
 axon:
   axonserver:
     enabled: false
@@ -97,12 +103,15 @@ application:
 management:
   tracing:
     enabled: false       # turned on by the 'observability' Spring profile
+  observations:
+    enable:
+      # R2DBC/SQL observations (Spring Boot's R2dbcObservationAutoConfiguration + r2dbc-proxy).
+      # Off by default so normal runs carry no per-query observations (spans or timers);
+      # turned on by the 'observability' profile (see application-observability.yaml).
+      r2dbc: false
 
 # JDBC/SQL tracing (datasource-micrometer). Off by default so normal runs are unaffected;
 # turned on by the 'observability' profile (see application-observability.yaml).
-# NOTE: this property only has any effect when the app is built with -Dtracing.database.enabled=true
-# (the 'tracing-database' Maven profile) — otherwise the datasource-micrometer JAR is not on the classpath
-# and this key is simply ignored. See docs/OBSERVABILITY.md.
 jdbc:
   datasource-proxy:
     enabled: false

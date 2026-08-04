@@ -1,13 +1,12 @@
 package com.dddheroes.heroesofddd.creaturerecruitment.read;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Repository
-public interface DwellingReadModelRepository extends JpaRepository<DwellingReadModel, String> {
+public interface DwellingReadModelRepository extends R2dbcRepository<DwellingReadModel, String> {
 
-    List<DwellingReadModel> findAllByGameId(String gameId);
+    Flux<DwellingReadModel> findAllByGameId(String gameId);
 
 }
