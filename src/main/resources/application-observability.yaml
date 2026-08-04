@@ -6,3 +6,10 @@ management:
   otlp:
     tracing:
       transport: http
+
+# JDBC/SQL tracing: wrap the HikariCP DataSource so every SQL statement (Axon JPA event store
+# + read-model projections) becomes a child span under the Axon/HTTP spans.
+jdbc:
+  datasource-proxy:
+    enabled: true
+    include-parameter-values: true   # bind parameter values in span attributes

@@ -71,17 +71,27 @@ axon:
     # All Axon attribute providers stay at their defaults (true)
     show-event-sourcing-handlers: false
     event-processor:
-      # Disable the StreamingEventProcessor.batch root span. Each event handler becomes
-      # its own root trace with an OpenTelemetry LINK back to the publish-event span —
-      # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
-      # across async boundaries. Off by default in Axon (batch trace = no links).
+      # Keep asynchronous event handlers in the publisher trace and suppress the
+      # StreamingEventProcessor.batch span. Set distributed-in-same-trace to false
+      # to separate consumers from publishers; with batch tracing enabled they follow
+      # the framework's batch/consumer relationship, and without it they become linked roots.
       disable-batch-trace: true
+      distributed-in-same-trace: true
 #  update-check:
 #    disabled: true
 
 management:
   tracing:
     enabled: false       # turned on by the 'observability' Spring profile
+
+# JDBC/SQL tracing (datasource-micrometer). Off by default so normal runs are unaffected;
+# turned on by the 'observability' profile (see application-observability.yaml).
+# NOTE: this property only has any effect when the app is built with -Dtracing.database.enabled=true
+# (the 'tracing-database' Maven profile) — otherwise the datasource-micrometer JAR is not on the classpath
+# and this key is simply ignored. See AXON4_TRACING_BASELINE.md.
+jdbc:
+  datasource-proxy:
+    enabled: false
 application:
   maintenance:
     enabled: true

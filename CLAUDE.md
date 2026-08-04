@@ -12,6 +12,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `./mvnw test -Dtest=ClassName` - Run specific test class
 - `./mvnw test -Dtest=ClassName#methodName` - Run specific test method
 
+### Optional Tracing Instrumentation (opt-in, build-time)
+JDBC/JPA and gRPC (Axon Server) tracing dependencies are excluded from a default build. Add them per feature
+via Maven properties (they activate the `tracing-database` / `tracing-grpc` profiles in `pom.xml`); they still
+require the `observability` Spring profile at runtime to actually emit spans:
+- `-Dtracing.database.enabled=true` - include JDBC/JPA tracing (datasource-micrometer)
+- `-Dtracing.grpc.enabled=true` - include Axon Server gRPC tracing (opentelemetry-grpc)
+- `./mvnw verify -Dtracing.database.enabled=true -Dtracing.grpc.enabled=true` - full tracing golden-master
+  (`JaegerTracingIntegrationTest` skips its JPA/gRPC span assertions when the JARs are absent)
+
 ### Infrastructure
 - `docker compose up` - Start Axon Server and PostgreSQL containers
 - `docker compose down` - Stop containers

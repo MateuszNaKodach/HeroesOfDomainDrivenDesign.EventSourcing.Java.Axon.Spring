@@ -1,7 +1,7 @@
 services:
   jaeger:
     image: jaegertracing/jaeger:2.5.0
-    container_name: jaeger
+    container_name: jaeger4
     environment:
       - LOG_LEVEL=info
     ports:
