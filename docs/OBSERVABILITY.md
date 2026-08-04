@@ -264,8 +264,11 @@ SPRING_PROFILES_ACTIVE=observability-jaeger ./mvnw spring-boot:run
 Every reactive SELECT, INSERT, and UPDATE issued by the read-model repositories becomes a database-client
 span under the WebFlux request or Axon projection/query-handler span that initiated it. Crucially, the
 listener resolves the parent from the **Reactor Context captured at subscription** (not from a thread-local
-read at query time), so queries whose I/O completes on the Postgres driver's shared Netty event-loop threads
-still nest correctly — the raw-OpenTelemetry `R2dbcTelemetry` wrapper used previously read
+read at query time). Axoniq Framework carries the active handler as a raw Micrometer Tracing `Span` under
+Micrometer's standard context key. Its balanced accessor gives every nested set and clear operation an independent
+scope, so Reactor restores the span safely across scheduler and driver thread changes without synthetic observations.
+Queries whose I/O completes on the Postgres driver's shared Netty event-loop threads therefore still nest
+correctly — the raw-OpenTelemetry `R2dbcTelemetry` wrapper used previously read
 `Context.current()` on those threads and produced orphaned root spans instead.
 
 Gating: `management.observations.enable.r2dbc` is `false` by default (`application.yaml`) and turned on by
