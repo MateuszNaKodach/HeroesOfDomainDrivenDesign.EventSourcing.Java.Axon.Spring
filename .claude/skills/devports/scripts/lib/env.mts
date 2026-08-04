@@ -45,6 +45,37 @@ export function upsertEnvBlock(path: string, block: string): void {
 }
 
 /**
+ * Parse the managed block of `path` back into the values it records. Returns
+ * null when the file or the block is absent.
+ *
+ * Lets `allocate` adopt ports that are already published for a directory instead
+ * of silently handing out different ones. Two cases produce a block with no
+ * matching registry entry: the registry was lost or reset, and a tool copying a
+ * sibling worktree's gitignored files (Conductor's "files to copy", a manual
+ * `cp`) dropped another checkout's `.env` in.
+ */
+export function readEnvBlock(path: string): { projectName?: string; ports: Record<string, number> } | null {
+  if (!existsSync(path)) return null
+  const match = blockRe().exec(readFileSync(path, "utf8"))
+  if (!match) return null
+  const ports: Record<string, number> = {}
+  let projectName: string | undefined
+  for (const line of match[0].split("\n")) {
+    const kv = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line.trim())
+    if (!kv) continue
+    const [, key, rawValue] = kv
+    const value = rawValue.trim()
+    if (key === "COMPOSE_PROJECT_NAME") {
+      if (value) projectName = value
+      continue
+    }
+    const port = Number(value)
+    if (Number.isInteger(port) && port > 0 && port <= 65535) ports[key] = port
+  }
+  return { projectName, ports }
+}
+
+/**
  * Strip the managed block. Returns true if something was removed. Deletes the
  * file entirely if nothing but the block remained.
  */
