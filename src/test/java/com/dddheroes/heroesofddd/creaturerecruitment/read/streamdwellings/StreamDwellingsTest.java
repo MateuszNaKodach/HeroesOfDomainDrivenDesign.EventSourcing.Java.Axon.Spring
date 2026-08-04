@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.List;
 
 import static com.dddheroes.heroesofddd.utils.AwaitilityUtils.awaitUntilAsserted;
@@ -64,7 +65,9 @@ class StreamDwellingsTest extends DwellingReadModelTest {
         var query = StreamDwellings.query(GAME_ID);
 
         // then
-        awaitUntilAsserted(() -> {
+        // This query reads a model projected by a pooled event processor. Under CI load its
+        // initial scheduling can outlast the standard integration-test allowance.
+        awaitUntilAsserted(Duration.ofSeconds(20), () -> {
             var result = streamDwellings(query);
             assertThat(result).hasSize(2);
             assertThat(result).extracting(DwellingReadModel::getDwellingId)
