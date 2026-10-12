@@ -97,11 +97,13 @@ Server; see its README for the full matrix): any released dispatcher fails on vo
 fixed handler; the fixed dispatcher and this workaround read void results as `null` from every handler; value,
 empty `String` and failure results are identical in every pair.
 
-Upstream fix (local, not pushed): AxoniqFramework branch `MateuszNaKodach/void-command-result-axoniq-5.4.x` on
-`axoniq-5.4.x` (5.4.1-SNAPSHOT), commits `b7d88836b7` (dispatcher reads Void-typed empty data as `null`, keeping the
-wire format) and `3af77d770b` (wire samples of the released 5.3.3 and 5.4.0 connectors as tests). With it installed
-as `5.4.1-SNAPSHOT` and the workaround removed, this app's full suite passes (104 tests); with the released 5.4.0
-connector, both `RecruitCreatureRequiresResourcesTest` tests fail again.
+Upstream fix: https://github.com/AxonIQ/axoniq-framework/pull/637 (milestone Release 5.4.1), branch
+`MateuszNaKodach/void-command-result-axoniq-5.4.x` on `axoniq-5.4.x`, commits `4fb5c18deb` (dispatcher reads
+Void-typed empty data as `null`, keeping the wire format) and `5d9dfb06b0` (wire samples of the released 5.3.3 and
+5.4.0 connectors as tests). With it installed as `5.4.1-SNAPSHOT` and the workaround removed (branch
+`MateuszNaKodach/connector-fix-5.4.1-check`, commit `93b62fb`), this app's full suite passes (104 tests); with the
+released 5.4.0 connector, both `RecruitCreatureRequiresResourcesTest` tests fail again. Once 5.4.1 is released,
+remove the workaround; `AxonServerVoidCommandResultCanaryTest` fails on that version to signal it.
 
 Tests added for this regression: `EmptyCommandResultAsNullInterceptorTest` (workaround unit test, incl. the empty
 `String` case) and `AxonServerVoidCommandResultCanaryTest` (workaround on: `null`; off: the upstream failure).
