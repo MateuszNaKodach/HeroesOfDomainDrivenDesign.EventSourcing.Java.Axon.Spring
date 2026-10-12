@@ -67,6 +67,21 @@
 				<artifactId>jackson-annotations</artifactId>
 				<version>2.22</version>
 			</dependency>
+			<!-- Verification only: a local build (mvn install) of the axon-server-connector fix for void
+			     command results (AxoniqFramework branch fix-void-command-result-5.4.1, commit 9e2f46d287).
+			     It is not published, so build with -nsu. Every other Axon artifact stays on axon.version. -->
+			<dependency>
+				<groupId>io.axoniq.framework</groupId>
+				<artifactId>axon-server-connector</artifactId>
+				<version>5.4.1-SNAPSHOT</version>
+			</dependency>
+			<!-- The snapshot connector would pull its own axoniq-distributed-messaging snapshot; keep that
+			     on axon.version so the connector jar is the only thing that differs from 5.4.0. -->
+			<dependency>
+				<groupId>io.axoniq.framework</groupId>
+				<artifactId>axoniq-distributed-messaging</artifactId>
+				<version>${axon.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
