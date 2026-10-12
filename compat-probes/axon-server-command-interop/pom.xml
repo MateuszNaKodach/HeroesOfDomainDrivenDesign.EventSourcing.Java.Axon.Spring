@@ -35,6 +35,41 @@
 
     <profiles>
         <profile>
+            <!-- The local 5.3.0-SNAPSHOT tracing build the application ran on before the 5.4.0 upgrade. Only
+                 available from the local Maven repository, so always build it with -nsu (never -U). -->
+            <id>v530snapshot</id>
+            <properties>
+                <probe.variant>v530snapshot</probe.variant>
+                <axon.version>5.3.0-SNAPSHOT</axon.version>
+                <axoniq.version>5.3.0-SNAPSHOT</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <!-- v530, v531 and v532 only run as same-version pairs, to find the first release that breaks. -->
+            <id>v530</id>
+            <properties>
+                <probe.variant>v530</probe.variant>
+                <axon.version>5.3.0</axon.version>
+                <axoniq.version>5.3.0</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>v531</id>
+            <properties>
+                <probe.variant>v531</probe.variant>
+                <axon.version>5.3.1</axon.version>
+                <axoniq.version>5.3.1</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>v532</id>
+            <properties>
+                <probe.variant>v532</probe.variant>
+                <axon.version>5.3.2</axon.version>
+                <axoniq.version>5.3.2</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
             <id>v533</id>
             <properties>
                 <probe.variant>v533</probe.variant>

@@ -2,18 +2,27 @@
 #
 # Mixed-version interop matrix for command results over Axon Server.
 #
-# Starts a throwaway Axon Server (dev mode) in Docker, builds one probe jar per framework variant, and for every
-# handler variant H and dispatcher variant D lets D dispatch the probe commands to H through Axon Server. Every
-# result is compared with the EXPECTED table below; the script exits non-zero on any mismatch.
+# Starts a throwaway Axon Server (dev mode) in Docker, builds one probe jar per framework variant, and lets
+# dispatcher variants D send the probe commands to handler variants H through Axon Server:
+#   - the full D x H matrix for HANDLERS x DISPATCHERS,
+#   - plus one same-version pair (D = H) for every variant in SAME_VERSION_PAIRS.
+# Every result is compared with the EXPECTED table below; the script exits non-zero on any mismatch.
 #
 # Works with the bash 3.2 that ships with macOS, and when invoked from zsh (./run-matrix.sh or bash run-matrix.sh).
 #
 # Environment:
-#   AXONSERVER_IMAGE  Axon Server image (default axoniq/axonserver:2025.2.7)
-#   SKIP_BUILD=true   reuse the jars under target/<variant>/ instead of building them
-#   MVN               Maven command (default: the repository's ./mvnw)
-#   JAVA              java executable (default: java on PATH)
-#   DISPATCH_TIMEOUT  seconds a dispatcher run may take (default 120)
+#   AXONSERVER_IMAGE    Axon Server image (default axoniq/axonserver:2025.2.7)
+#   SKIP_BUILD=true     reuse the jars under target/<variant>/ instead of building them
+#   MVN                 Maven command (default: the repository's ./mvnw)
+#   JAVA                java executable (default: java on PATH)
+#   DISPATCH_TIMEOUT    seconds a dispatcher run may take (default 120)
+#   HANDLERS            handler variants of the full matrix (default "v530snapshot v533 v540 v541fix");
+#                       must contain v540
+#   DISPATCHERS         dispatcher variants of the full matrix
+#                       (default "v530snapshot v533 v540 v541fix v540workaround"); must contain v540
+#   SAME_VERSION_PAIRS  variants that only run against themselves (default "v530 v531 v532")
+#   REPORT_ONLY=true    skip building and running; re-check the results of the last run in target/matrix/
+#                       against the current expectations
 
 set -euo pipefail
 
@@ -23,11 +32,20 @@ IMAGE="${AXONSERVER_IMAGE:-axoniq/axonserver:2025.2.7}"
 MVN="${MVN:-$REPO_ROOT/mvnw}"
 JAVA="${JAVA:-java}"
 SKIP_BUILD="${SKIP_BUILD:-false}"
+REPORT_ONLY="${REPORT_ONLY:-false}"
 DISPATCH_TIMEOUT="${DISPATCH_TIMEOUT:-120}"
 
-HANDLERS="v533 v540 v541fix"
-DISPATCHERS="v533 v540 v541fix v540workaround"
-VARIANTS="v533 v540 v541fix v540workaround"
+HANDLERS="${HANDLERS:-v530snapshot v533 v540 v541fix}"
+DISPATCHERS="${DISPATCHERS:-v530snapshot v533 v540 v541fix v540workaround}"
+SAME_VERSION_PAIRS="${SAME_VERSION_PAIRS-v530 v531 v532}"
+# Every variant that is built: the union of all lists above, in first-seen order.
+VARIANTS=""
+for variant in $HANDLERS $DISPATCHERS $SAME_VERSION_PAIRS; do
+    case " $VARIANTS " in
+        *" $variant "*) ;;
+        *) VARIANTS="${VARIANTS:+$VARIANTS }$variant" ;;
+    esac
+done
 CASES="void value emptyString failure"
 
 RUN_DIR="$SCRIPT_DIR/target/matrix"
@@ -35,24 +53,52 @@ LOG_DIR="$RUN_DIR/logs"
 JVM_OPTS="-Daxoniq.update-checker.disabled=true"
 
 CONTAINER_ID=""
+MISMATCHES=""
+KNOWN_DEFECTS=0
 HANDLER_PID=""
+DISPATCHER_PID=""
 
 # ---------------------------------------------------------------------------------------------------------------------
-# EXPECTED table. Written down before the first run; see README.md for every change made after investigating a
-# difference. A cell expectation is "OUTCOME|detail" and is matched as a bash glob pattern against the printed
-# PROBE_RESULT line (without the "PROBE_RESULT|case|" prefix).
+# EXPECTED table. The first version, written before the first run, is in the git history; README.md explains
+# every change made after investigating a difference. A cell expectation is "OUTCOME|detail" and is matched as a
+# bash glob pattern against the printed PROBE_RESULT line (without the "PROBE_RESULT|case|" prefix).
+#
+# The void case follows from two properties of a variant, both read from the framework sources:
+#
+# 1. What its handling side puts on the wire for a void command handler.
+#    - No payload: 5.3.0, 5.3.1 and the local 5.3.0-SNAPSHOT. Their SimpleCommandBus completes a handler without
+#      result with a null CommandResultMessage, and the connector sends a CommandResponse without payload for it.
+#    - A payload typed java.lang.Void with empty data: 5.3.2 and later, including the dispatcher-only fix.
+#      AxonFramework commit 4b971815a1 ("Ensure CommandResultMessage is never null", 5.3.2) makes SimpleCommandBus
+#      return GenericCommandResultMessage(Void, null), which the connector writes with the type name and
+#      Objects.requireNonNullElse(payload, new byte[0]).
+# 2. Whether its dispatching side reads such a typed empty Void payload as "no result".
+#    - No: every released connector and the snapshot only treat a payload without type as "no result", so they
+#      hand byte[0] to resultAs(Void.class), which fails in Jackson.
+#    - Yes: the dispatcher-only fix (empty type, or empty data with type java.lang.Void) and the application's
+#      dispatch interceptor workaround (any empty byte[] result becomes null).
 # ---------------------------------------------------------------------------------------------------------------------
 VOID_BUG='ERROR|org.axonframework.conversion.ConversionException: *byte\[\]* to *java.lang.Void*'
+
+handler_sends_typed_empty_void() {
+    case "$1" in
+        v532 | v533 | v540 | v541fix) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+dispatcher_reads_typed_empty_void_as_null() {
+    case "$1" in
+        v541fix | v540workaround) return 0 ;;
+        *) return 1 ;;
+    esac
+}
 
 expected() {
     local dispatcher="$1" handler="$2" case_name="$3"
     case "$case_name" in
         void)
-            # 5.4.0 handlers send a typed payload with empty data for a null result. Released dispatchers
-            # (5.3.3 and 5.4.0) only treat an untyped payload as "no result" and fail converting byte[] to Void.
-            # The fixed connector and the dispatch interceptor workaround both read it as null. 5.3.3 handlers
-            # and fixed handlers send no payload at all, which every dispatcher reads as null.
-            if [ "$handler" = "v540" ] && { [ "$dispatcher" = "v533" ] || [ "$dispatcher" = "v540" ]; }; then
+            if handler_sends_typed_empty_void "$handler" && ! dispatcher_reads_typed_empty_void_as_null "$dispatcher"; then
                 echo "$VOID_BUG"
             else
                 echo 'OK|null'
@@ -62,15 +108,30 @@ expected() {
             echo 'OK|"pong"'
             ;;
         emptyString)
-            echo 'OK|""'
+            # The Jackson converter turns the String "" into an empty byte[] (StringToByteArrayConverter), so it
+            # travels as a payload typed java.lang.String with empty data. Every connector, including the fix,
+            # keeps it a String. The current workaround interceptor maps every empty byte[] result to null without
+            # looking at the type, so it returns the WRONG value null instead of "" (see known_defect).
+            if [ "$dispatcher" = "v540workaround" ]; then
+                echo 'OK|null'
+            else
+                echo 'OK|""'
+            fi
             ;;
         failure)
-            # Cross-version pairs must propagate the failure exactly like the same-version pair of 5.4.0, which
-            # itself must carry the original message.
+            # Every pair must propagate the failure exactly like the same-version pair of 5.4.0, which itself must
+            # carry the original message.
             echo "SAME_AS_BASELINE"
             ;;
     esac
 }
+# Cells whose expectation is a known wrong result rather than correct behavior. The matrix marks them
+# "[KNOWN DEFECT]", so a passing run never hides them.
+known_defect() {
+    local dispatcher="$1" case_name="$3"
+    [ "$case_name" = "emptyString" ] && [ "$dispatcher" = "v540workaround" ]
+}
+
 FAILURE_BASELINE_DISPATCHER="v540"
 FAILURE_BASELINE_HANDLER="v540"
 FAILURE_BASELINE_PATTERN='ERROR|*probe failure*'
@@ -83,6 +144,9 @@ log() {
 
 cleanup() {
     local exit_code=$?
+    if [ -n "$DISPATCHER_PID" ] && kill -0 "$DISPATCHER_PID" 2>/dev/null; then
+        kill "$DISPATCHER_PID" 2>/dev/null || true
+    fi
     if [ -n "$HANDLER_PID" ] && kill -0 "$HANDLER_PID" 2>/dev/null; then
         kill "$HANDLER_PID" 2>/dev/null || true
         wait "$HANDLER_PID" 2>/dev/null || true
@@ -196,7 +260,8 @@ run_dispatcher() {
         --axon.axonserver.component-name="probe-dispatcher-$dispatcher" \
         --axon.axonserver.client-id="probe-dispatcher-$dispatcher-to-$handler" \
         >"$log_file" 2>&1 &
-    local pid=$! waited=0
+    DISPATCHER_PID=$!
+    local pid=$DISPATCHER_PID waited=0
     while kill -0 "$pid" 2>/dev/null; do
         if [ "$waited" -ge "$DISPATCH_TIMEOUT" ]; then
             log "dispatcher $dispatcher timed out, killing it"
@@ -207,6 +272,7 @@ run_dispatcher() {
         waited=$((waited + 1))
     done
     wait "$pid" 2>/dev/null || true
+    DISPATCHER_PID=""
     grep '^PROBE_' "$log_file" >"$RUN_DIR/$dispatcher-$handler.txt" || true
 }
 
@@ -261,8 +327,26 @@ short_cell() {
     esac
 }
 
+# Prints one cell, marking and counting it when it does not match its expectation.
+print_cell() {
+    local dispatcher="$1" handler="$2" case_name="$3" cell
+    cell="$(short_cell "$(actual "$dispatcher" "$handler" "$case_name")")"
+    if cell_matches "$dispatcher" "$handler" "$case_name"; then
+        if known_defect "$dispatcher" "$handler" "$case_name"; then
+            cell="$cell [KNOWN DEFECT]"
+            KNOWN_DEFECTS=$((KNOWN_DEFECTS + 1))
+        fi
+        printf '| %-34s' "$cell"
+    else
+        printf '| %-34s' "$cell [MISMATCH]"
+        MISMATCHES="$MISMATCHES $dispatcher:$handler:$case_name"
+    fi
+}
+
 print_matrix() {
-    local case_name dispatcher handler cell mismatches=0
+    local case_name dispatcher handler variant mismatch
+    MISMATCHES=""
+    KNOWN_DEFECTS=0
     echo
     echo "Command result interop matrix (rows: dispatcher D, columns: handler H)"
     echo "Axon Server image: $IMAGE"
@@ -277,50 +361,68 @@ print_matrix() {
         for dispatcher in $DISPATCHERS; do
             printf '  %-16s' "$dispatcher"
             for handler in $HANDLERS; do
-                cell="$(short_cell "$(actual "$dispatcher" "$handler" "$case_name")")"
-                if cell_matches "$dispatcher" "$handler" "$case_name"; then
-                    printf '| %-34s' "$cell"
-                else
-                    printf '| %-34s' "$cell [MISMATCH]"
-                    mismatches=$((mismatches + 1))
-                fi
+                print_cell "$dispatcher" "$handler" "$case_name"
             done
             echo
         done
     done
 
-    echo
-    echo "Variants (from the PROBE_VARIANT banner of each node):"
-    for handler in $HANDLERS; do
-        grep -h '^PROBE_VARIANT' "$LOG_DIR/handler-$handler.log" 2>/dev/null | head -1 | sed 's/^/  /' || true
-    done
-    for dispatcher in $DISPATCHERS; do
-        grep -h '^PROBE_VARIANT' "$RUN_DIR/$dispatcher-v540.txt" 2>/dev/null | head -1 | sed 's/^/  /' || true
-    done
-
-    if [ "$mismatches" -gt 0 ]; then
+    if [ -n "$SAME_VERSION_PAIRS" ]; then
         echo
-        echo "Mismatches ($mismatches):"
+        echo "Same-version pairs (D = H)"
+        printf '  %-16s' "variant"
         for case_name in $CASES; do
-            for dispatcher in $DISPATCHERS; do
-                for handler in $HANDLERS; do
-                    if ! cell_matches "$dispatcher" "$handler" "$case_name"; then
-                        echo "  $case_name D=$dispatcher H=$handler"
-                        echo "    expected: $(describe_expected "$dispatcher" "$handler" "$case_name")"
-                        echo "    actual:   $(actual "$dispatcher" "$handler" "$case_name")"
-                    fi
-                done
-            done
+            printf '| %-34s' "$case_name"
         done
         echo
-        echo "RESULT: FAILED ($mismatches mismatching cells)"
+        for variant in $SAME_VERSION_PAIRS; do
+            printf '  %-16s' "$variant"
+            for case_name in $CASES; do
+                print_cell "$variant" "$variant" "$case_name"
+            done
+            echo
+        done
+    fi
+
+    echo
+    echo "Variants (from the PROBE_VARIANT banner of each node):"
+    for variant in $VARIANTS; do
+        grep -h '^PROBE_VARIANT' "$LOG_DIR"/handler-"$variant".log "$RUN_DIR"/"$variant"-*.txt 2>/dev/null \
+            | sort -u | sed 's/^/  /' || true
+    done
+
+    if [ -n "$MISMATCHES" ]; then
+        echo
+        echo "Mismatches ($(echo $MISMATCHES | wc -w | tr -d ' ')):"
+        for mismatch in $MISMATCHES; do
+            dispatcher="${mismatch%%:*}"
+            handler="${mismatch#*:}"
+            handler="${handler%%:*}"
+            case_name="${mismatch##*:}"
+            echo "  $case_name D=$dispatcher H=$handler"
+            echo "    expected: $(describe_expected "$dispatcher" "$handler" "$case_name")"
+            echo "    actual:   $(actual "$dispatcher" "$handler" "$case_name")"
+        done
+        echo
+        echo "RESULT: FAILED ($(echo $MISMATCHES | wc -w | tr -d ' ') mismatching cells)"
         return 1
     fi
     echo
-    echo "RESULT: PASSED (all cells match the expectations)"
+    if [ "$KNOWN_DEFECTS" -gt 0 ]; then
+        echo "RESULT: PASSED (all cells match the expectations; $KNOWN_DEFECTS of them are a [KNOWN DEFECT]: the"
+        echo "        workaround returns null instead of \"\" for an empty String result)"
+    else
+        echo "RESULT: PASSED (all cells match the expectations)"
+    fi
 }
 
 main() {
+    case " $HANDLERS " in *" $FAILURE_BASELINE_HANDLER "*) ;; *) log "HANDLERS must contain $FAILURE_BASELINE_HANDLER"; exit 2 ;; esac
+    case " $DISPATCHERS " in *" $FAILURE_BASELINE_DISPATCHER "*) ;; *) log "DISPATCHERS must contain $FAILURE_BASELINE_DISPATCHER"; exit 2 ;; esac
+    if [ "$REPORT_ONLY" = "true" ]; then
+        print_matrix
+        return
+    fi
     rm -rf "$RUN_DIR"
     mkdir -p "$LOG_DIR"
     if [ "$SKIP_BUILD" != "true" ]; then
@@ -340,6 +442,13 @@ main() {
             run_dispatcher "$dispatcher" "$handler"
         done
         stop_handler "$handler"
+    done
+
+    local variant_pair
+    for variant_pair in $SAME_VERSION_PAIRS; do
+        start_handler "$variant_pair"
+        run_dispatcher "$variant_pair" "$variant_pair"
+        stop_handler "$variant_pair"
     done
 
     print_matrix
