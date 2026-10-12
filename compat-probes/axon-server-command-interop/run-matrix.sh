@@ -54,7 +54,6 @@ JVM_OPTS="-Daxoniq.update-checker.disabled=true"
 
 CONTAINER_ID=""
 MISMATCHES=""
-KNOWN_DEFECTS=0
 HANDLER_PID=""
 DISPATCHER_PID=""
 
@@ -76,7 +75,7 @@ DISPATCHER_PID=""
 #    - No: every released connector and the snapshot only treat a payload without type as "no result", so they
 #      hand byte[0] to resultAs(Void.class), which fails in Jackson.
 #    - Yes: the dispatcher-only fix (empty type, or empty data with type java.lang.Void) and the application's
-#      dispatch interceptor workaround (any empty byte[] result becomes null).
+#      dispatch interceptor workaround (a java.lang.Void typed result with an empty byte[] becomes null).
 # ---------------------------------------------------------------------------------------------------------------------
 VOID_BUG='ERROR|org.axonframework.conversion.ConversionException: *byte\[\]* to *java.lang.Void*'
 
@@ -110,13 +109,9 @@ expected() {
         emptyString)
             # The Jackson converter turns the String "" into an empty byte[] (StringToByteArrayConverter), so it
             # travels as a payload typed java.lang.String with empty data. Every connector, including the fix,
-            # keeps it a String. The current workaround interceptor maps every empty byte[] result to null without
-            # looking at the type, so it returns the WRONG value null instead of "" (see known_defect).
-            if [ "$dispatcher" = "v540workaround" ]; then
-                echo 'OK|null'
-            else
-                echo 'OK|""'
-            fi
+            # keeps it a String, and so does the workaround since it only touches java.lang.Void typed results.
+            # (The first, unnarrowed workaround returned null here; see README.md.)
+            echo 'OK|""'
             ;;
         failure)
             # Every pair must propagate the failure exactly like the same-version pair of 5.4.0, which itself must
@@ -125,13 +120,6 @@ expected() {
             ;;
     esac
 }
-# Cells whose expectation is a known wrong result rather than correct behavior. The matrix marks them
-# "[KNOWN DEFECT]", so a passing run never hides them.
-known_defect() {
-    local dispatcher="$1" case_name="$3"
-    [ "$case_name" = "emptyString" ] && [ "$dispatcher" = "v540workaround" ]
-}
-
 FAILURE_BASELINE_DISPATCHER="v540"
 FAILURE_BASELINE_HANDLER="v540"
 FAILURE_BASELINE_PATTERN='ERROR|*probe failure*'
@@ -332,10 +320,6 @@ print_cell() {
     local dispatcher="$1" handler="$2" case_name="$3" cell
     cell="$(short_cell "$(actual "$dispatcher" "$handler" "$case_name")")"
     if cell_matches "$dispatcher" "$handler" "$case_name"; then
-        if known_defect "$dispatcher" "$handler" "$case_name"; then
-            cell="$cell [KNOWN DEFECT]"
-            KNOWN_DEFECTS=$((KNOWN_DEFECTS + 1))
-        fi
         printf '| %-34s' "$cell"
     else
         printf '| %-34s' "$cell [MISMATCH]"
@@ -346,7 +330,6 @@ print_cell() {
 print_matrix() {
     local case_name dispatcher handler variant mismatch
     MISMATCHES=""
-    KNOWN_DEFECTS=0
     echo
     echo "Command result interop matrix (rows: dispatcher D, columns: handler H)"
     echo "Axon Server image: $IMAGE"
@@ -408,12 +391,7 @@ print_matrix() {
         return 1
     fi
     echo
-    if [ "$KNOWN_DEFECTS" -gt 0 ]; then
-        echo "RESULT: PASSED (all cells match the expectations; $KNOWN_DEFECTS of them are a [KNOWN DEFECT]: the"
-        echo "        workaround returns null instead of \"\" for an empty String result)"
-    else
-        echo "RESULT: PASSED (all cells match the expectations)"
-    fi
+    echo "RESULT: PASSED (all cells match the expectations)"
 }
 
 main() {

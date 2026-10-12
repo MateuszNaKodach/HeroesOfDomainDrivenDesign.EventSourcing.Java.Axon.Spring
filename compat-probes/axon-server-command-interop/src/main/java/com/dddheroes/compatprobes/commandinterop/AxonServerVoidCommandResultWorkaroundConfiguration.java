@@ -17,9 +17,10 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Copy of the application's
  * {@code com.dddheroes.heroesofddd.shared.infrastructure.AxonServerVoidCommandResultWorkaroundConfiguration}
- * interceptor, so the probe can show which mixed-version pairs it repairs. Only the v540workaround variant enables
- * it (through {@code probe.workaround.enabled}), and it only has an effect on the dispatching node: it turns an empty
- * {@code byte[]} command result payload back into a {@code null} payload.
+ * interceptor as of application commit {@code 3798145}, so the probe can show which mixed-version pairs it repairs.
+ * Only the v540workaround variant enables it (through {@code probe.workaround.enabled}), and it only has an effect on
+ * the dispatching node: it turns a command result typed {@code java.lang.Void} with an empty {@code byte[]} payload
+ * back into a {@code null} payload. Other empty results, such as an empty {@code String}, stay as they are.
  */
 @Configuration
 @ConditionalOnProperty(name = "probe.workaround.enabled", havingValue = "true")
@@ -32,6 +33,8 @@ class AxonServerVoidCommandResultWorkaroundConfiguration {
 
     static class EmptyCommandResultAsNullInterceptor implements MessageDispatchInterceptor<CommandMessage> {
 
+        private static final String VOID_RESULT_TYPE_NAME = Void.class.getName();
+
         @Override
         public @NonNull MessageStream<?> interceptOnDispatch(
                 @NonNull CommandMessage message,
@@ -43,7 +46,8 @@ class AxonServerVoidCommandResultWorkaroundConfiguration {
         }
 
         private static Message nullForEmptyPayload(Message result) {
-            if (result.payload() instanceof byte[] bytes && bytes.length == 0) {
+            if (VOID_RESULT_TYPE_NAME.equals(result.type().name())
+                    && result.payload() instanceof byte[] bytes && bytes.length == 0) {
                 return new GenericCommandResultMessage(
                         new GenericMessage(result.identifier(), result.type(), null, result.metadata())
                 );
