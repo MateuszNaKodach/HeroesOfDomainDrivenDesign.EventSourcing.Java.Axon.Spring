@@ -20,25 +20,27 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /*
  * Pins the behavior of the Axon Server void command result workaround (see
  * AxonServerVoidCommandResultWorkaroundConfiguration and docs/UPGRADE-AXON-5.4.0.md, regression 1).
- * The interceptor must turn only the "empty byte[]" result the 5.4.0 connector produces for a void handler
- * into a null payload, and leave every other result, including failures, exactly as it was.
+ * The interceptor must turn only the result the connector produces for a void handler (typed java.lang.Void,
+ * empty byte[] data) into a null payload, and leave every other result, including failures and a real empty
+ * String result (which Jackson also serializes to an empty byte[]), exactly as it was.
  */
 class EmptyCommandResultAsNullInterceptorTest {
 
     private static final CommandMessage COMMAND =
             new GenericCommandMessage(new MessageType("test.SomeCommand"), "payload");
-    private static final MessageType RESULT_TYPE = new MessageType("test.SomeCommandResult");
+    private static final MessageType VOID_RESULT_TYPE = new MessageType(Void.class);
+    private static final MessageType STRING_RESULT_TYPE = new MessageType(String.class);
     private static final Metadata RESULT_METADATA = Metadata.with("gameId", "game-1").and("playerId", "player-1");
 
     private final EmptyCommandResultAsNullInterceptor interceptor = new EmptyCommandResultAsNullInterceptor();
 
     @Nested
-    class WhenResultPayloadIsAnEmptyByteArray {
+    class WhenResultIsAnEmptyVoidResult {
 
         @Test
         void shouldReplacePayloadWithNull() {
             // given
-            var result = resultWithPayload(new byte[0]);
+            var result = voidResultWithPayload(new byte[0]);
 
             // when
             var intercepted = interceptedResultFor(MessageStream.just(result));
@@ -50,7 +52,7 @@ class EmptyCommandResultAsNullInterceptorTest {
         @Test
         void shouldKeepIdentifierTypeAndMetadata() {
             // given
-            var result = resultWithPayload(new byte[0]);
+            var result = voidResultWithPayload(new byte[0]);
 
             // when
             var intercepted = interceptedResultFor(MessageStream.just(result));
@@ -58,18 +60,31 @@ class EmptyCommandResultAsNullInterceptorTest {
             // then
             assertThat(intercepted).isInstanceOf(CommandResultMessage.class);
             assertThat(intercepted.identifier()).isEqualTo(result.identifier());
-            assertThat(intercepted.type()).isEqualTo(RESULT_TYPE);
+            assertThat(intercepted.type()).isEqualTo(VOID_RESULT_TYPE);
             assertThat(intercepted.metadata()).isEqualTo(RESULT_METADATA);
         }
     }
 
     @Nested
-    class WhenResultPayloadIsNotAnEmptyByteArray {
+    class WhenResultIsNotAnEmptyVoidResult {
+
+        @Test
+        void shouldLeaveEmptyStringResultUntouched() {
+            // given
+            var result = resultWithPayload(STRING_RESULT_TYPE, new byte[0]);
+
+            // when
+            var intercepted = interceptedResultFor(MessageStream.just(result));
+
+            // then
+            assertThat(intercepted).isSameAs(result);
+            assertThat(intercepted.payload()).isEqualTo(new byte[0]);
+        }
 
         @Test
         void shouldLeaveNonEmptyByteArrayResultUntouched() {
             // given
-            var result = resultWithPayload(new byte[]{1, 2, 3});
+            var result = resultWithPayload(STRING_RESULT_TYPE, new byte[]{1, 2, 3});
 
             // when
             var intercepted = interceptedResultFor(MessageStream.just(result));
@@ -82,7 +97,7 @@ class EmptyCommandResultAsNullInterceptorTest {
         @Test
         void shouldLeaveNonByteArrayResultUntouched() {
             // given
-            var result = resultWithPayload("dwelling-1");
+            var result = resultWithPayload(STRING_RESULT_TYPE, "dwelling-1");
 
             // when
             var intercepted = interceptedResultFor(MessageStream.just(result));
@@ -95,7 +110,7 @@ class EmptyCommandResultAsNullInterceptorTest {
         @Test
         void shouldLeaveAlreadyNullResultUntouched() {
             // given
-            var result = resultWithPayload(null);
+            var result = voidResultWithPayload(null);
 
             // when
             var intercepted = interceptedResultFor(MessageStream.just(result));
@@ -133,7 +148,11 @@ class EmptyCommandResultAsNullInterceptorTest {
         return entry.message();
     }
 
-    private static CommandResultMessage resultWithPayload(Object payload) {
-        return new GenericCommandResultMessage(RESULT_TYPE, payload, RESULT_METADATA);
+    private static CommandResultMessage voidResultWithPayload(Object payload) {
+        return resultWithPayload(VOID_RESULT_TYPE, payload);
+    }
+
+    private static CommandResultMessage resultWithPayload(MessageType type, Object payload) {
+        return new GenericCommandResultMessage(type, payload, RESULT_METADATA);
     }
 }
