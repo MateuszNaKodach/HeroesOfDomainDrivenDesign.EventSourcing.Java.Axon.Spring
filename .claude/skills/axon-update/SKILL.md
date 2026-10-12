@@ -187,6 +187,10 @@ For each failing test or new error, follow `reference/root-cause.md`:
      its Javadoc the upstream commit, the symptom, and when to delete it; guard it with
      a property so the user can switch it off to check a future version.
 6. Re-run the affected tests, then the full suite.
+7. If the user wants the regression fixed in the framework itself (not just worked around),
+   hand off to the `axon-upstream-fix` skill (`../axon-upstream-fix/SKILL.md`). It uses this app
+   as the reproduction and validation harness. Keep the app workaround until a release with the
+   fix is out.
 
 Also check what the failure means at runtime, not just in tests: a "failed" call that
 still committed its side effects is worse than a clean failure (clients retry). Say so

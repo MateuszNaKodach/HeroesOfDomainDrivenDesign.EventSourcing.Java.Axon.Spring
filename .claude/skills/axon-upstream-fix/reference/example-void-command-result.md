@@ -72,11 +72,17 @@ in `~/.m2` were verified unchanged (checksums and timestamps).
 
 - Child worktree of the upgrade branch. Gotcha hit: the worktree tool based it on the default
   branch (pre-upgrade commit); it had to be reset to the upgrade branch tip before editing.
-- Pinned only `io.axoniq.framework:axon-server-connector:5.4.1-SNAPSHOT` in `dependencyManagement`,
+- Pinned `io.axoniq.framework:axon-server-connector:5.4.1-SNAPSHOT` in `dependencyManagement`,
   deleted the workaround class, built with `./mvnw -nsu`.
-- Expected: full suite equal to the baseline with the workaround (104 tests, all green), negative
-  control with the connector pinned back to 5.4.0 failing `RecruitCreatureRequiresResourcesTest`
-  with the original `ConversionException`, then green again with the snapshot pin.
+- Second gotcha: the snapshot connector pulled its sibling `axoniq-distributed-messaging`
+  5.4.1-SNAPSHOT transitively. That sibling was also pinned back to 5.4.0, so the connector jar
+  was the only artifact that differed from the release (`dependency:list` showed exactly one
+  SNAPSHOT).
+- Result: full suite 104 tests, 0 failures, 0 errors (same as the baseline with the workaround).
+- Negative control: with the connector pinned back to 5.4.0 (workaround still deleted), both
+  `RecruitCreatureRequiresResourcesTest` tests errored with the original
+  `ConversionException` (`byte[]` to `java.lang.Void`, "No content to map due to end-of-input").
+  Restoring the snapshot pin made the two affected classes green again (8 tests).
 
 ## 9. PR (prepared, not pushed in this run)
 

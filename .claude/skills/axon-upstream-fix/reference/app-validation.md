@@ -47,6 +47,16 @@ repositories { mavenLocal() } // first, so the local snapshot wins
 Do not bump the app's shared framework version property: the other artifacts do not exist as
 the snapshot version, and changing them would mean the fix is no longer the only difference.
 
+Watch the transitive siblings: a snapshot built with `-am` declares its in-reactor dependencies at
+the snapshot version too (for example `axon-server-connector` pulls `axoniq-distributed-messaging`
+5.4.1-SNAPSHOT). Maven then resolves those siblings to the snapshot as well. Pin each such sibling
+back to the released version in the same `dependencyManagement` block, so the resolved list shows
+exactly the fixed artifact(s) as SNAPSHOT:
+
+```bash
+./mvnw -nsu -q dependency:list -DincludeScope=runtime -DoutputFile=/dev/stdout | grep SNAPSHOT
+```
+
 Check resolution:
 
 ```bash
