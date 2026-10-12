@@ -15,7 +15,7 @@ Sources used: release notes of
 |-------------------------------------------------|---------------------------|------------------------|--------------------|
 | `./mvnw test-compile`                           | OK                        | OK                     | OK                 |
 | New deprecation warnings                        | -                         | 3 (see below)          | 3                  |
-| `./mvnw test` (104 tests)                       | 104 pass                  | 102 pass, 2 errors     | 104 pass           |
+| `./mvnw test` (104 tests)                       | 104 pass                  | 102 pass, 2 errors     | 104 pass (119 with the tests added later) |
 | Compatibility run, JPA event store              | -                         | OK                     | OK                 |
 | Compatibility run, Axon Server aggregate-based  | -                         | REST 500 on commands   | OK                 |
 | Compatibility run, Axon Server DCB              | -                         | REST 500 on commands   | OK                 |
@@ -24,6 +24,10 @@ Changes in this repository:
 
 - `pom.xml`: `axon.version` / `axon5.version` set to `5.4.0`.
 - `AxonServerVoidCommandResultWorkaroundConfiguration` (new): workaround for regression 1.
+- Tests that keep the checks of this upgrade: the workaround unit and canary tests (regression 1), and
+  `JpaEventStoreDataFromAxon530CompatibilityTest`, which starts the app on a JPA event store written by the
+  pre-upgrade 5.3.0-SNAPSHOT build (fixture and its generator in `src/test/resources/compat/af-5.3.0-SNAPSHOT/`).
+- `compat-probes/axon-server-command-interop`: mixed-version command result probe (see regression 1).
 
 Runtime dependency set is unchanged apart from versions: `axonserver-connector-java` 2026.0.0 to 2026.1.0,
 `entitlement-manager` 1.1.0 to 1.3.2, `tools.jackson` 3.2.1 to 3.2.3, `protobuf-java` 4.34.0 to 4.36.0.
@@ -55,33 +59,52 @@ Observed in the compatibility run with the workaround switched off: `PUT .../ava
 returned HTTP 500, but the dwelling's available creatures went from 0 to 5. The command was applied, only the
 result could not be read. A client that retries on that error applies the change twice.
 
-Cause, in `io.axoniq.framework.axonserver.connector.command.CommandConverter` (axon-server-connector 5.4.0):
+Correction (same day, after capturing the wire format of the real released code): this is not new in 5.4.0.
+Released versions fail the same way since **5.3.2**. The app's baseline was a local 5.3.0-SNAPSHOT build that
+predates the cause, which is why it passed. The analysis below replaces the first version of this section.
 
-- Handling side, `convertResultMessage`: since 5.4 the handler always gets a non-null `CommandResultMessage`.
-  For a `null` payload it now writes a `SerializedObject` with the result type name and `new byte[0]`. In 5.3.3
-  a void handler produced no result message and the method sent a response without a payload.
-- Dispatching side, `convertCommandResponse`: treats the response as "no result" only when
-  `payload.getType().isEmpty()`. The type is now set, so the empty `byte[]` becomes the result payload and
-  `resultAs(Void.class)` hands it to Jackson.
+| Version                      | Handler sends for a void result              | Dispatcher reads it as                   | `resultAs(Void.class)` |
+|------------------------------|----------------------------------------------|------------------------------------------|------------------------|
+| 5.3.0, 5.3.1, local 5.3.0-SNAPSHOT | no payload (no result message)         | null payload                             | `null`                 |
+| 5.3.2, 5.3.3, 5.4.0          | payload typed `java.lang.Void`, empty data   | `byte[0]` payload typed `java.lang.Void` | fails                  |
+| local fix (5.4.1-SNAPSHOT)   | unchanged: `java.lang.Void`, empty data      | null payload, type `java.lang.Void`      | `null`                 |
 
-Origin:
+Cause:
 
-- Axoniq Framework commit `f2b25ad6a91ad6be74e3c9cdbcd0f18ca0c79be1` "Drop nullability for CommandResultMessage"
-  (2026-08-31), part of PR AxonIQ/axoniq-framework#270 "Local dispatch shortcut for command and query buses".
-- It follows Axon Framework PR AxonIQ/AxonFramework#4994 "Ensure returned `CommandResultMessage` is never `null`"
-  (merge commit `4adec434c3d6`).
-- Not in `axoniq-5.3.3`; first released in `axoniq-5.4.0-RC1`; still present in `axoniq-5.4.0` and on `main`
-  at the time of writing (that commit is the last change to `CommandConverter.java`).
+- Axon Framework `faaff07d36` "Ensure CommandResultMessage is never null" (PR AxonIQ/AxonFramework#4994, `main`,
+  merged 2026-09-02), backported to 5.3.x as `4b971815a1` (PR AxonIQ/AxonFramework#4999, first released in
+  `axon-5.3.2`, not in `axon-5.3.1`): `SimpleCommandBus` turns a void handler result into a result message typed
+  `java.lang.Void` with a `null` payload instead of no result message.
+- Connector handling side, `CommandConverter#convertResultMessage`: writes that as a payload typed `java.lang.Void`
+  with empty data (byte-identical in 5.3.3 and 5.4.0).
+- Connector dispatching side, `CommandConverter#convertCommandResponse`: treats the response as "no result" only
+  when the payload type is empty, so the empty data becomes a `byte[0]` payload and `resultAs(Void.class)` hands
+  it to Jackson.
+- Axoniq Framework `f2b25ad6a9` "Drop nullability for CommandResultMessage" (PR #270) only adapted the connector on
+  `main` to the never-null result; it is not the origin for released versions.
 
 Workaround: `AxonServerVoidCommandResultWorkaroundConfiguration` registers a command `MessageDispatchInterceptor`
-(only when `axon.axonserver.enabled=true`) that maps a result with an empty `byte[]` payload back to a `null`
-payload. All `resultAs(Void.class)` call sites stay unchanged. Switch it off with
-`application.workarounds.axon-server-void-command-result.enabled=false` to check whether a newer connector still
-needs it, and delete the class once it is fixed upstream.
+(only when `axon.axonserver.enabled=true`) that maps a result typed `java.lang.Void` with an empty `byte[]`
+payload back to a `null` payload. All `resultAs(Void.class)` call sites stay unchanged. The first version matched
+on the empty data alone and also turned a real empty `String` result into `null` (Jackson serializes `""` to an
+empty `byte[]`); the interop probe found it and commit `3798145` narrowed it to the `java.lang.Void` type. Switch it
+off with `application.workarounds.axon-server-void-command-result.enabled=false`, and delete the class once a
+framework release reads void results correctly (`AxonServerVoidCommandResultCanaryTest` fails at that point).
 
-Not tested, from reading the code: a rolling upgrade on Axon Server with 5.3 and 5.4 nodes in one cluster. The
-5.3.3 dispatcher has the same `getType().isEmpty()` check, so a 5.3 node that sends a command handled by a 5.4
-node would fail the same way, and the workaround only runs on the 5.4 nodes.
+Mixed versions (rolling upgrades), proven with `compat-probes/axon-server-command-interop` (real jars of 5.3.0,
+5.3.1, 5.3.2, 5.3.3, 5.4.0, the local 5.3.0-SNAPSHOT, the local fix and 5.4.0 with this workaround, over Axon
+Server; see its README for the full matrix): any released dispatcher fails on void results from any 5.3.2+ or
+fixed handler; the fixed dispatcher and this workaround read void results as `null` from every handler; value,
+empty `String` and failure results are identical in every pair.
+
+Upstream fix (local, not pushed): AxoniqFramework branch `MateuszNaKodach/void-command-result-axoniq-5.4.x` on
+`axoniq-5.4.x` (5.4.1-SNAPSHOT), commits `b7d88836b7` (dispatcher reads Void-typed empty data as `null`, keeping the
+wire format) and `3af77d770b` (wire samples of the released 5.3.3 and 5.4.0 connectors as tests). With it installed
+as `5.4.1-SNAPSHOT` and the workaround removed, this app's full suite passes (104 tests); with the released 5.4.0
+connector, both `RecruitCreatureRequiresResourcesTest` tests fail again.
+
+Tests added for this regression: `EmptyCommandResultAsNullInterceptorTest` (workaround unit test, incl. the empty
+`String` case) and `AxonServerVoidCommandResultCanaryTest` (workaround on: `null`; off: the upstream failure).
 
 ## Fixed between 5.4.0-RC1 and 5.4.0 (no action needed)
 
