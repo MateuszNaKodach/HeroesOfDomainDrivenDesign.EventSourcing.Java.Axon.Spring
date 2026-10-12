@@ -118,6 +118,14 @@ Commands are in `reference/origin.md`.
 Write down: introducing commit hash, PR number and title, first affected tag, last good tag,
 status on `main`. This is the heart of the PR description later.
 
+Treat "first affected" and "what older versions do" as hypotheses until a released artifact has
+shown them. Code reading of one layer can mislead: the cause may sit in another repo or layer
+(for example the OSS command bus changing what the commercial connector receives), may have been
+backported into an earlier patch line, and the app's own baseline may be a SNAPSHOT that is
+neither the old nor the new release. Prove it empirically: run same-version pairs of the
+released versions around the suspected change, and capture what the real released code produces
+(see step 5).
+
 ### 4. Isolated framework worktree on the released tag
 
 ```bash
@@ -145,6 +153,11 @@ itself has to wait for the local install. This is optional; the workflow works s
    directions: old sender with new receiver and new sender with old receiver (rolling upgrades),
    plus the already-released buggy format if it is in the wild. Fixing only one side usually
    leaves one mix broken; document which mixes stay broken.
+   Pin what released nodes really exchange as **golden samples captured from the released
+   artifacts** (run their real code once, store the bytes as test resources with a README on how
+   they were produced). Hand-built "old format" fixtures encode your assumption, not the truth.
+   Prefer a fix that keeps the released wire format and only makes the receiving side tolerant:
+   a patch release then adds no new shape that not yet upgraded nodes must understand.
 3. **GREEN.** Minimal change in the defective class. Keep Javadoc truthful. No unrelated
    refactoring, formatting or dependency changes: they make the fix hard to review and to
    backport.
@@ -224,6 +237,13 @@ and GREEN evidence, app validation and negative control results, where the repor
 are, and what is waiting for the user's decision (push/PR).
 
 ## Gotchas
+
+- **Wrong premise about older versions.** A SNAPSHOT baseline or code reading of one layer can make
+  a long-standing bug look like a new regression (or the reverse). Confirm with released artifacts
+  and golden samples before writing the PR description or choosing which side to change.
+- **Workaround too broad.** An app workaround that matches on data alone (for example "empty
+  bytes") can also rewrite legitimate results (an empty String serializes to empty bytes too).
+  Match on the type as well, and probe it with real mixed versions.
 
 - **New worktree on the wrong base.** Worktree tools may create branches from the default branch
   instead of the current one. Check `git log -1` in every new worktree before editing.

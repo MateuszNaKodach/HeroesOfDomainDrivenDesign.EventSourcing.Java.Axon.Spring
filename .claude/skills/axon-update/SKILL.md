@@ -254,6 +254,11 @@ the hits).
 
 ## Gotchas seen in practice
 
+- **SNAPSHOT baselines.** When the app was on a SNAPSHOT (or a local build) before the update, a
+  failure is not automatically a regression of the target release: the latest released version
+  of the old line may already fail the same way. Run the failing case on that released version
+  too before naming "first affected" in the report.
+
 - **RC versus GA.** Problems seen on an RC may be fixed in the GA (and new ones may
   appear). Re-verify everything against the exact target version.
 - **Ambiguous beans after an update.** New named components of an existing type (for

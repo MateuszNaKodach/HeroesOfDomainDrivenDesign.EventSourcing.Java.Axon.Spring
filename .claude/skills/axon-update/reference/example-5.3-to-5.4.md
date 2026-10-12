@@ -26,8 +26,8 @@ Read `axon-5.3.0-RC1` .. `axon-5.4.0` and `axoniq-5.3.0-RC1` .. `axoniq-5.4.0`. 
 that turned out to matter:
 
 - AF #4980 timeouts reintroduced, on by default in Spring Boot (behavior change, kept).
-- AF #4994 / axoniq commit `f2b25ad6a9`: `CommandResultMessage` never null (caused the
-  regression below).
+- AF #4994 (backported as #4999 into 5.3.2): `CommandResultMessage` never null (caused the
+  failure below; the first pass wrongly blamed axoniq commit `f2b25ad6a9`).
 - AF #5112 prefer the type-level component when autowiring (fixed an RC1-only ambiguity).
 - axoniq #591 starter depends on the Axon Server connector again (fixed an RC1-only
   compile failure).
@@ -52,15 +52,21 @@ that turned out to matter:
   content to map due to end-of-input`.
 - Cause: the connector's `CommandConverter` now sends a typed, empty payload for a `null`
   result, and the receiving side only treats an untyped payload as "no result".
-- Origin: axoniq-framework commit `f2b25ad6a9` (PR #270), not in `axoniq-5.3.3`, first in
-  `axoniq-5.4.0-RC1`, still on `main`.
+- Origin (corrected): AxonFramework `faaff07d36` (PR #4994), backported as `4b971815a1`
+  (PR #4999) and first released in 5.3.2; the connector's dispatching side never learned to read
+  the resulting Void-typed empty payload. The first pass blamed axoniq `f2b25ad6a9` in 5.4.0-RC1
+  because the app's baseline was a local 5.3.0-SNAPSHOT that predates the cause; a mixed-version
+  probe with released jars (5.3.0 and 5.3.1 OK, 5.3.2 fails) settled it.
 - Runtime effect found in the compatibility run: HTTP 500 for the client, but the command
   was applied (retry would double-apply).
 - Workaround: one `MessageDispatchInterceptor<CommandMessage>` bean, active only with
-  Axon Server, mapping an empty `byte[]` result back to a `null` payload, switchable by a
-  property. All call sites unchanged; 104 of 104 green.
-- Not tested: mixed 5.3/5.4 nodes; by code reading, a 5.3 dispatcher would fail the same
-  way on results from a 5.4 handler.
+  Axon Server, mapping an empty `byte[]` result typed `java.lang.Void` back to a `null`
+  payload, switchable by a property (first version matched on empty bytes only and turned a
+  real empty String into `null`; narrowed after the probe found it). All call sites unchanged; 104 of 104 green.
+- Mixed 5.3/5.4 nodes: first left as a code-reading guess, then tested with
+  `compat-probes/axon-server-command-interop` (real jars over Axon Server): every released
+  dispatcher fails on void results from any 5.3.2+ handler; only the fixed dispatcher and the
+  narrowed workaround read them as `null`.
 
 ## Step 7: compatibility run
 

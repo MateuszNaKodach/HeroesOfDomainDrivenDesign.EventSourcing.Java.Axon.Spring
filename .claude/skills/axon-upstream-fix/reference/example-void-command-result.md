@@ -25,7 +25,19 @@ Caused by: tools.jackson.databind.exc.MismatchedInputException: No content to ma
 - Workaround in the app: a command `MessageDispatchInterceptor` mapping an empty `byte[]` result
   payload to `null`, toggle `application.workarounds.axon-server-void-command-result.enabled`.
 
-## 2-3. Owning repo and origin
+> **Correction recorded on purpose.** The first pass of this example (sections 2-5 below as first
+> written) was built on a wrong premise: that 5.3.x handlers sent no payload for void results and
+> that the bug came with `f2b25ad6a9` in 5.4.0-RC1. Golden samples captured from the real released
+> 5.3.3 and 5.4.0 handling stacks, and a mixed-version probe with real jars, showed instead:
+> released 5.3.2, 5.3.3 and 5.4.0 handlers all send a payload typed `java.lang.Void` with empty
+> data, and every released dispatcher fails on it. The cause is AxonFramework `faaff07d36`
+> (PR #4994, backported as `4b971815a1`, PR #4999, first released in `axon-5.3.2`); 5.3.0 and 5.3.1
+> work. The app's baseline was a local 5.3.0-SNAPSHOT that predates it. The first fix (handler sends
+> no payload) was therefore replaced by a dispatcher-only fix that keeps the released wire format;
+> see "Final state" at the end. Keep reading the first pass as an example of how a plausible
+> code-reading conclusion goes wrong.
+
+## 2-3. Owning repo and origin (first pass, superseded)
 
 - Class: `io.axoniq.framework.axonserver.connector.command.CommandConverter`, module
   `connector/axon-server-connector` in `AxonIQ/axoniq-framework`.
@@ -86,7 +98,27 @@ in `~/.m2` were verified unchanged (checksums and timestamps).
 
 ## 9. PR (prepared, not pushed in this run)
 
-Title: "Send no payload for empty command results over Axon Server". Body built from the fix
-report: symptom and impact, origin commit/PRs, both-sides fix and the version-mix matrix, tests,
-app validation with negative control, the remaining broken mix and the "empty byte[] result now
-reads as null" edge case. Push and PR waited for the user's explicit confirmation.
+Prepared on a fresh branch from `axoniq-5.4.x` (5.4.1-SNAPSHOT) with the net change as two clean
+commits instead of the four exploratory ones: `b7d88836b7` "Read Void-typed empty command results
+from Axon Server as null" and `3af77d770b` "Pin the command wire format to samples of released
+connectors"; module suite 315/315. The description (`PR-DESCRIPTION.md` in that worktree) has: the
+symptom, a per-version table (5.3.0/5.3.1, 5.3.2 to 5.4.0, the fix), the origin with hashes, the
+fix and why the handler side stays unchanged, the mixed-version matrix, the TDD evidence and the
+app references with commit hashes. Push and PR waited for the user's explicit confirmation.
+
+## Final state
+
+- Fix: dispatching side only. `convertCommandResponse` reads an empty type, or a `java.lang.Void`
+  type without data, as a `null` payload that keeps the Void type, identifier and metadata. The
+  handling side and therefore the wire format are byte-identical to every released version. The
+  type, not the data alone, decides, so empty `String` / `byte[]` results stay intact.
+- Rejected: the handler sending no payload. It is a new wire shape in a patch release, and a
+  5.3.3 dispatcher reads it as `getResultMessage() == null`, so `onSuccess` handlers are silently
+  skipped.
+- Evidence: `CommandConverterWireCompatibilityTest` (24 tests on golden samples of 5.3.3 and 5.4.0,
+  RED on `axoniq-5.4.0`, GREEN on the fix); a mixed-version probe with real jars (5.3.0, 5.3.1,
+  5.3.2, 5.3.3, 5.4.0, local 5.3.0-SNAPSHOT, the fix, 5.4.0 with the app workaround): the fixed
+  dispatcher reads void as `null` from every handler, released dispatchers behave as released.
+- App: full suite 104/104 without the workaround on the fix; the negative control fails again on
+  the released connector. The same probe also showed that the app's first workaround (matching on
+  empty bytes only) turned a real empty String into `null`; it was narrowed to the Void type.
