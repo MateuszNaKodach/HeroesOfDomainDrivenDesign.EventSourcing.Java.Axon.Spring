@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Standalone probe: the application's root pom has no <modules>, so this project is never part of the main
+         build. Every framework variant is built from the same sources by activating exactly one profile, e.g.
+         ./mvnw -f compat-probes/axon-server-command-interop/pom.xml -nsu -Pv540 package -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.14</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.dddheroes.compatprobes</groupId>
+    <artifactId>axon-server-command-interop</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>axon-server-command-interop</name>
+    <description>Mixed-version command result interop probe over Axon Server</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <!-- org.axonframework artifacts (pulled in transitively by the Axoniq starter) -->
+        <axon.version>5.4.0</axon.version>
+        <!-- io.axoniq.framework artifacts -->
+        <axoniq.version>5.4.0</axoniq.version>
+        <!-- io.axoniq.framework:axon-server-connector, the only artifact the v541fix variant swaps -->
+        <axoniq.connector.version>${axoniq.version}</axoniq.connector.version>
+        <!-- Name of the built variant, used for the output directory, the jar name and the runtime banner -->
+        <probe.variant>v540</probe.variant>
+        <!-- Baked into application.properties; only the v540workaround variant turns it on -->
+        <probe.workaround.enabled>false</probe.workaround.enabled>
+    </properties>
+
+    <profiles>
+        <profile>
+            <!-- The local 5.3.0-SNAPSHOT tracing build the application ran on before the 5.4.0 upgrade. Only
+                 available from the local Maven repository, so always build it with -nsu (never -U). -->
+            <id>v530snapshot</id>
+            <properties>
+                <probe.variant>v530snapshot</probe.variant>
+                <axon.version>5.3.0-SNAPSHOT</axon.version>
+                <axoniq.version>5.3.0-SNAPSHOT</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <!-- v530, v531 and v532 only run as same-version pairs, to find the first release that breaks. -->
+            <id>v530</id>
+            <properties>
+                <probe.variant>v530</probe.variant>
+                <axon.version>5.3.0</axon.version>
+                <axoniq.version>5.3.0</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>v531</id>
+            <properties>
+                <probe.variant>v531</probe.variant>
+                <axon.version>5.3.1</axon.version>
+                <axoniq.version>5.3.1</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>v532</id>
+            <properties>
+                <probe.variant>v532</probe.variant>
+                <axon.version>5.3.2</axon.version>
+                <axoniq.version>5.3.2</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>v533</id>
+            <properties>
+                <probe.variant>v533</probe.variant>
+                <axon.version>5.3.3</axon.version>
+                <axoniq.version>5.3.3</axoniq.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>v540</id>
+            <properties>
+                <probe.variant>v540</probe.variant>
+            </properties>
+        </profile>
+        <profile>
+            <!-- Released 5.4.0 everywhere except the locally built connector of the fix branch. -->
+            <id>v541fix</id>
+            <properties>
+                <probe.variant>v541fix</probe.variant>
+                <axoniq.connector.version>5.4.1-SNAPSHOT</axoniq.connector.version>
+            </properties>
+        </profile>
+        <profile>
+            <!-- Released 5.4.0 plus the application's dispatch interceptor workaround. -->
+            <id>v540workaround</id>
+            <properties>
+                <probe.variant>v540workaround</probe.variant>
+                <probe.workaround.enabled>true</probe.workaround.enabled>
+            </properties>
+        </profile>
+    </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Pin every framework artifact explicitly, so the variant is decided by the properties above and
+                 never by a transitive version. -->
+            <dependency>
+                <groupId>org.axonframework</groupId>
+                <artifactId>axon-framework-bom</artifactId>
+                <version>${axon.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.axoniq.framework</groupId>
+                <artifactId>axon-server-connector</artifactId>
+                <version>${axoniq.connector.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.axoniq.framework</groupId>
+                <artifactId>axoniq-distributed-messaging</artifactId>
+                <version>${axoniq.version}</version>
+            </dependency>
+            <!-- Same reason as in the application pom: Jackson 3 in axon-conversion references
+                 com.fasterxml.jackson.annotation.JsonApplyView, which needs jackson-annotations 2.22. -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.22</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.axoniq.framework</groupId>
+            <artifactId>axoniq-spring-boot-starter</artifactId>
+            <version>${axoniq.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <directory>${project.basedir}/target/${probe.variant}</directory>
+        <finalName>command-interop-probe-${probe.variant}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
