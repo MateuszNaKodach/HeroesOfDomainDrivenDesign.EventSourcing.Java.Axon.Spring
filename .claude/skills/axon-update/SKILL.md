@@ -105,6 +105,13 @@ repository. Do not run with `-U` / `--refresh-dependencies` in the baseline, it 
 replace them with remote snapshots. After moving to a release this caveat is gone; say
 so in the report.
 
+Find the workarounds earlier updates left behind: the last `docs/UPGRADE-*.md` report, classes
+or properties named `*Workaround*` / `application.workarounds.*`, and canary tests. For each, find
+the upstream fix it waits for (the PR in the report) and whether the target version contains it.
+After the bump in step 4, run its canary with the workaround switched off. A failing canary means
+the release fixed it: delete the workaround and its canary in this update, as a separate commit,
+and list it in the report under removed workarounds.
+
 ### 2. Read every release note in between
 
 ```bash
@@ -185,7 +192,9 @@ For each failing test or new error, follow `reference/root-cause.md`:
      Prefer **one central, removable, switchable** workaround (an interceptor,
      decorator, bean override, or property) over editing many call sites; document in
      its Javadoc the upstream commit, the symptom, and when to delete it; guard it with
-     a property so the user can switch it off to check a future version.
+     a property so the user can switch it off to check a future version. Add a canary test
+     that runs with the workaround off and expects the upstream failure; it fails once a
+     release fixes the bug, which tells the next update to remove the workaround.
 6. Re-run the affected tests, then the full suite.
 7. If the user wants the regression fixed in the framework itself (not just worked around),
    hand off to the `axon-upstream-fix` skill (`../axon-upstream-fix/SKILL.md`). It uses this app
