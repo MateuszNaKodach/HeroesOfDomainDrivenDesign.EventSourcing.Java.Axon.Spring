@@ -32,6 +32,13 @@ file in a GitHub repo at a tag:
 gh api "repos/<repo>/contents/<path>?ref=<tag>" -H "Accept: application/vnd.github.raw"
 ```
 
+Describe the old behavior from that code, not from the test that used to pass. "It worked
+before" may only hold for the one API the failing test uses. Follow the value to every API on
+the same path that the app calls, in each version. Keep "no message" apart from "a message
+with a `null` payload". In 5.3.0/5.3.1 a void command over Axon Server gave no result message
+at all: `resultAs(Void.class)` returned `null`, but `onSuccess` threw inside `whenComplete` and
+was silently skipped. A table that says only "returned `null`" hides that.
+
 ## 3. Find the upstream change
 
 ```bash
