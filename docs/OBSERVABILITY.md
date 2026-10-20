@@ -275,6 +275,49 @@ Gating: `management.observations.enable.r2dbc` is `false` by default (`applicati
 the `observability` profile, which also sets `management.observations.r2dbc.include-parameter-values: true`
 (same caveat as the JDBC bind-parameter values above). Normal runs therefore remain unchanged.
 
+### Before and after the balanced span accessor
+
+Micrometer's default `ObservationAwareSpanThreadLocalAccessor` loses a scope when Reactor clears the span inside
+an already-restored span scope (a subscriber whose Reactor Context has no span, or the R2DBC driver subscribing
+internally). The next restore then goes off by one: the outer span disappears, Micrometer's `assert` in
+`restore(...)` fails, or the span stays current on a worker thread and leaks into unrelated work.
+Axoniq Framework replaces that accessor with a balanced one
+([AxonIQ/axoniq-framework PR 329](https://github.com/AxonIQ/axoniq-framework/pull/329)); the same fix is proposed
+upstream in [micrometer-metrics/tracing PR 1614](https://github.com/micrometer-metrics/tracing/pull/1614).
+
+The screenshots below come from the same `generated-requests.http` flow, run with `java -ea` (assertions on, as
+Surefire runs tests) against a fresh database, once with the previous accessor (`heroes-before-fix`) and once with
+the balanced one (`heroes-with-fix`).
+
+**Before the fix, first `PUT .../dwellings/{dwellingId}`.** The `DwellingReadModelProjector` and
+`WhenWeekSymbolProclaimed...` handlers end in `ERROR`, their R2DBC `INSERT` and the `QueryBus.emitUpdate` are
+missing, and the read model is never written: the following `GET` returns an empty body and the subscription query
+emits nothing. The second pair of failing handlers at the end of the trace (around 4.3 s) is the event processor's
+retry after it released and re-claimed its segment; it fails the same way.
+
+![Before the fix: projection handlers fail](images/observability/jaeger/span-scope-fix/before-fix-build-dwelling.png)
+
+The failing span's status carries Micrometer's scope assertion:
+
+![Before the fix: scope assertion on the projector span](images/observability/jaeger/span-scope-fix/before-fix-projector-error.png)
+
+**Before the fix, second `PUT`.** While their processors keep retrying the failed event, the projector and the
+automation never handle the second dwelling, so their spans are missing from the trace (and from every other trace of
+the run).
+
+![Before the fix: handlers missing for the second dwelling](images/observability/jaeger/span-scope-fix/before-fix-build-second-dwelling.png)
+
+**With the fix.** Both handlers run their `SELECT` and `INSERT` under the handler span, the projector emits the
+subscription-query update, and the read side works end to end (the watch stream shows `0 -> 5 -> 2`). The two
+`ERROR` markers on `StateManager.loadManagedEntity` / `Repository.loadOrCreate` are the expected "entity not found"
+path when a new dwelling is built and appear in both runs.
+
+![With the fix: complete projection spans](images/observability/jaeger/span-scope-fix/with-fix-build-dwelling.png)
+
+Without `-ea` the previous accessor does not fail the handlers, so the trace looks complete, but it still logs
+`After closing the scope, current span ... is not the same as the one to which you want to revert` warnings and can
+leave spans current on pooled threads.
+
 ## gRPC spans (Axon Server connector)
 
 The only gRPC in this app is the connection to **Axon Server** (via `axonserver-connector-java`),
