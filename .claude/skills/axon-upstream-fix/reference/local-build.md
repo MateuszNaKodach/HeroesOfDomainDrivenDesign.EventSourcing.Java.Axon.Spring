@@ -47,6 +47,18 @@ remote repository. Install the full reactor only if `-am` misses something the a
 
 Run the module's tests with the same override before installing, if you did not already in step 5.
 
+## Read test results you can trust
+
+- Check `docker info` first. Many modules have Testcontainers-based tests; with the daemon down
+  they error with "Could not find a valid Docker environment", which looks like a real failure.
+- `verify -pl <module> -am` also runs the tests of every in-reactor dependency and stops at the
+  first failing one, before the module you care about. Its `target/surefire-reports` are then
+  left over from an earlier run. Delete them before the run and count the results afterwards.
+- Do not narrow with a package-wide `-Dtest=<package>.**`: it also selects `*IT` classes that the
+  default build leaves to an integration-test profile.
+- Compare the test count with an earlier run of the same module (axoniq-framework's
+  `axon-server-connector`: 315). A lower count means tests were skipped, not that they passed.
+
 ## Guard the released artifacts
 
 ```bash
