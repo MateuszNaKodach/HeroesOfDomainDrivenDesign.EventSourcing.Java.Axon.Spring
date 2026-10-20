@@ -1,5 +1,8 @@
 # Axon Server command result interop probe
 
+Application commit hashes here refer to branch `MateuszNaKodach/upgrade-to-axon-5.4.0`, which was
+squash-merged into `axon5/main` as `e99267c`; the branch stays on origin so the hashes resolve.
+
 A runnable probe for one question: when the node that dispatches a command and the node that handles it run
 different Axon Framework / Axoniq Framework versions, and the command travels through Axon Server, does the
 dispatcher still read the command result correctly?
@@ -18,12 +21,14 @@ never builds it.
 - Docker, with the image `axoniq/axonserver:2025.2.7` (or any image passed in `AXONSERVER_IMAGE`).
 - JDK 21 or newer on the `PATH` (or `JAVA=/path/to/java`), and `curl`.
 - Two artifacts that only exist in the local Maven repository (always build with `-nsu`, never `-U`):
-  - the fixed connector `io.axoniq.framework:axon-server-connector:5.4.1-SNAPSHOT` for `v541fix`. It is not
-    published. Build it from the fix commit without touching existing checkouts, and always with `-Drevision`, so
-    the released 5.4.0 jars in `~/.m2` stay untouched:
+  - the fixed connector `io.axoniq.framework:axon-server-connector:5.4.1-SNAPSHOT` for `v541fix`. The fix is
+    AxonIQ/axoniq-framework#637, backported to `axoniq-5.4.x` by #641 (merge commit `9191fe0e06`). Until 5.4.1 is
+    published, build it from that commit without touching existing checkouts, and always with `-Drevision`, so
+    the released 5.4.0 jars in `~/.m2` stay untouched (once 5.4.1 is out, point `v541fix` at it instead):
 
     ```bash
-    git -C ~/GitRepos/AxonIQ/AxoniqFramework worktree add --detach /tmp/axoniq-fix 5ed57f713e
+    git -C ~/GitRepos/AxonIQ/AxoniqFramework fetch origin axoniq-5.4.x
+    git -C ~/GitRepos/AxonIQ/AxoniqFramework worktree add --detach /tmp/axoniq-fix 9191fe0e06
     (cd /tmp/axoniq-fix && ./mvnw -Drevision=5.4.1-SNAPSHOT -pl connector/axon-server-connector -am install -DskipTests)
     git -C ~/GitRepos/AxonIQ/AxoniqFramework worktree remove /tmp/axoniq-fix
     ```
@@ -143,7 +148,7 @@ pair (`CommandExecutionException: java.lang.IllegalStateException: probe failure
 
 ## How the expectations changed
 
-The expectations were written down before the first run (commit `07e1d22`), and only changed after the root cause
+The expectations were written down before the first run (commit `2dd3c7e`), and only changed after the root cause
 of a difference was found:
 
 1. **void, H=v533 with released dispatchers: expected OK, got ERROR.** The prior assumed every 5.3.x handler sends
@@ -163,10 +168,10 @@ of a difference was found:
    ```
 
    The application narrowed the workaround to results typed `java.lang.Void` (application commit `3798145`), the
-   probe copy followed (commit `3dec1d3`), and `""` now stays `""` through the workaround.
-3. **The fix changed from handler-and-dispatcher to dispatcher-only.** The first fix (`e286c7a9e6`) also stopped
+   probe copy followed (commit `1211e84`), and `""` now stays `""` through the workaround.
+3. **The fix changed from handler-and-dispatcher to dispatcher-only.** The first, local fix attempt also stopped
    the handler from sending a payload for a void result, so a fixed handler worked with every released
-   dispatcher. The final fix (`5ed57f713e`, production change in `4059420359`) keeps the released wire format on
+   dispatcher. The final fix (AxonIQ/axoniq-framework#637) keeps the released wire format on
    the handling side byte for byte and only makes the dispatcher tolerant. A fixed handler is therefore expected
    to fail with released dispatchers, exactly like a released handler, and a fixed dispatcher works with every
    handler.
@@ -182,8 +187,8 @@ of a difference was found:
 
 ## Last run
 
-Date: 2026-10-12, 17:52 CEST. Fix: AxoniqFramework branch `MateuszNaKodach/fix-void-command-result-wire-goldens`
-at `5ed57f713e9aae324936ae9c47f32acc7001297b`. Workaround copy: application commit `3798145`. Axon Server
+Date: 2026-10-12, 17:52 CEST. Fix: a local AxoniqFramework build at `5ed57f713e`,
+an unpublished exploratory commit whose connector source is identical to the merged AxonIQ/axoniq-framework#637. Workaround copy: application commit `3798145`. Axon Server
 `axoniq/axonserver:2025.2.7`. Script exit code 0.
 
 ```
