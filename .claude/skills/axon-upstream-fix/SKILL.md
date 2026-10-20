@@ -214,8 +214,10 @@ worktree. Every section matters; write "n/a" with a reason instead of dropping o
 
 Follow `reference/pr.md`:
 
-1. Decide the target branch from how previous patch fixes were merged (maintenance branch such
-   as `axon-5.4.x` / `axoniq-5.4.x` if it exists, otherwise `main`).
+1. Decide the target branch from how previous patch fixes were merged. If the maintenance
+   branch only receives `[Backport ...]` PRs or a backport workflow exists (axoniq-framework),
+   target `main` and backport after the merge; otherwise a maintenance branch such as
+   `axon-5.4.x` if it exists, else `main`.
 2. Port the fix onto a branch from that target (cherry-pick or rebase), resolve conflicts, rerun
    the module tests there.
 3. Draft title and body from the report, following the repo's PR template.

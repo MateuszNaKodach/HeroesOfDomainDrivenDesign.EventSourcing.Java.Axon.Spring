@@ -1,5 +1,8 @@
 # Upgrade notes: Axon Framework / Axoniq Framework 5.3.0-SNAPSHOT to 5.4.0
 
+Application commit hashes here refer to branch `MateuszNaKodach/upgrade-to-axon-5.4.0`, which was
+squash-merged into `axon5/main` as `e99267c`; the branch stays on origin so the hashes resolve.
+
 Upgrade date: 2026-10-12. All artifacts (`org.axonframework:*`, `org.axonframework.extensions.spring:*`,
 `io.axoniq.framework:*`) come from Maven Central at `5.4.0` (GA, released the same day). The app no longer
 depends on locally built tracing-branch snapshots, so `./mvnw -nsu` is not needed anymore.
@@ -97,10 +100,10 @@ Server; see its README for the full matrix): any released dispatcher fails on vo
 fixed handler; the fixed dispatcher and this workaround read void results as `null` from every handler; value,
 empty `String` and failure results are identical in every pair.
 
-Upstream fix: https://github.com/AxonIQ/axoniq-framework/pull/637 (milestone Release 5.4.1), branch
-`MateuszNaKodach/void-command-result-axoniq-5.4.x` on `axoniq-5.4.x`, commits `4fb5c18deb` (dispatcher reads
-Void-typed empty data as `null`, keeping the wire format) and `5d9dfb06b0` (wire samples of the released 5.3.3 and
-5.4.0 connectors as tests). With it installed as `5.4.1-SNAPSHOT` and the workaround removed (branch
+Upstream fix: https://github.com/AxonIQ/axoniq-framework/pull/637, merged to `main` (`d4268313d0`) and
+backported to `axoniq-5.4.x` by https://github.com/AxonIQ/axoniq-framework/pull/641 for 5.4.1. Only the
+dispatching side changes: it reads Void-typed empty data as `null`, keeping the wire format; wire samples of the
+released 5.3.3 and 5.4.0 connectors are its tests. With it installed as `5.4.1-SNAPSHOT` and the workaround removed (branch
 `MateuszNaKodach/connector-fix-5.4.1-check`, commit `93b62fb`), this app's full suite passes (104 tests); with the
 released 5.4.0 connector, both `RecruitCreatureRequiresResourcesTest` tests fail again. Once 5.4.1 is released,
 remove the workaround; `AxonServerVoidCommandResultCanaryTest` fails on that version to signal it.
