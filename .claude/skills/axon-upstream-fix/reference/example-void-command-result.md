@@ -96,15 +96,34 @@ in `~/.m2` were verified unchanged (checksums and timestamps).
   `ConversionException` (`byte[]` to `java.lang.Void`, "No content to map due to end-of-input").
   Restoring the snapshot pin made the two affected classes green again (8 tests).
 
-## 9. PR (prepared, not pushed in this run)
+## 9. PR
 
-Prepared on a fresh branch from `axoniq-5.4.x` (5.4.1-SNAPSHOT) with the net change as two clean
-commits instead of the four exploratory ones: `b7d88836b7` "Read Void-typed empty command results
-from Axon Server as null" and `3af77d770b` "Pin the command wire format to samples of released
-connectors"; module suite 315/315. The description (`PR-DESCRIPTION.md` in that worktree) has: the
-symptom, a per-version table (5.3.0/5.3.1, 5.3.2 to 5.4.0, the fix), the origin with hashes, the
-fix and why the handler side stays unchanged, the mixed-version matrix, the TDD evidence and the
-app references with commit hashes. Push and PR waited for the user's explicit confirmation.
+- Squashed the four exploratory commits into two clean ones on a fresh branch: "Read Void-typed
+  empty command results from Axon Server as null" and "Pin the command wire format to samples of
+  released connectors". Module suite: 315/315.
+- The description has:
+  - the symptom;
+  - a per-version table (5.3.0/5.3.1, 5.3.2 to 5.4.0, the fix);
+  - the origin with hashes;
+  - the fix, and why the handler side stays unchanged;
+  - the mixed-version matrix;
+  - the TDD evidence;
+  - a table of the app's commits with links (after pushing the app branch).
+- Push and PR waited for the user's explicit confirmation.
+- First opened against `axoniq-5.4.x`, because the skill then preferred maintenance branches. The
+  user had it rebased onto `main`: in axoniq-framework, fixes merge to `main`, and a
+  `/backport axoniq-5.4.x` comment makes the bot open the backport.
+- Result:
+  - AxonIQ/axoniq-framework#637 merged to `main` (`d4268313d0`);
+  - backport #641 merged to `axoniq-5.4.x` for 5.4.1.
+- Validation run after the rebase:
+  - Docker had stopped, so Testcontainers errors came first;
+  - `-am` stopped in a sibling module, leaving stale connector reports;
+  - see "Read test results you can trust" in `local-build.md`.
+- The description first said a 5.3.0/5.3.1 dispatcher reads "a `null` payload". Reading the
+  5.3.1 sources showed there was no result message at all (`getResultMessage()` completes with
+  `null`). So `resultAs(Void.class)` worked there, but `onSuccess` was silently skipped. Fixed in
+  the PR text.
 
 ## Final state
 
