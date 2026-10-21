@@ -29,6 +29,7 @@
 	<properties>
 		<assertj.version>3.27.7</assertj.version>
 		<axon.version>5.4.0</axon.version>
+		<axoniq.version>5.4.1-SNAPSHOT</axoniq.version>
 		<axon5.version>5.4.0</axon5.version>
 		<axoniq-console.version>1.9.3</axoniq-console.version>
 		<datasource-micrometer.version>1.4.1</datasource-micrometer.version>
@@ -104,7 +105,7 @@
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
 			<artifactId>axoniq-spring-boot-starter</artifactId>
-			<version>${axon.version}</version>
+			<version>${axoniq.version}</version>
 		</dependency>
 		<!-- Native Mono/Flux gateways (ReactorCommandGateway/ReactorQueryGateway/ReactorEventGateway),
 		     auto-configured by ReactorAutoConfiguration (shipped with the OSS autoconfigure module that
@@ -128,7 +129,7 @@
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
 			<artifactId>axoniq-tracing-micrometer</artifactId>
-			<version>${axon.version}</version>
+			<version>${axoniq.version}</version>
 		</dependency>
 
 		<!-- OpenTelemetry export pipeline. Spring Boot's actuator tracing autoconfiguration creates the
@@ -220,7 +221,7 @@
 		<dependency>
 			<groupId>io.axoniq.framework</groupId>
 			<artifactId>axoniq-testcontainer</artifactId>
-			<version>${axon.version}</version>
+			<version>${axoniq.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
