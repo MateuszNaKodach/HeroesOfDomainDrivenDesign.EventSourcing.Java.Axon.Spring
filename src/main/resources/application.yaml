@@ -79,13 +79,15 @@ axon:
         mode: subscribing
   tracing:
     # All Axon attribute providers stay at their defaults (true)
-    show-event-sourcing-handlers: false
+    event-sourcing-handlers-enabled: false
     event-processor:
-      # Disable the StreamingEventProcessor.batch root span. Each event handler becomes
-      # its own root trace with an OpenTelemetry LINK back to the publish-event span —
-      # so Jaeger / Kibana APM render clickable "linked traces" for the cause/effect pair
-      # across async boundaries. Off by default in Axon (batch trace = no links).
-      disable-batch-trace: true
+      # Streaming (pooled) event handlers continue the publisher's trace, so one request is one
+      # trace across the Axon Server hop, projectors, automations and their follow-up commands.
+      # Events older than distributed-in-same-trace-time-limit (2 minutes by default, e.g. a
+      # replay) start their own trace with a span LINK to the publisher instead, because the
+      # StreamingEventProcessor.batch span is disabled. With Axon's defaults (both settings
+      # left out) every batch becomes its own trace, linked to the publishers.
+      batch-trace-enabled: false
       distributed-in-same-trace: true
 #  update-check:
 #    disabled: true
