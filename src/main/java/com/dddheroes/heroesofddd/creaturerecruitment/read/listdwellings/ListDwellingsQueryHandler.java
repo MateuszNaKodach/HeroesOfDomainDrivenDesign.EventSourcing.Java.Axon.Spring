@@ -4,16 +4,15 @@ import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 /**
  * Multi-result query example.
  * <p>
- * The handler returns a {@link List} of results. Callers dispatch this with
- * {@code queryGateway.queryMany(query, DwellingReadModel.class)}, which yields a
- * {@code CompletableFuture<List<DwellingReadModel>>}. This is the Axon Framework 5 native
- * alternative to wrapping the collection in a dedicated {@code Result} record.
+ * The handler returns a reactive {@link Flux} backed directly by the R2DBC repository. Callers
+ * dispatch this with {@code queryGateway.queryMany(query, DwellingReadModel.class)}, which collects
+ * the emitted results into a {@code CompletableFuture<List<DwellingReadModel>>} (or
+ * {@code ReactorQueryGateway.queryMany} for a {@code Mono<List<DwellingReadModel>>}).
  */
 @Component
 class ListDwellingsQueryHandler {
@@ -25,7 +24,7 @@ class ListDwellingsQueryHandler {
     }
 
     @QueryHandler
-    List<DwellingReadModel> handle(ListDwellings query) {
+    Flux<DwellingReadModel> handle(ListDwellings query) {
         return dwellingReadModelRepository.findAllByGameId(query.gameId().raw());
     }
 }

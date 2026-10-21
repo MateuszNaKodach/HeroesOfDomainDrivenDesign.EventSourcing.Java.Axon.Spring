@@ -86,7 +86,8 @@ Tests focus on observable behavior using Axon Test Fixture:
 
 ### Configuration Notes
 - Axon Server disabled by default (uses JPA event store)
-- Virtual threads enabled for better concurrency
+- Reactive stack: Spring WebFlux (Netty), Reactor `Mono`/`Flux` in controllers, query handlers, projectors and automations
+- Read models use Spring Data R2DBC (tables managed by Flyway); the Axon event store/token store/DLQ stay on JPA/JDBC over the same Postgres database
 - Jackson serialization for events and messages
 - Game metadata correlation for event sequencing
 

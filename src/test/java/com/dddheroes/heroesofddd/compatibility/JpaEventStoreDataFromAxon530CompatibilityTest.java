@@ -81,6 +81,12 @@ class JpaEventStoreDataFromAxon530CompatibilityTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        // the reactive read models connect through R2DBC, not the JDBC datasource
+        registry.add("spring.r2dbc.url", () -> "r2dbc:postgresql://%s:%d/%s".formatted(
+                POSTGRES.getHost(), POSTGRES.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
+                POSTGRES.getDatabaseName()));
+        registry.add("spring.r2dbc.username", POSTGRES::getUsername);
+        registry.add("spring.r2dbc.password", POSTGRES::getPassword);
     }
 
     @Nested

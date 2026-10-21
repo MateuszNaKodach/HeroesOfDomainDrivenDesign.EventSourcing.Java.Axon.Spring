@@ -16,8 +16,10 @@ The app can emit distributed traces to either **Elastic APM** or **Jaeger** via 
 8. [Same traces in Jaeger](#same-traces-in-jaeger)
 9. [Useful filters](#useful-filters)
 10. [JDBC / SQL spans](#jdbc--sql-spans)
-11. [gRPC spans (Axon Server connector)](#grpc-spans-axon-server-connector)
-12. [Why Axon splits work across multiple traces](#why-axon-splits-work-across-multiple-traces)
+11. [R2DBC / SQL spans](#r2dbc--sql-spans)
+12. [gRPC spans (Axon Server connector)](#grpc-spans-axon-server-connector)
+13. [Reading reactive traces — causality vs. containment](#reading-reactive-traces--causality-vs-containment)
+14. [When a request spans more than one trace](#when-a-request-spans-more-than-one-trace)
 
 ## Backends — pick one
 
@@ -35,8 +37,9 @@ The two profiles are **alternatives** — pick the backend you want for a given 
 | [`axon-tracing-opentelemetry`](https://docs.axoniq.io/axon-framework-reference/4.13/monitoring/tracing/) | Instruments command/event/query handlers, aggregates, repositories, event store |
 | [`micrometer-tracing-bridge-otel`](https://docs.spring.io/spring-boot/reference/actuator/tracing.html) | Spring Boot's official bridge from Micrometer Observation to OpenTelemetry |
 | [`opentelemetry-exporter-otlp`](https://opentelemetry.io/docs/specs/otlp/) | Pushes traces over OTLP/HTTP to the chosen backend |
-| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters. **Opt-in build-time dep** — add with `-Dtracing.database.enabled=true` |
-| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile). **Opt-in build-time dep** — add with `-Dtracing.grpc.enabled=true` |
+| [`datasource-micrometer-spring-boot`](https://github.com/jdbc-observations/datasource-micrometer) | Wraps the HikariCP `DataSource` so each JDBC connection/query becomes a child span carrying the SQL text and bind parameters. Runtime gate: `jdbc.datasource-proxy.enabled` |
+| [`r2dbc-proxy`](https://github.com/r2dbc/r2dbc-proxy) | Activates Spring Boot's own `R2dbcObservationAutoConfiguration`, which wraps the reactive `ConnectionFactory` so each read-model query becomes a Micrometer Observation → child span. The parent is resolved from the Reactor Context captured at subscription. Runtime gate: `management.observations.enable.r2dbc` |
+| [`opentelemetry-grpc-1.6`](https://opentelemetry.io/docs/languages/java/instrumentation/) | Client interceptor on the Axon Server connector channel, producing gRPC client spans (only under an `axonserver` profile) |
 | [Elastic APM 9.x](https://www.elastic.co/observability/application-performance-monitoring) | Receives OTLP, stores in Elasticsearch, visualizes in Kibana |
 | [Jaeger 2.x](https://www.jaegertracing.io/) | Receives OTLP directly, in-memory storage, lightweight UI |
 
@@ -46,12 +49,10 @@ Activation surface:
 - Profile **`observability-jaeger`** — base + Jaeger endpoint
 - Profile groups in `application.yaml` make the two child profiles automatically include the base.
 
-Build-time toggles (independent of the runtime profiles above):
-- The **JDBC** and **gRPC** instrumentation JARs are **opt-in at build time** and excluded from a default build.
-  Add them per feature via Maven properties, which activate the `tracing-database` / `tracing-grpc` profiles in `pom.xml`:
-  `-Dtracing.database.enabled=true` (JDBC/JPA spans) and `-Dtracing.grpc.enabled=true` (Axon Server gRPC spans).
-- This is a *build-time* gate stacked on top of the *runtime* gates: the JAR must be present **and** the
-  `observability` profile (plus `jdbc.datasource-proxy.enabled` / `axon.axonserver.enabled`) active before spans appear.
+Instrumentation JARs (JDBC, R2DBC, gRPC) are always on the classpath; each feature is gated at **runtime** only:
+the `observability` profile plus the feature's enabled property (`jdbc.datasource-proxy.enabled`,
+`management.observations.enable.r2dbc`, or `axon.axonserver.enabled`) must be active before spans appear.
+Normal runs (no observability profile) carry no per-query observations.
 
 ## Run with Elastic APM
 
@@ -113,89 +114,110 @@ No `observability-*` profile = no traces emitted, no extra containers needed. Us
 
 ## Exploring traces in Kibana — guided tour
 
-A quick walkthrough of what you can see and where to click. Examples below were captured after running the full chain `BuildDwelling → IncreaseAvailableCreatures → RecruitCreature → GetDwellingById` through Swagger UI with the `observability-elastic` profile active.
+A quick walkthrough of what you can see and where to click. The captures below come from running the
+`generated-requests.http` flow (`BuildDwelling` twice, `GetDwellingById`, the `WatchDwelling` subscription,
+`IncreaseAvailableCreatures`, `RecruitCreature`) with `SPRING_PROFILES_ACTIVE=observability-elastic,axonserver-aggregate`,
+so commands travel through Axon Server.
 
 ### 1. Service inventory
 
-[Kibana → ☰ → Observability → APM → Services](http://localhost:5601/app/apm/services) — landing page lists every service emitting traces. After firing a few requests you should see `heroesofddd` with average latency, throughput, and error rate.
+[Kibana -> ☰ -> Observability -> APM -> Services](http://localhost:5601/app/apm/services) - landing page lists every service emitting traces. After firing a few requests you should see `heroesofddd-axon5` with average latency, throughput, and error rate.
 
 ![Service inventory](images/observability/service-inventory.png)
 
 ### 2. Transactions
 
-Click `heroesofddd` → **Transactions** tab. Each row is a distinct "entry point" — both HTTP endpoints (auto-instrumented by Spring Web) and Axon's async boundaries (each command/event/query handler is a top-level transaction because Axon hops across the gRPC bus and async event processors).
+Click `heroesofddd-axon5` -> **Transactions** tab. With the default transaction type `request` the table lists the HTTP
+endpoints (auto-instrumented by Spring WebFlux) and the Axon Server connector's own background gRPC calls
+(`EventStore/GetFirstToken`, `PlatformService/GetPlatformServer`). Switch **Transaction type** to `unknown` to list the
+Axon handlers (`CommandBus.handle ...`, `CommandBusConnector.handle ...`, `EventProcessor.process ...`, `QueryBus.handle ...`).
+Elastic APM shows those as transactions because of their span kind, but they are not separate traces: each one sits
+inside the trace of the request that caused it.
 
 ![Transactions](images/observability/transactions.png)
 
-### 3. Traces — the full list
+### 3. Traces - the full list
 
-[Kibana → APM → Traces](http://localhost:5601/app/apm/traces) shows every individual trace tree.
+[Kibana -> APM -> Traces](http://localhost:5601/app/apm/traces) shows every individual trace tree, by its root.
 
-For this project you'll see roots like:
-- `http put /games/{gameId}/dwellings/{dwellingId}` — HTTP root
-- `CommandBus.handleDistributedCommand(RecruitCreature)` — command handling on the aggregate side after the gRPC hop to Axon Server
-- `StreamingEventProcessor.process(CreatureRecruited)` — projector / automation
-- `CommandBus.handleCommand(AddCreatureToArmy)` — command emitted by the `WhenCreatureRecruitedThenAddToArmy` automation
-- `QueryBus.processQueryMessage(GetDwellingById)` — query side
+For this project the roots are:
+- `http put /games/{gameId}/dwellings/{dwellingId}` and the other HTTP endpoints, one trace per request
+- `io.axoniq.axonserver.grpc.event.EventStore/GetFirstToken` and `...PlatformService/GetPlatformServer`, background
+  calls of the Axon Server connector, not tied to any request
+
+Commands, event processors, automations and their follow-up commands do **not** appear as roots: they continue the
+request's trace (see [When a request spans more than one trace](#when-a-request-spans-more-than-one-trace)).
 
 ![Traces list](images/observability/traces.png)
 
-### 4. Trace waterfall — Axon internals visible
+### 4. Trace waterfall - Axon internals visible
 
-Click any `CommandBus.handleCommand(...)` trace and Kibana renders a waterfall like this — the full call path of the Axon command handler, including aggregate loading and event publication:
+Click the `http put .../creature-recruitments` trace and Kibana renders the whole request as one waterfall - the HTTP
+call, the command's hop through Axon Server, the command handler, event publication, the projector with its SQL, and
+the automation's follow-up command:
 
 ![Axon trace waterfall](images/observability/axon-waterfall.png)
 
-What you're looking at:
+What you're looking at (durations from the capture above, names shortened):
 
 ```
-✓ CommandBus.handleDistributedCommand(RecruitCreature)     22 ms     ← gRPC server side
-  └─ CommandBus.dispatchCommand(RecruitCreature)           22 ms
-     └─ CommandBus.handleCommand(RecruitCreature)          22 ms
-        ├─ Repository.load                                 10 ms     ← event sourcing
-        │  ├─ Repository.obtainLock                        41 μs
-        │  └─ Repository.initializeState(Dwelling)          1.0 ms   ← rehydrate aggregate
-        ├─ Dwelling.decide(RecruitCreature)                 3.2 ms   ← AGGREGATE business logic
-        ├─ EventBus.publishEvent(CreatureRecruited)        29 μs
-        └─ EventBus.commitEvents                            5.8 ms   ← persist to event store
+✓ http put /games/{gameId}/dwellings/{dwellingId}/creature-recruitments             29 ms
+  └─ CommandBus.dispatch ...RecruitCreature                                         26 ms
+     └─ CommandBusConnector.dispatch ...RecruitCreature                             26 ms   <- gRPC to Axon Server
+        ├─ CommandService/Dispatch                                                  25 ms
+        └─ CommandBusConnector.handle ...RecruitCreature                            18 ms   <- handling side of the hop
+           └─ CommandBus.handle ...RecruitCreature                                  16 ms
+              ├─ DwellingCommandHandler.decide(RecruitCreature,...)                9.9 ms   <- business logic
+              │  ├─ StateManager.loadManagedEntity Dwelling                        7.7 ms
+              │  │  └─ Repository.loadOrCreate Dwelling                            7.6 ms   <- event sourcing
+              │  │     └─ EventStore/ListAggregateEvents                           6.3 ms
+              │  └─ EventSink.publish ...CreatureRecruited                          61 μs
+              │     ├─ EventProcessor.process ...CreatureRecruited                  12 ms   <- ReadModel_Dwelling
+              │     │  └─ DwellingReadModelProjector.on(CreatureRecruited,...)      12 ms
+              │     │     ├─ query / query                                                  <- R2DBC read-model queries
+              │     │     └─ QueryBus.emitUpdate                                            <- subscription-query update
+              │     └─ EventProcessor.process ...CreatureRecruited                          <- automation processor
+              │        └─ WhenCreatureRecruitedThenAddToArmyProcessor.react(...)
+              │           └─ CommandBus.dispatch ...AddCreatureToArmy                       <- follow-up command, same trace
+              └─ EventStore/AppendEvent
 ```
 
-This is *exactly* the layered shape from Event Sourcing theory — repository → aggregate → event publication — rendered as data, not as a diagram in a slide.
+### 5. Span attributes - gameId, playerId, message metadata
 
-### 5. Span attributes — gameId, playerId, message metadata
-
-Click any Axon span (e.g. `CommandBus.handleCommand(RecruitCreature)`) → **Metadata** tab. The flyout shows OpenTelemetry attributes — including correlation data injected by `GameConfiguration.gameDataProvider`:
+Click any Axon span (e.g. `CommandBus.handle ...RecruitCreature`) -> **Metadata**. The `labels` section shows the
+message identity and the message's metadata - including the correlation data injected by `GameConfiguration.gameDataProvider`:
 
 ![Span attributes](images/observability/span-attributes.png)
 
 ```
-labels.axon_metadata_gameId    = scenario-1                  ← from gameDataProvider
-labels.axon_metadata_playerId  = player-1                    ← from gameDataProvider
-labels.axon_message_id         = 2201ae5d-3871-45b2-a661-...
-labels.axon_message_name       = com.dddheroes…RecruitCreature
-labels.axon_message_type       = GrpcBackedCommandMessage
-labels.axon_payload_type       = com.dddheroes…RecruitCreature
+labels.axoniq_message_id                = 0a81514e-8265-4173-8260-...
+labels.axoniq_message_type              = com.dddheroes...RecruitCreature#0.0.1
+labels.axoniq_metadata_gameId           = game-...                       <- from gameDataProvider
+labels.axoniq_metadata_playerId         = player-1                     <- from gameDataProvider
+labels.axoniq_metadata_correlationId    = 0a81514e-...
+labels.axoniq_metadata_causationId      = 0a81514e-...
+labels.axoniq_metadata_traceparent      = 00-4a33f4b3...-b114d4d4...-01    <- trace context carried in the message
 ```
 
-This is the practical payoff: filtering traces by `labels.axon_metadata_gameId : "scenario-1"` in the Kibana search bar isolates every span — across every aggregate, processor and projector — that participated in one game session.
+This is the practical payoff: filtering by `labels.axoniq_metadata_gameId : "scenario-1"` in the Kibana search bar isolates every Axon span - across every aggregate, processor and projector - that participated in one game session.
 
 ## Same traces in Jaeger
 
-With `observability-jaeger` active, the **same** trace data is produced — Jaeger just renders it differently:
+With `observability-jaeger` active, the **same** trace data is produced - Jaeger just renders it differently:
 
 1. Open [http://localhost:16686](http://localhost:16686).
-2. **Service** dropdown → pick `heroesofddd`.
-3. **Operation** dropdown → e.g. `CommandBus.handleCommand(RecruitCreature)`.
-4. Click **Find Traces** → see the same waterfall tree (`Repository.load`, `Dwelling.decide`, `EventBus.publishEvent`, …).
-5. Click any span → "Tags" panel shows the same OTel attributes as Kibana labels, with dot-notation: `axon.message.id`, `axon.message.name`, `axon.metadata.gameId`, `axon.metadata.playerId`, etc.
+2. **Service** dropdown -> pick `heroesofddd-axon5`.
+3. **Operation** dropdown -> e.g. `http put /games/{gameId}/dwellings/{dwellingId}/creature-recruitments`, or an Axon span such as `CommandBus.handle com.dddheroes.heroesofddd.creaturerecruitment.write.recruitcreature.RecruitCreature`.
+4. Click **Find Traces** -> see the same waterfall tree (`CommandBusConnector.handle`, `DwellingCommandHandler.decide(...)`, `EventSink.publish`, `EventProcessor.process`, ...).
+5. Click any span -> "Tags" panel shows the same attributes as Kibana labels, with dot-notation: `axoniq.message.id`, `axoniq.message.type`, `axoniq.metadata.gameId`, `axoniq.metadata.playerId`, etc.
 
 Trade-offs vs Kibana APM:
-- ✅ **Lighter** — one container, instant startup, no Elasticsearch index management
-- ✅ **Simpler** — direct trace search by service / operation / tag / duration
-- ❌ **No service map** — Kibana shows topology between services; Jaeger v2 OSS doesn't
-- ❌ **No KQL** — Jaeger uses a simpler tag-equality search (`tag: axon.metadata.gameId=scenario-1`) rather than full KQL
-- ❌ **No persistence by default** — all-in-one stores traces in memory; restart loses them
-- ❌ **No metrics/logs correlation** — Kibana correlates traces with the rest of the Elastic stack
+- ✅ **Lighter** - one container, instant startup, no Elasticsearch index management
+- ✅ **Simpler** - direct trace search by service / operation / tag / duration
+- ❌ **No service map** - Kibana shows topology between services; Jaeger v2 OSS doesn't
+- ❌ **No KQL** - Jaeger uses a simpler tag-equality search (`axoniq.metadata.gameId=scenario-1`) rather than full KQL
+- ❌ **No persistence by default** - all-in-one stores traces in memory; restart loses them
+- ❌ **No metrics/logs correlation** - Kibana correlates traces with the rest of the Elastic stack
 
 ## Useful filters
 
@@ -205,11 +227,11 @@ Paste into the Kibana search bar (KQL) at the top of any APM page:
 
 | Goal | KQL |
 |---|---|
-| Traces for one game | `labels.axon_metadata_gameId : "scenario-1"` |
-| Only command handlers | `transaction.name : "CommandBus.handleCommand*"` |
-| Only one aggregate's decisions | `span.name : "Dwelling.decide(*)"` |
-| Only automation reactions | `span.name : "*Processor.react(*)"` |
-| Only event publications | `span.name : "EventBus.publishEvent(*)"` |
+| Traces for one game | `labels.axoniq_metadata_gameId : "scenario-1"` |
+| Only command handlers | `transaction.name : CommandBus.handle*` |
+| Only one entity's decisions | `span.name : DwellingCommandHandler.decide*` |
+| Only automation reactions | `span.name : *Processor.react*` |
+| Only event publications | `span.name : EventSink.publish*` |
 
 ### Jaeger (Tags field)
 
@@ -217,11 +239,11 @@ In the Jaeger UI search form, the **Tags** field accepts space-separated `key=va
 
 | Goal | Tag query |
 |---|---|
-| Traces for one game | `axon.metadata.gameId=scenario-1` |
-| One specific player's traces | `axon.metadata.playerId=player-1` |
-| Combine | `axon.metadata.gameId=scenario-1 axon.metadata.playerId=player-1` |
+| Traces for one game | `axoniq.metadata.gameId=scenario-1` |
+| One specific player's traces | `axoniq.metadata.playerId=player-1` |
+| Combine | `axoniq.metadata.gameId=scenario-1 axoniq.metadata.playerId=player-1` |
 
-(Operation-level filtering — e.g. "only `Dwelling.decide` spans" — is done via the **Operation** dropdown, not the Tags field.)
+(Operation-level filtering - e.g. "only `DwellingCommandHandler.decide` spans" - is done via the **Operation** dropdown, not the Tags field.)
 
 ## JDBC / SQL spans
 
@@ -243,12 +265,81 @@ domain or infrastructure code changes — so all pooled SQL is captured automati
 Gating: the proxy is **disabled by default** (`jdbc.datasource-proxy.enabled: false` in
 `application.yaml`) and turned on only by the `observability` profile
 (`application-observability.yaml`), matching the rest of the tracing setup — normal runs are
-unaffected. In addition, the `datasource-micrometer-spring-boot` JAR is an **opt-in build-time
-dependency**: build with `-Dtracing.database.enabled=true` (the `tracing-database` Maven profile)
-to include it; without it the JAR is absent and the `jdbc.datasource-proxy.*` keys are ignored.
+unaffected.
 
 > ⚠️ Bind-parameter values can expose data. This is intentional here (local/dev tracing, off by
 > default). Before enabling in any shared environment, revisit `include-parameter-values`.
+
+## R2DBC / SQL spans
+
+The reactive read models use Spring Data R2DBC, so JDBC instrumentation does not see their queries. R2DBC
+tracing rides on Spring Boot's own [`R2dbcObservationAutoConfiguration`](https://docs.spring.io/spring-boot/api/java/org/springframework/boot/actuate/autoconfigure/r2dbc/R2dbcObservationAutoConfiguration.html),
+activated by [`r2dbc-proxy`](https://github.com/r2dbc/r2dbc-proxy) on the classpath: it wraps the reactive
+`ConnectionFactory` with `ObservationProxyExecutionListener`, so each query becomes a Micrometer Observation
+(`r2dbc.query...`) flowing through the same `micrometer-tracing-bridge-otel` → OTLP pipeline as everything else.
+
+```bash
+SPRING_PROFILES_ACTIVE=observability-jaeger ./mvnw spring-boot:run
+```
+
+Every reactive SELECT, INSERT, and UPDATE issued by the read-model repositories becomes a database-client
+span under the WebFlux request or Axon projection/query-handler span that initiated it. Crucially, the
+listener resolves the parent from the **Reactor Context captured at subscription** (not from a thread-local
+read at query time). Axoniq Framework carries the active handler as a raw Micrometer Tracing `Span` under
+Micrometer's standard context key. A balanced accessor gives every nested set and clear operation an independent
+scope, so Reactor restores the span safely across scheduler and driver thread changes without synthetic observations.
+Axoniq Framework ships that accessor from `5.4.1-SNAPSHOT` on (AxonIQ/axoniq-framework PR 688); the released
+5.4.0 does not (see regression 2 in [UPGRADE-AXON-5.4.0.md](UPGRADE-AXON-5.4.0.md)).
+Queries whose I/O completes on the Postgres driver's shared Netty event-loop threads therefore still nest
+correctly — the raw-OpenTelemetry `R2dbcTelemetry` wrapper used previously read
+`Context.current()` on those threads and produced orphaned root spans instead.
+
+Gating: `management.observations.enable.r2dbc` is `false` by default (`application.yaml`) and turned on by
+the `observability` profile, which also sets `management.observations.r2dbc.include-parameter-values: true`
+(same caveat as the JDBC bind-parameter values above). Normal runs therefore remain unchanged.
+
+### Before and after the balanced span accessor
+
+Micrometer's default `ObservationAwareSpanThreadLocalAccessor` loses a scope when Reactor clears the span inside
+an already-restored span scope (a subscriber whose Reactor Context has no span, or the R2DBC driver subscribing
+internally). The next restore then goes off by one: the outer span disappears, Micrometer's `assert` in
+`restore(...)` fails, or the span stays current on a worker thread and leaks into unrelated work.
+Axoniq Framework replaces that accessor with a balanced one
+([AxonIQ/axoniq-framework PR 329](https://github.com/AxonIQ/axoniq-framework/pull/329)); the same fix is proposed
+upstream in [micrometer-metrics/tracing PR 1614](https://github.com/micrometer-metrics/tracing/pull/1614).
+
+The screenshots below come from the same `generated-requests.http` flow, run with `java -ea` (assertions on, as
+Surefire runs tests) against a fresh database, once with the previous accessor (`heroes-before-fix`) and once with
+the balanced one (`heroes-with-fix`).
+
+**Before the fix, first `PUT .../dwellings/{dwellingId}`.** The `DwellingReadModelProjector` and
+`WhenWeekSymbolProclaimed...` handlers end in `ERROR`, their R2DBC `INSERT` and the `QueryBus.emitUpdate` are
+missing, and the read model is never written: the following `GET` returns an empty body and the subscription query
+emits nothing. The second pair of failing handlers at the end of the trace (around 4.3 s) is the event processor's
+retry after it released and re-claimed its segment; it fails the same way.
+
+![Before the fix: projection handlers fail](images/observability/jaeger/span-scope-fix/before-fix-build-dwelling.png)
+
+The failing span's status carries Micrometer's scope assertion:
+
+![Before the fix: scope assertion on the projector span](images/observability/jaeger/span-scope-fix/before-fix-projector-error.png)
+
+**Before the fix, second `PUT`.** While their processors keep retrying the failed event, the projector and the
+automation never handle the second dwelling, so their spans are missing from the trace (and from every other trace of
+the run).
+
+![Before the fix: handlers missing for the second dwelling](images/observability/jaeger/span-scope-fix/before-fix-build-second-dwelling.png)
+
+**With the fix.** Both handlers run their `SELECT` and `INSERT` under the handler span, the projector emits the
+subscription-query update, and the read side works end to end (the watch stream shows `0 -> 5 -> 2`). The two
+`ERROR` markers on `StateManager.loadManagedEntity` / `Repository.loadOrCreate` are the expected "entity not found"
+path when a new dwelling is built and appear in both runs.
+
+![With the fix: complete projection spans](images/observability/jaeger/span-scope-fix/with-fix-build-dwelling.png)
+
+Without `-ea` the previous accessor does not fail the handlers, so the trace looks complete, but it still logs
+`After closing the scope, current span ... is not the same as the one to which you want to revert` warnings and can
+leave spans current on pooled threads.
 
 ## gRPC spans (Axon Server connector)
 
@@ -267,10 +358,6 @@ on the connector channel through Axon 5's `ManagedChannelCustomizer` hook (see
 Axon/HTTP/JDBC spans. It is built from the shared `OpenTelemetry` SDK bean, so no extra export
 wiring is needed.
 
-The `opentelemetry-grpc-1.6` JAR is an **opt-in build-time dependency**: build with
-`-Dtracing.grpc.enabled=true` (the `tracing-grpc` Maven profile) to include it. Without it,
-`GrpcTracingConfiguration` (which loads `GrpcTelemetry` reflectively and is `@ConditionalOnClass` on
-it) is skipped, and the app compiles and runs unchanged.
 
 > ℹ️ Axon Server traffic is dominated by **long-lived bidirectional streams** (command / query /
 > event / control channels). gRPC client instrumentation opens **one span per RPC**, so a streaming
@@ -280,8 +367,76 @@ it) is skipped, and the app compiles and runs unchanged.
 > distributed tracing (`axoniq-distributed-messaging`). Expect a few very long-duration gRPC spans
 > in the trace list — that is normal for streaming RPCs.
 
-## Why Axon splits work across multiple traces
+## Reading reactive traces — causality vs. containment
 
-You'll notice that an HTTP request often produces *two or three* separate trace trees rather than one giant tree. That's expected. Axon hops over async boundaries that don't preserve OpenTelemetry context: the gRPC call to Axon Server (server-side `handleDistributedCommand` starts a new root) and the asynchronous event processors (each `process(Event)` is its own root). Inside one boundary, however, the tree is complete — as the waterfall above shows. Behavior is identical in both Kibana APM and Jaeger.
+With reactive handlers, you will regularly see a child span that **starts after its parent span has already
+ended**. Example — `GET /games/{gameId}/dwellings/{dwellingId}` (times in µs within the trace):
 
-To stitch sessions together end-to-end, use the `axon_metadata_gameId` (Kibana) / `axon.metadata.gameId` (Jaeger) tag filter described above.
+```
+QueryBus.query GetDwellingById            952285 ───────────────────────────► 1002228
+  QueryBus.handleQuery GetDwellingById      957217 ──────► 978619
+    GetDwellingByIdQueryHandler.handle        958123 ──────► 978651
+      query  (R2DBC SELECT)                                       989743 ──► 999502   ← after its parent!
+```
+
+This is correct, not a bug. A parent-child link in OpenTelemetry records **causality** ("this SELECT was
+caused by this handler invocation"), not temporal containment. A reactive handler like
+
+```java
+@QueryHandler
+Mono<DwellingReadModel> handle(GetDwellingById query) {
+    return dwellingReadModelRepository.findById(query.dwellingId().raw());
+}
+```
+
+only *builds* the pipeline and returns immediately; the actual database round trip completes asynchronously
+on the R2DBC driver's threads, after the handler-side spans have closed. The gap in the waterfall is real
+information: *the handler was not blocked; the I/O happened asynchronously, caused by it.*
+
+How to read each span:
+
+| Span | Measures | Use it for |
+|---|---|---|
+| `QueryBus.query …` (dispatch) | Dispatch until the **result stream terminates** — contains all async work | End-to-end query latency |
+| `QueryBus.handleQuery …` | The handling UnitOfWork window | Framework handling overhead |
+| `SomeQueryHandler.handle(…)` | The synchronous handler invocation | Your handler's own (pipeline-building) time |
+| `QueryBus.respond …` | Production and delivery of a normal query's finite response stream after handling returned | The post-handler response tail, even without database instrumentation |
+| `QueryBus.initialResponse …` | Production of only a subscription query's finite initial result | Initial subscription answer latency without keeping a span open for updates |
+| `query` (R2DBC) | The actual SQL round trip | Database latency |
+
+For a subscription query, `QueryBus.subscriptionQuery …` covers setup only. Its combined result then consists of a
+finite initial result followed by a potentially unbounded update stream. `QueryBus.initialResponse …` ends when that
+initial-result stream terminates; it deliberately does **not** include later updates or the lifetime of the SSE
+connection.
+
+The events side looks different on purpose: a projector's `EventProcessor.process` / `…Processor.on(…)` span
+stays open until the handler's result `Mono`/`Flux` terminates, because there the framework itself drains the
+stream — drain time *is* processing time. For queries the **caller** drains the result (potentially slowly —
+think an SSE client on `/dwellings/stream`), so stretching handler spans until the drain would make handler
+latency depend on consumer behavior and would keep spans of long-lived streaming queries open indefinitely.
+That is why the dispatch span, not the handler span, is the one that covers the full duration.
+
+## When a request spans more than one trace
+
+In this app one HTTP request is **one trace**, including everything Axon does on its behalf: the command's hop through
+Axon Server (`CommandBusConnector.dispatch` -> `CommandBusConnector.handle`), the event handlers of both subscribing and
+streaming (pooled) processors, and the commands that automations send in reaction. The waterfall above is a single
+trace. Two things make this work:
+
+- every command and event carries the trace context in its metadata (`traceparent`), so it survives the gRPC hop and
+  is stored with the event;
+- `axon.tracing.event-processor.distributed-in-same-trace: true` (see `application.yaml`) lets streaming processors
+  continue the publisher's trace instead of starting their own.
+
+You will see additional traces only in these cases:
+
+| Situation | What you see |
+|---|---|
+| An event is handled more than `distributed-in-same-trace-time-limit` (default 2 minutes) after it was published - a replay, or a backlog after downtime | The handler starts its own trace, with a span **link** back to the publishing span (`batch-trace-enabled: false` keeps it free of a `StreamingEventProcessor.batch` parent) |
+| Subscription-query updates (`/watch`) | The update's `QueryBusConnector.queryUpdate` spans **link** to the `WatchDwelling` subscription's trace. They are meant to sit under the emitting `QueryBus.emitUpdate` in the command's trace; Axoniq Framework 5.4.0 and 5.4.1-SNAPSHOT start them as their own trace instead (framework fix in progress) |
+| Axon Server connector housekeeping | Short root traces such as `EventStore/GetFirstToken`, not tied to any request |
+| Axon's defaults (drop both `event-processor` settings) | Every streaming batch becomes its own `StreamingEventProcessor.batch` trace, each `EventProcessor.process` span **linked** to the publishing span |
+
+Jaeger and Kibana render span links as clickable references between the traces. To collect everything for one game
+session regardless of trace boundaries, filter by `axoniq.metadata.gameId` (Jaeger) or `labels.axoniq_metadata_gameId`
+(Kibana) as described above.

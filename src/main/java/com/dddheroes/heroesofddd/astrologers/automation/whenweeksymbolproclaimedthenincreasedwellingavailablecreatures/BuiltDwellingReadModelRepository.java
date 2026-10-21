@@ -1,12 +1,11 @@
 package com.dddheroes.heroesofddd.astrologers.automation.whenweeksymbolproclaimedthenincreasedwellingavailablecreatures;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Repository
-public interface BuiltDwellingReadModelRepository extends JpaRepository<BuiltDwellingReadModel, String> {
+public interface BuiltDwellingReadModelRepository extends R2dbcRepository<BuiltDwellingReadModel, String> {
 
-    List<BuiltDwellingReadModel> findAllByGameId(String gameId);
+    Flux<BuiltDwellingReadModel> findAllByGameId(String gameId);
 }

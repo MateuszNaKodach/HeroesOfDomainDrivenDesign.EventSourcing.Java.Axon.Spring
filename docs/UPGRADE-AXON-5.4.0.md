@@ -1,5 +1,11 @@
 # Upgrade notes: Axon Framework / Axoniq Framework 5.3.0-SNAPSHOT to 5.4.0
 
+> **Status (2026-10-21, WebFlux branch):** the app now uses Axoniq Framework `5.4.1-SNAPSHOT` (branch
+> `axoniq-5.4.x`), which contains the fixes for both regressions below (AxonIQ/axoniq-framework PR 641 and PR 688).
+> Both workarounds and their canary tests were removed: with them switched off the full suite already passed on that
+> snapshot. Axon Framework artifacts (`org.axonframework*`) stay on `5.4.0`, the version `5.4.1-SNAPSHOT` is built
+> against.
+
 Upgrade date: 2026-10-12. All artifacts (`org.axonframework:*`, `org.axonframework.extensions.spring:*`,
 `io.axoniq.framework:*`) come from Maven Central at `5.4.0` (GA, released the same day). The app no longer
 depends on locally built tracing-branch snapshots, so `./mvnw -nsu` is not needed anymore.
@@ -23,7 +29,8 @@ Sources used: release notes of
 Changes in this repository:
 
 - `pom.xml`: `axon.version` / `axon5.version` set to `5.4.0`.
-- `AxonServerVoidCommandResultWorkaroundConfiguration` (new): workaround for regression 1.
+- `AxonServerVoidCommandResultWorkaroundConfiguration` (new): workaround for regression 1, removed again with `5.4.1-SNAPSHOT`.
+- `ReactorSpanScopeWorkaroundConfiguration` (new, WebFlux branch): workaround for regression 2, removed again with `5.4.1-SNAPSHOT`.
 - Tests that keep the checks of this upgrade: the workaround unit and canary tests (regression 1), and
   `JpaEventStoreDataFromAxon530CompatibilityTest`, which starts the app on a JPA event store written by the
   pre-upgrade 5.3.0-SNAPSHOT build (fixture and its generator in `src/test/resources/compat/af-5.3.0-SNAPSHOT/`).
@@ -32,7 +39,7 @@ Changes in this repository:
 Runtime dependency set is unchanged apart from versions: `axonserver-connector-java` 2026.0.0 to 2026.1.0,
 `entitlement-manager` 1.1.0 to 1.3.2, `tools.jackson` 3.2.1 to 3.2.3, `protobuf-java` 4.34.0 to 4.36.0.
 
-## Regression 1: void command results fail over Axon Server (worked around)
+## Regression 1: void command results fail over Axon Server (fixed in 5.4.1-SNAPSHOT)
 
 What worked before: on 5.3.0-SNAPSHOT a command whose handler returns nothing, dispatched through Axon Server,
 completed `commandGateway.send(...).resultAs(Void.class)` with `null`.
@@ -107,6 +114,37 @@ remove the workaround; `AxonServerVoidCommandResultCanaryTest` fails on that ver
 
 Tests added for this regression: `EmptyCommandResultAsNullInterceptorTest` (workaround unit test, incl. the empty
 `String` case) and `AxonServerVoidCommandResultCanaryTest` (workaround on: `null`; off: the upstream failure).
+
+## Regression 2 (WebFlux branch): reactive handler spans lose their scope (fixed in 5.4.1-SNAPSHOT)
+
+What worked before: the WebFlux branch ran on a locally built 5.3.0-SNAPSHOT of Axoniq Framework that contained
+AxonIQ/axoniq-framework PR 329, a balanced span accessor for Reactor context propagation.
+
+What happens on 5.4.0: the release does not contain PR 329, so Micrometer's `ObservationAwareSpanThreadLocalAccessor`
+is used again. When Reactor clears the span inside an already restored span scope (the R2DBC driver subscribes with
+a Reactor Context that has no span), it overwrites the current scope instead of opening one, and the following
+restores close the wrong scopes. With assertions enabled (tests) its `assert` fails inside the reactive pipeline:
+
+```
+java.lang.AssertionError: After closing the scope, current span <null> is not the same as the one to which you
+want to revert <SdkSpan{... name=DwellingReadModelProjector.on(...) ...}>
+```
+
+Affected: reactive event handlers and read models (R2DBC), with tracing enabled. Failing tests without the
+workaround: `R2dbcTracingEndToEndTest`, `R2dbcSpanPropagationDiagnosticTest` (raw span variant) and both tests of
+`WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest`; all pass with `-DenableAssertions=false`, while
+the run logs 251 scope warnings. In a normal JVM (no `-ea`) handlers keep working, but spans can be lost or stay
+current on worker threads.
+
+Cause and fixes: Micrometer Tracing's accessor, fixed upstream in micrometer-metrics/tracing PR 1614, and replaced in
+Axoniq Framework by AxonIQ/axoniq-framework PR 329. Neither is released yet.
+
+Workaround: `ReactorSpanScopeWorkaroundConfiguration` registers a balanced accessor under Micrometer's key when the
+application is ready (switch: `application.workarounds.reactor-span-scope.enabled`). `ReactorSpanScopeCanaryTest`
+fails once Micrometer's accessor or the Axoniq Framework release carries the fix, which is the signal to remove it.
+
+Also on this branch: `JpaEventStoreDataFromAxon530CompatibilityTest` points `spring.r2dbc.*` at its restored
+database, because the reactive read models do not use the JDBC datasource.
 
 ## Fixed between 5.4.0-RC1 and 5.4.0 (no action needed)
 

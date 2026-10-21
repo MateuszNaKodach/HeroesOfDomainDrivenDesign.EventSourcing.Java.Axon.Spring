@@ -13,6 +13,7 @@ import org.axonframework.messaging.core.sequencing.MetadataSequencingPolicy;
 import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.eventhandling.replay.annotation.DisallowReplay;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -32,7 +33,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     }
 
     @EventHandler
-    CompletableFuture<?> react(
+    Mono<Void> react(
             WeekSymbolProclaimed event,
             @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId,
             @MetadataValue(GameMetaData.PLAYER_ID_KEY) String playerId,
@@ -40,11 +41,11 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     ) {
         var creature = event.weekOf();
         var increaseBy = event.growth();
-        var futures = repository.findAllByGameId(gameId).stream()
-                  .filter(dwelling -> dwelling.getCreatureId().equals(creature))
-                  .map(dwelling -> increaseAvailableCreatures(commandDispatcher, dwelling, increaseBy, playerId))
-                  .toArray(CompletableFuture[]::new);
-        return CompletableFuture.allOf(futures);
+        return repository.findAllByGameId(gameId)
+                         .filter(dwelling -> dwelling.getCreatureId().equals(creature))
+                         .flatMap(dwelling -> Mono.fromFuture(
+                                 () -> increaseAvailableCreatures(commandDispatcher, dwelling, increaseBy, playerId)))
+                         .then();
     }
 
     private CompletableFuture<? extends Message> increaseAvailableCreatures(
@@ -62,12 +63,16 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesProcessor {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId) {
+    Mono<Void> on(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId) {
         var state = new BuiltDwellingReadModel(
                 gameId,
                 event.dwellingId(),
                 event.creatureId()
         );
-        repository.save(state);
+        // findById first keeps redelivery idempotent: an INSERT of an already-known dwelling would
+        // fail on the primary key (JPA's save() used to merge silently).
+        return repository.findById(event.dwellingId())
+                         .switchIfEmpty(repository.save(state))
+                         .then();
     }
 }

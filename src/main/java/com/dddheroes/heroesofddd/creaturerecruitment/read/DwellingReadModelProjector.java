@@ -13,7 +13,13 @@ import org.axonframework.messaging.eventhandling.annotation.EventHandler;
 import org.axonframework.messaging.eventhandling.replay.annotation.ResetHandler;
 import org.axonframework.messaging.queryhandling.QueryUpdateEmitter;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
+/**
+ * Fully reactive projection: every handler returns a {@link Mono} composed of R2DBC repository
+ * operations. The event processor awaits the returned publisher's completion before advancing the
+ * token, so the ordering guarantees are the same as with the previous blocking JPA implementation.
+ */
 @Namespace("ReadModel_Dwelling")
 @SequencingPolicy(type = MetadataSequencingPolicy.class, parameters = GameMetaData.GAME_ID_KEY)
 @Component
@@ -26,7 +32,8 @@ class DwellingReadModelProjector {
     }
 
     @EventHandler
-    void on(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId, QueryUpdateEmitter emitter) {
+    Mono<Void> on(DwellingBuilt event, @MetadataValue(GameMetaData.GAME_ID_KEY) String gameId,
+                  QueryUpdateEmitter emitter) {
         var state = new DwellingReadModel(
                 gameId,
                 event.dwellingId(),
@@ -34,29 +41,37 @@ class DwellingReadModelProjector {
                 event.costPerTroop(),
                 0
         );
-        repository.save(state);
-        emitWatchUpdate(emitter, state);
+        // findById first keeps redelivery idempotent: an INSERT of an already-projected dwelling
+        // would fail on the primary key (JPA's save() used to merge silently).
+        return repository.findById(event.dwellingId())
+                         .switchIfEmpty(repository.save(state))
+                         .doOnNext(saved -> emitWatchUpdate(emitter, saved))
+                         .then();
     }
 
     @EventHandler
-    void on(AvailableCreaturesChanged event, QueryUpdateEmitter emitter) {
-        repository.findById(event.dwellingId())
-                  .map(state -> state.withAvailableCreatures(event.changedTo()))
-                  .map(repository::save)
-                  .ifPresent(state -> emitWatchUpdate(emitter, state));
+    Mono<Void> on(AvailableCreaturesChanged event, QueryUpdateEmitter emitter) {
+        return repository.findById(event.dwellingId())
+                         .map(state -> state.withAvailableCreatures(event.changedTo()))
+                         .flatMap(repository::save)
+                         .doOnNext(state -> emitWatchUpdate(emitter, state))
+                         .then();
     }
 
     @EventHandler
-    void on(CreatureRecruited event, QueryUpdateEmitter emitter) {
-        repository.findById(event.dwellingId())
-                  .map(state -> state.withAvailableCreaturesDecreasedBy(event.quantity()))
-                  .map(repository::save)
-                  .ifPresent(state -> emitWatchUpdate(emitter, state));
+    Mono<Void> on(CreatureRecruited event, QueryUpdateEmitter emitter) {
+        return repository.findById(event.dwellingId())
+                         .map(state -> state.withAvailableCreaturesDecreasedBy(event.quantity()))
+                         .flatMap(repository::save)
+                         .doOnNext(state -> emitWatchUpdate(emitter, state))
+                         .then();
     }
 
     // Emit the just-persisted state to any WatchDwelling subscription query for this dwelling.
     // Emitting from the projecting handler (rather than a separate processor) guarantees the update
-    // reflects the value written in this same unit of work — no cross-processor race.
+    // reflects the value written in this same unit of work — no cross-processor race. The emitter
+    // only registers an after-commit task on the processing context, so it is non-blocking and safe
+    // to call from within the reactive pipeline.
     private void emitWatchUpdate(QueryUpdateEmitter emitter, DwellingReadModel state) {
         emitter.emit(
                 WatchDwelling.class,
@@ -66,7 +81,7 @@ class DwellingReadModelProjector {
     }
 
     @ResetHandler
-    void onReset() {
-        repository.deleteAll();
+    Mono<Void> onReset() {
+        return repository.deleteAll();
     }
 }

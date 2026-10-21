@@ -4,9 +4,11 @@ import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModel;
 import com.dddheroes.heroesofddd.creaturerecruitment.read.DwellingReadModelRepository;
 import org.axonframework.messaging.queryhandling.annotation.QueryHandler;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 @Component
 class GetDwellingByIdQueryHandler {
+
     private final DwellingReadModelRepository dwellingReadModelRepository;
 
     GetDwellingByIdQueryHandler(DwellingReadModelRepository dwellingReadModelRepository) {
@@ -14,7 +16,7 @@ class GetDwellingByIdQueryHandler {
     }
 
     @QueryHandler
-    DwellingReadModel handle(GetDwellingById query){
-        return dwellingReadModelRepository.findById(query.dwellingId().raw()).orElse(null);
+    Mono<DwellingReadModel> handle(GetDwellingById query) {
+        return dwellingReadModelRepository.findById(query.dwellingId().raw());
     }
 }

@@ -124,7 +124,7 @@ class WhenWeekSymbolProclaimedThenIncreaseDwellingAvailableCreaturesTest {
 
     private void awaitDwellingProjected(String dwellingId) {
         awaitUntilAsserted(() ->
-                assertThat(builtDwellingReadModelRepository.findById(dwellingId)).isPresent()
+                assertThat(builtDwellingReadModelRepository.findById(dwellingId).blockOptional()).isPresent()
         );
     }
 
