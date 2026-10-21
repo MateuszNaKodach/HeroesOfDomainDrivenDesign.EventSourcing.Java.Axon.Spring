@@ -1,5 +1,11 @@
 # Upgrade notes: Axon Framework / Axoniq Framework 5.3.0-SNAPSHOT to 5.4.0
 
+> **Status (2026-10-21, WebFlux branch):** the app now uses Axoniq Framework `5.4.1-SNAPSHOT` (branch
+> `axoniq-5.4.x`), which contains the fixes for both regressions below (AxonIQ/axoniq-framework PR 641 and PR 688).
+> Both workarounds and their canary tests were removed: with them switched off the full suite already passed on that
+> snapshot. Axon Framework artifacts (`org.axonframework*`) stay on `5.4.0`, the version `5.4.1-SNAPSHOT` is built
+> against.
+
 Upgrade date: 2026-10-12. All artifacts (`org.axonframework:*`, `org.axonframework.extensions.spring:*`,
 `io.axoniq.framework:*`) come from Maven Central at `5.4.0` (GA, released the same day). The app no longer
 depends on locally built tracing-branch snapshots, so `./mvnw -nsu` is not needed anymore.
@@ -23,8 +29,8 @@ Sources used: release notes of
 Changes in this repository:
 
 - `pom.xml`: `axon.version` / `axon5.version` set to `5.4.0`.
-- `AxonServerVoidCommandResultWorkaroundConfiguration` (new): workaround for regression 1.
-- `ReactorSpanScopeWorkaroundConfiguration` (new, WebFlux branch): workaround for regression 2.
+- `AxonServerVoidCommandResultWorkaroundConfiguration` (new): workaround for regression 1, removed again with `5.4.1-SNAPSHOT`.
+- `ReactorSpanScopeWorkaroundConfiguration` (new, WebFlux branch): workaround for regression 2, removed again with `5.4.1-SNAPSHOT`.
 - Tests that keep the checks of this upgrade: the workaround unit and canary tests (regression 1), and
   `JpaEventStoreDataFromAxon530CompatibilityTest`, which starts the app on a JPA event store written by the
   pre-upgrade 5.3.0-SNAPSHOT build (fixture and its generator in `src/test/resources/compat/af-5.3.0-SNAPSHOT/`).
@@ -33,7 +39,7 @@ Changes in this repository:
 Runtime dependency set is unchanged apart from versions: `axonserver-connector-java` 2026.0.0 to 2026.1.0,
 `entitlement-manager` 1.1.0 to 1.3.2, `tools.jackson` 3.2.1 to 3.2.3, `protobuf-java` 4.34.0 to 4.36.0.
 
-## Regression 1: void command results fail over Axon Server (worked around)
+## Regression 1: void command results fail over Axon Server (fixed in 5.4.1-SNAPSHOT)
 
 What worked before: on 5.3.0-SNAPSHOT a command whose handler returns nothing, dispatched through Axon Server,
 completed `commandGateway.send(...).resultAs(Void.class)` with `null`.
@@ -109,7 +115,7 @@ remove the workaround; `AxonServerVoidCommandResultCanaryTest` fails on that ver
 Tests added for this regression: `EmptyCommandResultAsNullInterceptorTest` (workaround unit test, incl. the empty
 `String` case) and `AxonServerVoidCommandResultCanaryTest` (workaround on: `null`; off: the upstream failure).
 
-## Regression 2 (WebFlux branch): reactive handler spans lose their scope (worked around)
+## Regression 2 (WebFlux branch): reactive handler spans lose their scope (fixed in 5.4.1-SNAPSHOT)
 
 What worked before: the WebFlux branch ran on a locally built 5.3.0-SNAPSHOT of Axoniq Framework that contained
 AxonIQ/axoniq-framework PR 329, a balanced span accessor for Reactor context propagation.

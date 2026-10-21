@@ -288,8 +288,8 @@ listener resolves the parent from the **Reactor Context captured at subscription
 read at query time). Axoniq Framework carries the active handler as a raw Micrometer Tracing `Span` under
 Micrometer's standard context key. A balanced accessor gives every nested set and clear operation an independent
 scope, so Reactor restores the span safely across scheduler and driver thread changes without synthetic observations.
-On Axoniq Framework 5.4.0 the app registers that accessor itself (`ReactorSpanScopeWorkaroundConfiguration`, see
-regression 2 in [UPGRADE-AXON-5.4.0.md](UPGRADE-AXON-5.4.0.md)), because the fix is not released yet.
+Axoniq Framework ships that accessor from `5.4.1-SNAPSHOT` on (AxonIQ/axoniq-framework PR 688); the released
+5.4.0 does not (see regression 2 in [UPGRADE-AXON-5.4.0.md](UPGRADE-AXON-5.4.0.md)).
 Queries whose I/O completes on the Postgres driver's shared Netty event-loop threads therefore still nest
 correctly — the raw-OpenTelemetry `R2dbcTelemetry` wrapper used previously read
 `Context.current()` on those threads and produced orphaned root spans instead.
@@ -433,7 +433,7 @@ You will see additional traces only in these cases:
 | Situation | What you see |
 |---|---|
 | An event is handled more than `distributed-in-same-trace-time-limit` (default 2 minutes) after it was published - a replay, or a backlog after downtime | The handler starts its own trace, with a span **link** back to the publishing span (`batch-trace-enabled: false` keeps it free of a `StreamingEventProcessor.batch` parent) |
-| Subscription-query updates (`/watch`) | The update is part of the trace of the command that caused it, with a **link** to the `WatchDwelling` subscription's trace |
+| Subscription-query updates (`/watch`) | The update's `QueryBusConnector.queryUpdate` spans **link** to the `WatchDwelling` subscription's trace. They are meant to sit under the emitting `QueryBus.emitUpdate` in the command's trace; Axoniq Framework 5.4.0 and 5.4.1-SNAPSHOT start them as their own trace instead (framework fix in progress) |
 | Axon Server connector housekeeping | Short root traces such as `EventStore/GetFirstToken`, not tied to any request |
 | Axon's defaults (drop both `event-processor` settings) | Every streaming batch becomes its own `StreamingEventProcessor.batch` trace, each `EventProcessor.process` span **linked** to the publishing span |
 
