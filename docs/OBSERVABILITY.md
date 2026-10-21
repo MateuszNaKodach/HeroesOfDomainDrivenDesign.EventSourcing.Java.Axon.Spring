@@ -286,8 +286,10 @@ Every reactive SELECT, INSERT, and UPDATE issued by the read-model repositories 
 span under the WebFlux request or Axon projection/query-handler span that initiated it. Crucially, the
 listener resolves the parent from the **Reactor Context captured at subscription** (not from a thread-local
 read at query time). Axoniq Framework carries the active handler as a raw Micrometer Tracing `Span` under
-Micrometer's standard context key. Its balanced accessor gives every nested set and clear operation an independent
+Micrometer's standard context key. A balanced accessor gives every nested set and clear operation an independent
 scope, so Reactor restores the span safely across scheduler and driver thread changes without synthetic observations.
+On Axoniq Framework 5.4.0 the app registers that accessor itself (`ReactorSpanScopeWorkaroundConfiguration`, see
+regression 2 in [UPGRADE-AXON-5.4.0.md](UPGRADE-AXON-5.4.0.md)), because the fix is not released yet.
 Queries whose I/O completes on the Postgres driver's shared Netty event-loop threads therefore still nest
 correctly — the raw-OpenTelemetry `R2dbcTelemetry` wrapper used previously read
 `Context.current()` on those threads and produced orphaned root spans instead.
