@@ -25,6 +25,16 @@ Changes in this repository:
 Runtime dependency changes (resolved runtime classpath, old vs new): <versions that moved,
 artifacts added or removed; "same set, versions only" when that is the case>.
 
+## Checks
+
+Playbooks: <files and status, or "uncharted: <line>">.
+
+| ID | Kind | Status | Evidence |
+|----|------|--------|----------|
+| <check ID> | <auto/decide/verify/note> | <done / decided: x / n/a: reason / failed: regression n> | <file:line, test, or run> |
+
+Workarounds removed in this update: <ID, class, the release that fixed it; "none">.
+
 ## Regressions
 
 <One subsection per regression. Write "None found." when there are none.>

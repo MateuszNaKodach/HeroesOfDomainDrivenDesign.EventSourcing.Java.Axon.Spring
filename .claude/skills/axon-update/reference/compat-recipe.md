@@ -73,6 +73,13 @@ Axon Server:
 
 If Docker is not running, start it or ask the user; do not skip the run silently.
 
+Shell traps, both handled by `compat-lib.sh`:
+
+- The Postgres JPA token store maps `token` to an `oid` large object; read it with
+  `lo_get(token)`.
+- zsh does not word-split a command stored in a variable (`PG="docker exec ..."`); use shell
+  functions.
+
 ## 4. Jars
 
 Build both jars without tests and copy them to the scratch dir, so later rebuilds do not
