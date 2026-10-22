@@ -235,7 +235,7 @@ def tests(root):
         if "/src/test/" not in path.replace(os.sep, "/"):
             continue
         with open(path, encoding="utf-8", errors="replace") as fh:
-            for m in re.finditer(r"@ActiveProfiles\(([^)]*)\)", fh.read()):
+            for m in re.finditer(r"^[ \t]*@ActiveProfiles\(([^)]*)\)", fh.read(), re.MULTILINE):  # line start skips commented-out annotations
                 for prof in re.findall(r"\"([^\"]+)\"", m.group(1)):
                     counts.setdefault(prof, []).append(os.path.basename(path))
     if not counts:

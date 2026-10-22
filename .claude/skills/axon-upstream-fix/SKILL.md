@@ -234,6 +234,11 @@ upgrade report (or add a note next to the workaround) with: upstream PR link or 
 expected release, and how to remove the workaround then (delete class/config, drop the
 snapshot pin, rerun the suite). Do not merge the validation child branch.
 
+Record the fix in the `axon-update` playbook row of the regression
+(`../axon-update/playbooks/`): the fix PR, the release that carries it, and a separate `verify`
+row that removes the workaround once `tgt` reaches that release. That row lets the next update
+remove the workaround without any research.
+
 Close with a short chat summary: root cause and origin commit, the fix in one sentence, RED
 and GREEN evidence, app validation and negative control results, where the report and branches
 are, and what is waiting for the user's decision (push/PR).
